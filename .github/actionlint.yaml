@@ -1,0 +1,6 @@
+# GitHub-hosted preview label documented in actions/runner-images:
+# images/macos/xcode-27-arm64-Readme.md. actionlint's built-in label list
+# currently omits it, so use its additional-label allowlist for validation.
+self-hosted-runner:
+  labels:
+    - xcode-27

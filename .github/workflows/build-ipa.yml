@@ -190,8 +190,10 @@ jobs:
   build:
     name: Compile and publish versioned IPA
     needs: prepare_inputs
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 240
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.app/Contents/Developer
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -222,6 +224,12 @@ jobs:
       - name: Install build tools
         run: brew install xcodegen
 
+      - name: Verify the selected Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          test "$(xcrun --sdk iphoneos --show-sdk-version | cut -d. -f1)" -ge 27
+
       - name: Make sure the Metal compiler is installed
         run: xcrun -sdk iphoneos metal --version > /dev/null 2>&1 || xcodebuild -downloadComponent MetalToolchain
 
@@ -246,8 +254,11 @@ jobs:
           EXECUTABLE=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")
           test "$(lipo -archs "$APP/$EXECUTABLE")" = arm64
           for language in en tr; do test -s "$APP/$language.lproj/Cheats.strings"; done
+          # GitHub normalizes spaces in Release filenames. Publish the same
+          # ASCII filename recorded in metadata and SHA256SUMS.
+          cp 'GtaV Mobile.ipa' GtaV-Mobile.ipa
           python3 app/Scripts/create_release_metadata.py \
-            --ipa 'GtaV Mobile.ipa' --output release \
+            --ipa GtaV-Mobile.ipa --output release \
             --commit "$SOURCE_COMMIT" --source-repository "$SOURCE_REPOSITORY" \
             --run-id "$GITHUB_RUN_ID" --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             --xcode-version "$(xcodebuild -version | tr '\n' ' ')" \
@@ -260,7 +271,7 @@ jobs:
         with:
           name: GtaV-Mobile-${{ steps.release.outputs.version }}-build-${{ steps.release.outputs.build }}
           path: |
-            GtaV Mobile.ipa
+            GtaV-Mobile.ipa
             release/release-metadata.json
             release/SHA256SUMS
             release/release-notes.md
@@ -275,7 +286,7 @@ jobs:
           RELEASE_TITLE: ${{ steps.release.outputs.title }}
         run: |
           gh release create "$RELEASE_TAG" \
-            'GtaV Mobile.ipa' release/release-metadata.json release/SHA256SUMS release/release-notes.md \
+            GtaV-Mobile.ipa release/release-metadata.json release/SHA256SUMS release/release-notes.md \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "$RELEASE_TITLE" --notes-file release/release-notes.md --draft
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest

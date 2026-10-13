@@ -36,6 +36,8 @@ hileleri sıfırlar.
 
 ## IPA derleme ve kurulum
 
+CI, Apple Silicon `xcode-27` makinesinde kararlı Xcode 27 ve iOS 27 SDK kullanır; en düşük iOS sürümü 17 olarak kalır. Mac çıktısı `GtaV Mobile.ipa`, GitHub Release dosyası **`GtaV-Mobile.ipa`** olur. Böylece indirilen dosya adı metadata ve SHA256SUMS ile birebir eşleşir.
+
 Tam derleme için kendi oyun kopyanızın şu dosyaları gerekir:
 
 - `b/8b0b5899ed/game.wasm`
@@ -57,7 +59,7 @@ belirtilen 18 paketin tamamını içermelidir; aynı `index.json` dosyası da ol
 Mevcut motor/manifest/indeks arşivi tek başına yeterli değildir. Eksik veya
 kısmi paketler macOS derlemesi başlamadan kontrol edilir.
 
-Her başarılı derleme otomatik olarak yeni bir Release yayımlar: **GtaV Mobile.ipa**,
+Her başarılı derleme otomatik olarak yeni bir Release yayımlar: **GtaV-Mobile.ipa**,
 **release-metadata.json**, **SHA256SUMS** ve Türkçe/İngilizce sürüm notları.
 Notlarda IPA'nın gerçek sürümü, build kodu, kaynak commit, iş akışı bağlantısı,
 iOS gereksinimi, diller, dosya boyutu, SHA-256 ve Xcode/SDK bilgisi bulunur.

@@ -1,5 +1,7 @@
 # Qeyf fork — v1.3.2
 
+- CI explicitly uses stable Xcode 27 / iOS 27 while retaining iOS 17 deployment support. Release IPA filenames are ASCII-safe and match the packaged metadata and SHA256SUMS.
+
 - Successful private IPA builds publish separate version/build tags, packaged metadata, bilingual notes and SHA-256 checksums without deleting release history.
 - Private Release ZIP inputs are validated before macOS compilation, including all referenced shader pack sizes; the build workflow can be reused from a source-pinned private orchestration repository.
 - App name and IPA output changed to GtaV Mobile; separate `io.github.qeyf.gtavmobile` bundle identifier.
