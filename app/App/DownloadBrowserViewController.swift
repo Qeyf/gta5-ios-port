@@ -68,8 +68,8 @@ final class DownloadBrowserViewController: UIViewController, WKNavigationDelegat
         navigationItem.leftBarButtonItem = UIBarButtonItem(systemItem: .close, primaryAction: UIAction { [weak self] _ in self?.dismiss(animated: true) })
         navigationItem.leftBarButtonItem?.accessibilityLabel = String(localized: "Close", table: "Files")
         navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(image: UIImage(systemName: "arrow.clockwise"), primaryAction: UIAction { [weak self] _ in self?.webView.reload() }),
-            UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), primaryAction: UIAction { [weak self] _ in self?.webView.goBack() })
+            UIBarButtonItem(image: UIImage(systemName: "arrow.clockwise"), primaryAction: UIAction(title: String(localized: "Reload page", table: "Files"), image: UIImage(systemName: "arrow.clockwise")) { [weak self] _ in self?.webView.reload() }),
+            UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), primaryAction: UIAction(title: String(localized: "Go back", table: "Files"), image: UIImage(systemName: "chevron.backward")) { [weak self] _ in self?.webView.goBack() })
         ]
         navigationItem.rightBarButtonItems?[0].accessibilityLabel = String(localized: "Reload page", table: "Files")
         navigationItem.rightBarButtonItems?[1].accessibilityLabel = String(localized: "Back", table: "Files")

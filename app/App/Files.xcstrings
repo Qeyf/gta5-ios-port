@@ -1714,6 +1714,7 @@
       }
     },
     "Reload page": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1724,7 +1725,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sayfayı yeniden yükle"
+            "value": "Sayfayı yenile"
           }
         }
       }
@@ -3213,6 +3214,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "yanlış boyut: %1$@, %3$@ yerine %2$@ bayt"
+          }
+        }
+      }
+    },
+    "Go back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go back"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri dön"
           }
         }
       }
