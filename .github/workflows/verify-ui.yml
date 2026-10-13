@@ -1,0 +1,37 @@
+name: Verify GtaV Mobile UI and translations
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate English and Turkish resources
+        run: python3 app/Tests/localization_resources.py
+      - name: Compile all Swift UI against the iOS SDK
+        run: |
+          mkdir -p app/Build/UIVerification/objects app/Build/UIVerification/strings
+          cd app/Build/UIVerification/objects
+          xcrun --sdk iphoneos swiftc -c -parse-as-library -swift-version 5 \
+            -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -target arm64-apple-ios17.0 \
+            -import-objc-header ../../../Source/Native-Bridging-Header.h \
+            -Xcc -I../../../Source -Xcc -I../../../App/GameInstaller \
+            -emit-localized-strings -emit-localized-strings-path ../strings \
+            ../../../App/*.swift ../../../App/GameInstaller/*.swift
+      - name: Compile Apple String Catalogs
+        run: |
+          mkdir -p app/Build/UIVerification/resources
+          for catalog in app/App/*.xcstrings; do
+            xcrun xcstringstool compile --output-directory app/Build/UIVerification/resources "$catalog"
+          done
+      - name: Verify compiled strings have catalog translations
+        run: python3 app/Scripts/check_extracted_localizations.py app/Build/UIVerification/strings

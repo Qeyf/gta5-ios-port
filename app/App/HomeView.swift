@@ -6,9 +6,9 @@ import UIKit
 final class HomeView: UIView {
     enum FilesState { case ready, attention, problem, busy }
 
-    let playButton = Theme.primaryButton("Play", symbol: "play.fill")
-    let settingsButton = Theme.glassButton("Settings", symbol: "gearshape.fill")
-    let layoutButton = Theme.glassButton("Controls layout", symbol: "hand.tap.fill")
+    let playButton = Theme.primaryButton(String(localized: "Play", table: "Main"), symbol: "play.fill")
+    let settingsButton = Theme.glassButton(String(localized: "Settings", table: "Main"), symbol: "gearshape.fill")
+    let layoutButton = Theme.glassButton(String(localized: "Controls layout", table: "Main"), symbol: "hand.tap.fill")
     let preloadLabel = UILabel()
     let controllerLabel = UILabel()
     /// Taps on the game files card.
@@ -40,15 +40,16 @@ final class HomeView: UIView {
         icon.widthAnchor.constraint(equalToConstant: 52).isActive = true
         icon.heightAnchor.constraint(equalToConstant: 52).isActive = true
         let title = UILabel()
-        title.text = "GTA V Port"
+        title.text = "GtaV Mobile"
         title.font = Theme.display(30)
         title.textColor = Theme.text
         title.adjustsFontSizeToFitWidth = true
         title.minimumScaleFactor = 0.7
         let subtitle = UILabel()
-        subtitle.text = "Fan project · plays your own game files · \(Theme.appVersion)"
+        subtitle.text = String(localized: "Fan project · plays your own game files · \(Theme.appVersion)", table: "Main")
         subtitle.font = Theme.body(14, .medium)
         subtitle.textColor = Theme.secondaryText
+        subtitle.numberOfLines = 0
         let titles = UIStackView(arrangedSubviews: [title, subtitle])
         titles.axis = .vertical
         titles.spacing = 2
@@ -83,7 +84,7 @@ final class HomeView: UIView {
         preloadLabel.isHidden = true
 
         let mapLabel = UILabel()
-        mapLabel.text = "Map"
+        mapLabel.text = String(localized: "Map", table: "Main")
         mapLabel.font = Theme.body(13, .semibold)
         mapLabel.textColor = Theme.secondaryText
         mapRow.addArrangedSubview(mapLabel)
@@ -221,7 +222,7 @@ final class HomeView: UIView {
         }
         filesIcon.image = symbol.isEmpty ? nil : UIImage(systemName: symbol)
         filesIcon.tintColor = color
-        filesCard.accessibilityLabel = "Game files: \(title). \(detail)"
+        filesCard.accessibilityLabel = String(localized: "Game files: \(title). \(detail)", table: "Main")
     }
 
     /// Marks the chosen mode (nil: none yet) and shows its description.
@@ -237,7 +238,7 @@ final class HomeView: UIView {
             chip.configuration?.background.strokeColor = selected ? Theme.accent : .clear
             chip.configuration?.background.strokeWidth = selected ? 1.5 : 0
             chip.accessibilityTraits = selected ? [.button, .selected] : .button
-            chip.accessibilityLabel = "Sandbox map: " + GameSettings.sandboxMapTitles[i]
+            chip.accessibilityLabel = String(localized: "Sandbox map: \(GameSettings.sandboxMapTitles[i])", table: "Main")
         }
     }
 
@@ -270,6 +271,8 @@ private final class ModeCard: UIControl {
         icon.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .semibold))
         label.text = title
         label.font = Theme.body(15, .semibold)
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.8
         let row = UIStackView(arrangedSubviews: [icon, label])
         row.spacing = 8
         row.alignment = .center

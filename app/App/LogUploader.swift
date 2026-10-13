@@ -16,7 +16,7 @@ enum LogUploader {
             body.append(data.count > perLog ? data.suffix(perLog) : data)
             body.append("\n".data(using: .utf8)!)
         }
-        guard !body.isEmpty else { DispatchQueue.main.async { done(("No log yet", "Start the game once, then try again.")) }; return }
+        guard !body.isEmpty else { DispatchQueue.main.async { done((String(localized: "No log yet", table: "Files"), String(localized: "Start the game once, then try again.", table: "Files"))) }; return }
         var request = URLRequest(url: endpoint, timeoutInterval: 60)
         request.httpMethod = "POST"
         request.setValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
@@ -28,11 +28,11 @@ enum LogUploader {
             let reply = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
             let result: (String, String)
             if status == 200 {
-                result = ("Log sent, thank you!", "Reference: \(reply?["id"] as? String ?? "-"). Mention it if you also ask for help in the community.")
+                result = (String(localized: "Log sent, thank you!", table: "Files"), String(localized: "Reference: \(reply?["id"] as? String ?? "-"). Mention it if you also ask for help in the community.", table: "Files"))
             } else if error != nil {
-                result = ("Couldn't send the log", "No internet connection? Try again, or use Share log instead.")
+                result = (String(localized: "Couldn't send the log", table: "Files"), String(localized: "No internet connection? Try again, or use Share log instead.", table: "Files"))
             } else {
-                result = ("Couldn't send the log", (reply?["error"] as? String) ?? "Try again later, or use Share log instead.")
+                result = (String(localized: "Couldn't send the log", table: "Files"), (reply?["error"] as? String).map { String(localized: "The server could not accept the log: \($0)", table: "Files") } ?? String(localized: "Try again later, or use Share log instead.", table: "Files"))
             }
             DispatchQueue.main.async { done(result) }
         }.resume()
@@ -47,14 +47,14 @@ final class SendLogViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Send log to the developer"
+        title = String(localized: "Send log to the developer", table: "Files")
         view.backgroundColor = .systemGroupedBackground
-        navigationItem.leftBarButtonItem = UIBarButtonItem(systemItem: .cancel, primaryAction: UIAction { [weak self] _ in self?.dismiss(animated: true) })
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Send", primaryAction: UIAction { [weak self] _ in self?.send() })
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: String(localized: "Cancel", table: "Files"), primaryAction: UIAction(title: String(localized: "Cancel", table: "Files")) { [weak self] _ in self?.dismiss(animated: true) })
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: String(localized: "Send", table: "Files"), primaryAction: UIAction(title: String(localized: "Send", table: "Files")) { [weak self] _ in self?.send() })
         navigationItem.rightBarButtonItem?.style = .done
 
         let info = UILabel()
-        info.text = "Sends this run's game log and the previous one: your iPhone model, iOS version, app settings and what the game printed. No personal data, photos or contacts."
+        info.text = String(localized: "Sends this run's game log and the previous one: your iPhone model, iOS version, app settings and what the game printed. No personal data, photos or contacts.", table: "Files")
         info.numberOfLines = 0
         info.font = .preferredFont(forTextStyle: .footnote)
         info.textColor = .secondaryLabel
@@ -62,9 +62,9 @@ final class SendLogViewController: UIViewController {
         note.layer.cornerRadius = 10
         note.backgroundColor = .secondarySystemGroupedBackground
         note.textContainerInset = UIEdgeInsets(top: 10, left: 8, bottom: 10, right: 8)
-        note.accessibilityLabel = "What happened? (optional)"
+        note.accessibilityLabel = String(localized: "What happened? (optional)", table: "Files")
         let placeholder = UILabel()
-        placeholder.text = "What happened? (optional)"
+        placeholder.text = String(localized: "What happened? (optional)", table: "Files")
         placeholder.textColor = .placeholderText
         placeholder.font = note.font
         placeholder.tag = 7
@@ -98,7 +98,7 @@ final class SendLogViewController: UIViewController {
     private func send() {
         navigationItem.rightBarButtonItem?.isEnabled = false
         note.resignFirstResponder()
-        status.text = "Sending…"
+        status.text = String(localized: "Sending…", table: "Files")
         LogUploader.send(note: note.text ?? "") { [weak self] result in
             guard let self else { return }
             let done = self.finished

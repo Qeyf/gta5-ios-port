@@ -1,0 +1,2182 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ %lld×%lld at %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld×%lld at %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %lld×%lld, %@"
+          }
+        }
+      }
+    },
+    "%@ (playing now)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (playing now)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (şu anda oynanıyor)"
+          }
+        }
+      }
+    },
+    "%@ (recommended)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (recommended)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (önerilen)"
+          }
+        }
+      }
+    },
+    "%@ · %@ already on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ already on this iPhone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ zaten bu iPhone'da"
+          }
+        }
+      }
+    },
+    "%@ · %@ of %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ of %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ / %@"
+          }
+        }
+      }
+    },
+    "%@ · %lld GB · app limit %lld MB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld GB · app limit %lld MB"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld GB · uygulama sınırı %lld MB"
+          }
+        }
+      }
+    },
+    "%@ · %lld GB · app limit %lld MB · BC textures": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld GB · app limit %lld MB · BC textures"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld GB · uygulama sınırı %lld MB · BC dokuları"
+          }
+        }
+      }
+    },
+    "%@ · changes right away": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · changes right away"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · hemen uygulanır"
+          }
+        }
+      }
+    },
+    "%@ · plays without streaming": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · plays without streaming"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · sunucudan veri almadan oynanır"
+          }
+        }
+      }
+    },
+    "%@ ▾": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ▾"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ▾"
+          }
+        }
+      }
+    },
+    "%@/s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/s"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/sn"
+          }
+        }
+      }
+    },
+    "%lld FPS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld FPS"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld FPS"
+          }
+        }
+      }
+    },
+    "%lldp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldp"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldp"
+          }
+        }
+      }
+    },
+    "1080p with high shaders, shadows and reflections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1080p with high shaders, shadows and reflections"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1080p; yüksek kaliteli gölgelendiriciler, gölgeler ve yansımalar"
+          }
+        }
+      }
+    },
+    "Aim look speed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aim look speed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nişan alma sırasında kamera hızı"
+          }
+        }
+      }
+    },
+    "Aim stick speed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aim stick speed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nişan çubuğu hızı"
+          }
+        }
+      }
+    },
+    "All files on device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All files on device"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm dosyalar cihazda"
+          }
+        }
+      }
+    },
+    "Always on foot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always on foot"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaya iken her zaman"
+          }
+        }
+      }
+    },
+    "App language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App language"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama dili"
+          }
+        }
+      }
+    },
+    "Assist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assist"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destek"
+          }
+        }
+      }
+    },
+    "Assisted aim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assisted aim"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destekli nişan"
+          }
+        }
+      }
+    },
+    "Assisted free aim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assisted free aim"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destekli serbest nişan"
+          }
+        }
+      }
+    },
+    "Auto (%lldp)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto (%lldp)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik (%lldp)"
+          }
+        }
+      }
+    },
+    "Available after restarting the app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available after restarting the app"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama yeniden başlatıldıktan sonra kullanılabilir"
+          }
+        }
+      }
+    },
+    "Balanced": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balanced"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dengeli"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pil tasarrufu"
+          }
+        }
+      }
+    },
+    "Button opacity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Button opacity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düğme opaklığı"
+          }
+        }
+      }
+    },
+    "Button size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Button size"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düğme boyutu"
+          }
+        }
+      }
+    },
+    "Camera stick speed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera stick speed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera çubuğu hızı"
+          }
+        }
+      }
+    },
+    "Can't download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't download"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilemiyor"
+          }
+        }
+      }
+    },
+    "Can't remove files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't remove files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar silinemiyor"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İptal"
+          }
+        }
+      }
+    },
+    "Cancel download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel download"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirmeyi iptal et"
+          }
+        }
+      }
+    },
+    "Change the app language in iOS Settings. Tap App language, then choose your preferred language in this app's settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the app language in iOS Settings. Tap App language, then choose your preferred language in this app's settings."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama dilini iOS Ayarları'ndan değiştirebilirsiniz. Uygulama dili satırına dokunun, ardından bu uygulamanın ayarlarından tercih ettiğiniz dili seçin."
+          }
+        }
+      }
+    },
+    "Changes apply the next time you start the game. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes apply the next time you start the game. %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklikler oyunu bir sonraki başlatışınızda uygulanır. %@"
+          }
+        }
+      }
+    },
+    "Checking size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking size"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boyut kontrol ediliyor"
+          }
+        }
+      }
+    },
+    "Close and reopen the app to play %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close and reopen the app to play %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oynamak için uygulamayı kapatıp yeniden açın."
+          }
+        }
+      }
+    },
+    "Controls act as a game controller, so the game's own aim assist and analog steering work. Assisted aim locks onto targets like on a console.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls act as a game controller, so the game's own aim assist and analog steering work. Assisted aim locks onto targets like on a console."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokunmatik kontroller oyun kumandası gibi çalışır; böylece oyunun kendi nişan desteği ve analog direksiyonu kullanılabilir. Destekli nişan, konsollarda olduğu gibi hedeflere kilitlenir."
+          }
+        }
+      }
+    },
+    "Customized": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customized"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özelleştirilmiş"
+          }
+        }
+      }
+    },
+    "Detail level, default %lldp · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detail level, default %lldp · %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntı düzeyi, varsayılan %lldp · %@"
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndir"
+          }
+        }
+      }
+    },
+    "Download all game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download all game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm oyun dosyalarını indir"
+          }
+        }
+      }
+    },
+    "Download all game files?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download all game files?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm oyun dosyaları indirilsin mi?"
+          }
+        }
+      }
+    },
+    "Download paused": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download paused"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme duraklatıldı"
+          }
+        }
+      }
+    },
+    "Download progress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download progress"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme ilerlemesi"
+          }
+        }
+      }
+    },
+    "Download stopped": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download stopped"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme durdu"
+          }
+        }
+      }
+    },
+    "Downloading game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları indiriliyor"
+          }
+        }
+      }
+    },
+    "Edit controls layout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit controls layout"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrol düzenini düzenle"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Fill the screen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fill the screen"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekranı doldur"
+          }
+        }
+      }
+    },
+    "Fire also aims": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fire also aims"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ateş ederken nişan al"
+          }
+        }
+      }
+    },
+    "Fire locks on first, like the classic mobile GTA games": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fire locks on first, like the classic mobile GTA games"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasik mobil GTA oyunlarındaki gibi, ateş etmeden önce hedefe kilitlenir"
+          }
+        }
+      }
+    },
+    "Frame rate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frame rate"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kare hızı"
+          }
+        }
+      }
+    },
+    "Free aim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free aim"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serbest nişan"
+          }
+        }
+      }
+    },
+    "Free roam anywhere on the map with every weapon. No missions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free roam anywhere on the map with every weapon. No missions."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm silahlarla haritanın her yerinde serbestçe dolaşın. Görev yoktur."
+          }
+        }
+      }
+    },
+    "Frees %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frees %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ alan boşaltır"
+          }
+        }
+      }
+    },
+    "Frees %@. The game will stream from the server again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frees %@. The game will stream from the server again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ alan boşaltır. Oyun verileri yeniden sunucudan alınır."
+          }
+        }
+      }
+    },
+    "Full lock at %lld°": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full lock at %lld°"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld° eğimde tam dönüş"
+          }
+        }
+      }
+    },
+    "GTA V": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GTA V"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GTA V"
+          }
+        }
+      }
+    },
+    "GTA VI test map": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GTA VI test map"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GTA VI test haritası"
+          }
+        }
+      }
+    },
+    "Game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları"
+          }
+        }
+      }
+    },
+    "Game mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game mode"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun modu"
+          }
+        }
+      }
+    },
+    "Graphics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graphics"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grafikler"
+          }
+        }
+      }
+    },
+    "GtaV Mobile %@. Quote this version when you report a problem.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GtaV Mobile %@. Quote this version when you report a problem."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GtaV Mobile %@. Sorun bildirirken bu sürümü belirtin."
+          }
+        }
+      }
+    },
+    "Gyro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gyro"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jiroskop"
+          }
+        }
+      }
+    },
+    "Gyro sensitivity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gyro sensitivity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jiroskop hassasiyeti"
+          }
+        }
+      }
+    },
+    "Hide touch controls with a controller": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide touch controls with a controller"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun kumandası bağlıyken dokunmatik kontrolleri gizle"
+          }
+        }
+      }
+    },
+    "Hide when a controller is connected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide when a controller is connected"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun kumandası bağlıyken gizle"
+          }
+        }
+      }
+    },
+    "Higher detail textures, effects and draw distance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Higher detail textures, effects and draw distance"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha ayrıntılı dokular ve efektler, daha uzun çizim mesafesi"
+          }
+        }
+      }
+    },
+    "Higher uses more power and heat; 30 FPS is steadiest. Unlocked goes up to 120 on ProMotion iPhones.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Higher uses more power and heat; 30 FPS is steadiest. Unlocked goes up to 120 on ProMotion iPhones."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüksek kare hızları daha fazla güç tüketir ve ısınmaya yol açar; 30 FPS en kararlı seçenektir. Sınırsız seçeneği, ProMotion özellikli iPhone'larda 120 FPS'ye kadar çıkar."
+          }
+        }
+      }
+    },
+    "Invert vertical": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invert vertical"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dikey ekseni ters çevir"
+          }
+        }
+      }
+    },
+    "Invert vertical gyro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invert vertical gyro"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jiroskopun dikey eksenini ters çevir"
+          }
+        }
+      }
+    },
+    "Keeps what is already downloaded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps what is already downloaded"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilmiş dosyalar korunur"
+          }
+        }
+      }
+    },
+    "Keyboard and mouse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard and mouse"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klavye ve fare"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dil"
+          }
+        }
+      }
+    },
+    "Look speed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look speed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bakış hızı"
+          }
+        }
+      }
+    },
+    "Lowest load, longest play time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lowest load, longest play time"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En düşük yük, en uzun oyun süresi"
+          }
+        }
+      }
+    },
+    "Max": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En yüksek"
+          }
+        }
+      }
+    },
+    "Move the phone to fine-tune your aim; turning your body turns the camera. Tilt steering turns the phone like a steering wheel: Assist adds fine control on top of the touch steering, Tilt to steer replaces it. The straight-ahead angle is however you hold the phone when you get in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the phone to fine-tune your aim; turning your body turns the camera. Tilt steering turns the phone like a steering wheel: Assist adds fine control on top of the touch steering, Tilt to steer replaces it. The straight-ahead angle is however you hold the phone when you get in."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nişanınızı hassas biçimde ayarlamak için telefonu hareket ettirin; vücudunuzu döndürdüğünüzde kamera da döner. Eğimli direksiyonda telefonu direksiyon gibi çevirirsiniz: Destek, dokunmatik direksiyona hassas kontrol ekler; Eğerek yönlendir ise dokunmatik direksiyonun yerini alır. Araca binerken telefonu tuttuğunuz açı, düz gidiş açısı olarak alınır."
+          }
+        }
+      }
+    },
+    "Move, resize or hide buttons": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move, resize or hide buttons"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düğmeleri taşıyın, boyutlandırın veya gizleyin"
+          }
+        }
+      }
+    },
+    "Native (%lldp)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Native (%lldp)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekranın doğal çözünürlüğü (%lldp)"
+          }
+        }
+      }
+    },
+    "Near-native resolution, high textures and full draw distance (newest Pro phones)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Near-native resolution, high textures and full draw distance (newest Pro phones)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekranın doğal çözünürlüğüne yakın görüntü, yüksek kaliteli dokular ve tam çizim mesafesi (en yeni Pro modelleri)"
+          }
+        }
+      }
+    },
+    "No log yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No log yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz günlük yok"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "One tap. Helps fix crashes and loading problems": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One tap. Helps fix crashes and loading problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tek dokunuşla gönderin. Çökmelerin ve yükleme sorunlarının çözülmesine yardımcı olur"
+          }
+        }
+      }
+    },
+    "Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklat"
+          }
+        }
+      }
+    },
+    "Performance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performance"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Performans"
+          }
+        }
+      }
+    },
+    "Play with the PC controls (WASD, mouse look). With both connected, touch controls hide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play with the PC controls (WASD, mouse look). With both connected, touch controls hide"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC kontrolleriyle oynayın (WASD, fareyle bakış). Klavye ve fare bağlıyken dokunmatik kontroller gizlenir"
+          }
+        }
+      }
+    },
+    "Preset and frame rate changes apply the next time you start the game.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset and frame rate changes apply the next time you start the game."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grafik profili ve kare hızı değişiklikleri oyunu bir sonraki başlatışınızda uygulanır."
+          }
+        }
+      }
+    },
+    "Presets above the recommended one can run out of memory or overheat on this phone; if a launch fails, the game falls back automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presets above the recommended one can run out of memory or overheat on this phone; if a launch fails, the game falls back automatically."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önerilenin üzerindeki grafik profilleri bu telefonda belleğin tükenmesine veya aşırı ısınmaya yol açabilir; oyun başlatılamazsa ayarlar otomatik olarak düşürülür."
+          }
+        }
+      }
+    },
+    "Presets apply when you press Play.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presets apply when you press Play."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grafik profilleri Oyna'ya bastığınızda uygulanır."
+          }
+        }
+      }
+    },
+    "Quality": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalite"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
+    "Remove downloaded files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove downloaded files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilen dosyaları sil"
+          }
+        }
+      }
+    },
+    "Remove downloaded files?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove downloaded files?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilen dosyalar silinsin mi?"
+          }
+        }
+      }
+    },
+    "Removing files also clears the startup set; the next Play prepares it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing files also clears the startup set; the next Play prepares it again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları silmek başlangıç dosyalarını da temizler; Oyna'ya bir sonraki basışınızda yeniden hazırlanırlar."
+          }
+        }
+      }
+    },
+    "Removing files…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing files…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar siliniyor…"
+          }
+        }
+      }
+    },
+    "Render at the screen's shape instead of stretching 16:9": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Render at the screen's shape instead of stretching 16:9"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "16:9 görüntüyü esnetmek yerine ekranın en-boy oranında işle"
+          }
+        }
+      }
+    },
+    "Renders at %lld×%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renders at %lld×%lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşleme çözünürlüğü: %lld×%lld"
+          }
+        }
+      }
+    },
+    "Resolution": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolution"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çözünürlük"
+          }
+        }
+      }
+    },
+    "Resolution changes apply right away.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolution changes apply right away."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çözünürlük değişiklikleri hemen uygulanır."
+          }
+        }
+      }
+    },
+    "Restart needed for %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart needed for %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ için yeniden başlatma gerekir."
+          }
+        }
+      }
+    },
+    "Resume download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume download"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirmeye devam et"
+          }
+        }
+      }
+    },
+    "Sandbox": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serbest mod"
+          }
+        }
+      }
+    },
+    "Sandbox map": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox map"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serbest mod haritası"
+          }
+        }
+      }
+    },
+    "Save or send this run's log and the previous one yourself": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save or send this run's log and the previous one yourself"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturumun ve önceki oturumun günlüklerini kaydedin veya gönderin"
+          }
+        }
+      }
+    },
+    "Saves the whole game on this iPhone (%@) so it no longer streams from the server. Tailscale must be connected while it downloads. Keep the app open: in the background the download pauses after a short while and continues when you come back. You can play while it downloads.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saves the whole game on this iPhone (%@) so it no longer streams from the server. Tailscale must be connected while it downloads. Keep the app open: in the background the download pauses after a short while and continues when you come back. You can play while it downloads."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunun tamamını bu iPhone'a kaydeder (%@); böylece veriler artık sunucudan alınmaz. İndirme sırasında Tailscale bağlantısı açık olmalıdır. Uygulamayı açık tutun: arka planda indirme kısa süre sonra duraklar ve uygulamaya döndüğünüzde devam eder. İndirme sürerken oynayabilirsiniz."
+          }
+        }
+      }
+    },
+    "Send log to the developer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send log to the developer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlüğü geliştiriciye gönder"
+          }
+        }
+      }
+    },
+    "Sensitivity %@×": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensitivity %@×"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hassasiyet %@×"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar"
+          }
+        }
+      }
+    },
+    "Share log": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share log"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlüğü paylaş"
+          }
+        }
+      }
+    },
+    "Sharper image and shadows": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharper image and shadows"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha keskin görüntü ve gölgeler"
+          }
+        }
+      }
+    },
+    "Start the game once, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game once, then try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunu bir kez başlatın, ardından yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Story mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Story mode"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hikâye modu"
+          }
+        }
+      }
+    },
+    "Story mode saves stay on this phone between launches. Sandbox keeps its own separate files.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Story mode saves stay on this phone between launches. Sandbox keeps its own separate files."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hikâye modu kayıtları oyun kapatıldığında da bu telefonda kalır. Serbest mod kendi dosyalarını ayrı tutar."
+          }
+        }
+      }
+    },
+    "Targeting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Targeting"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nişan alma"
+          }
+        }
+      }
+    },
+    "The campaign with missions. Continues your latest save, or starts from the Prologue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The campaign with missions. Continues your latest save, or starts from the Prologue."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görevlerle ilerleyen hikâye. En son kaydınızdan devam eder veya Önsöz'den başlar."
+          }
+        }
+      }
+    },
+    "The full GTA V map": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full GTA V map"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GTA V haritasının tamamı"
+          }
+        }
+      }
+    },
+    "The game reads everything from this iPhone. Removing the files frees the space; the game then streams again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game reads everything from this iPhone. Removing the files frees the space; the game then streams again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun tüm dosyaları bu iPhone'dan okur. Dosyaları silmek alan boşaltır; oyun verileri yeniden sunucudan alınır."
+          }
+        }
+      }
+    },
+    "The test level that comes with the game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The test level that comes with the game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyalarıyla birlikte gelen test bölümü"
+          }
+        }
+      }
+    },
+    "This device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihaz"
+          }
+        }
+      }
+    },
+    "This saves %@ more on this iPhone (%@ free). Wi-Fi and Tailscale recommended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves %@ more on this iPhone (%@ free). Wi-Fi and Tailscale recommended."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone'a %@ daha kaydeder (%@ boş alan var). Wi-Fi ve Tailscale önerilir."
+          }
+        }
+      }
+    },
+    "Tilt for full steering": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilt for full steering"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam dönüş için eğim"
+          }
+        }
+      }
+    },
+    "Tilt steering": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilt steering"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eğimli direksiyon"
+          }
+        }
+      }
+    },
+    "Tilt to steer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilt to steer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eğerek yönlendir"
+          }
+        }
+      }
+    },
+    "Today's tested setup for 6 GB iPhones": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's tested setup for 6 GB iPhones"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 GB iPhone'lar için güncel, test edilmiş ayarlar"
+          }
+        }
+      }
+    },
+    "Touch controls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch controls"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokunmatik kontroller"
+          }
+        }
+      }
+    },
+    "Touch controls come back as soon as the controller disconnects": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch controls come back as soon as the controller disconnects"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun kumandasının bağlantısı kesilince dokunmatik kontroller geri gelir"
+          }
+        }
+      }
+    },
+    "Traditional lock-on": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traditional lock-on"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasik hedefe kilitlenme"
+          }
+        }
+      }
+    },
+    "Türkçe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Türkçe"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Türkçe"
+          }
+        }
+      }
+    },
+    "Ultra": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultra"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultra"
+          }
+        }
+      }
+    },
+    "Unlocked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlocked"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sınırsız"
+          }
+        }
+      }
+    },
+    "While aiming": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While aiming"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nişan alırken"
+          }
+        }
+      }
+    },
+    "about 21 GB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about 21 GB"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yaklaşık 21 GB"
+          }
+        }
+      }
+    },
+    "⚠︎ Heavier than this phone's recommended setting: may run out of memory or overheat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠︎ Heavier than this phone's recommended setting: may run out of memory or overheat."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠︎ Bu telefon için önerilen ayardan daha yüksek yük: bellek tükenebilir veya cihaz aşırı ısınabilir."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

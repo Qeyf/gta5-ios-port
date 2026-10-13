@@ -47,7 +47,7 @@ final class LocalFileSource: ArchiveByteSource {
         for part in parts {
             var st = stat()
             guard stat(part.path, &st) == 0 else {
-                throw InstallError(.sourceUnreadable, "The archive \"\(part.lastPathComponent)\" could not be opened.", detail: String(cString: strerror(errno)))
+                throw InstallError(.sourceUnreadable, String(localized: "The archive \"\(part.lastPathComponent)\" could not be opened.", table: "Files"), detail: String(cString: strerror(errno)))
             }
             total += Int64(st.st_size)
         }
@@ -76,14 +76,14 @@ final class LocalFileSource: ArchiveByteSource {
 
     func nextBlock() -> (UnsafeRawPointer, Int)? {
         lock.lock(); let stop = cancelled; lock.unlock()
-        if stop { failure = InstallError(.cancelled, "The install was cancelled."); return nil }
+        if stop { failure = InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")); return nil }
         while true {
             if fd < 0 {
                 if !openNext() { return failure == nil ? (UnsafeRawPointer(buffer), 0) : nil }
             }
             let n = read(fd, buffer, blockSize)
             if n < 0 {
-                failure = InstallError(.sourceUnreadable, "Reading the archive \"\(parts[index].lastPathComponent)\" failed.", detail: String(cString: strerror(errno)))
+                failure = InstallError(.sourceUnreadable, String(localized: "Reading the archive \"\(parts[index].lastPathComponent)\" failed.", table: "Files"), detail: String(cString: strerror(errno)))
                 return nil
             }
             if n == 0 { closeCurrent(finished: true); continue }
@@ -102,7 +102,7 @@ final class LocalFileSource: ArchiveByteSource {
         fd = open(path, modify ? O_RDWR : O_RDONLY)
         if fd < 0 && modify { fd = open(path, O_RDONLY); if fd >= 0 { log("Archive part is read-only; it will not be freed as it is read.") } }
         guard fd >= 0 else {
-            failure = InstallError(.sourceUnreadable, "The archive \"\(parts[index].lastPathComponent)\" could not be opened.", detail: String(cString: strerror(errno)))
+            failure = InstallError(.sourceUnreadable, String(localized: "The archive \"\(parts[index].lastPathComponent)\" could not be opened.", table: "Files"), detail: String(cString: strerror(errno)))
             return false
         }
         var sfs = statfs()
@@ -157,7 +157,7 @@ enum ArchiveParts {
         let fm = FileManager.default
         func exists(_ n: String) -> Bool { fm.fileExists(atPath: folder.appendingPathComponent(n).path) }
         func missing(_ n: String, after: String) -> InstallError {
-            InstallError(.missingPart, "Part \"\(n)\" of the multi-part archive is missing. Put all parts in the same folder (\"\(after)\" was found) and try again.", files: [n])
+            InstallError(.missingPart, String(localized: "Part \"\(n)\" of the multi-part archive is missing. Put all parts in the same folder (\"\(after)\" was found) and try again.", table: "Files"), files: [n])
         }
         let siblings = (try? fm.contentsOfDirectory(atPath: folder.path)) ?? []
 

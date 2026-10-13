@@ -16,29 +16,30 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
     private let statusIcon = UIImageView()
     private let statusTitle = UILabel()
     private let statusDetail = UILabel()
-    private let detailsButton = Theme.glassButton("Show every problem", symbol: "list.bullet")
-    private let anywayButton = Theme.glassButton("Play anyway", symbol: "exclamationmark.triangle")
+    private let detailsButton = Theme.glassButton(String(localized: "Show every problem", table: "Files"), symbol: "list.bullet")
+    private let anywayButton = Theme.glassButton(String(localized: "Play anyway", table: "Files"), symbol: "exclamationmark.triangle")
     private let linkField = UITextField()
-    private let linkButton = Theme.primaryButton("Continue", symbol: "arrow.down.circle.fill")
+    private let linkButton = Theme.primaryButton(String(localized: "Continue", table: "Files"), symbol: "arrow.down.circle.fill")
     private let archivesStack = UIStackView()
     private let progressPanel = Theme.panel()
     private let progressBar = UIProgressView(progressViewStyle: .default)
     private let progressTitle = UILabel()
     private let progressDetail = UILabel()
-    private let cancelButton = Theme.glassButton("Cancel", symbol: "xmark")
+    private let cancelButton = Theme.glassButton(String(localized: "Cancel", table: "Files"), symbol: "xmark")
     private var lastReport: GameFiles.Report?
     private var pickingArchive = false
     private var install: GameInstallManager { .shared }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Game files"
+        title = String(localized: "Game files", table: "Files")
         view.backgroundColor = Theme.night
         let backdrop = Theme.backdrop(image: "SettingsBackground", darken: 0.8)
         backdrop.frame = view.bounds
         backdrop.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.addSubview(backdrop)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .done, primaryAction: UIAction { [weak self] _ in self?.close() })
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: String(localized: "Done", table: "Files"), style: .done, target: nil, action: nil)
+        navigationItem.rightBarButtonItem?.primaryAction = UIAction(title: String(localized: "Done", table: "Files")) { [weak self] _ in self?.close() }
         navigationItem.rightBarButtonItem?.tintColor = Theme.accent
 
         let scroll = UIScrollView()
@@ -109,7 +110,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         row.spacing = 14
         row.alignment = .top
         detailsButton.addAction(UIAction { [weak self] _ in self?.showDetails() }, for: .touchUpInside)
-        let check = Theme.glassButton("Check every file again", symbol: "checkmark.shield")
+        let check = Theme.glassButton(String(localized: "Check every file again", table: "Files"), symbol: "checkmark.shield")
         check.addAction(UIAction { [weak self] _ in self?.refresh(recheck: true) }, for: .touchUpInside)
         anywayButton.addAction(UIAction { [weak self] _ in self?.confirmPlayAnyway() }, for: .touchUpInside)
         anywayButton.isHidden = true
@@ -119,15 +120,15 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
     }
 
     private func findSection() -> UIView {
-        let find = Theme.glassButton("Look again", symbol: "magnifyingglass")
+        let find = Theme.glassButton(String(localized: "Look again", table: "Files"), symbol: "magnifyingglass")
         find.addAction(UIAction { [weak self] _ in self?.lookInAppFolder() }, for: .touchUpInside)
-        let pick = Theme.glassButton("Choose a folder…", symbol: "folder")
+        let pick = Theme.glassButton(String(localized: "Choose a folder…", table: "Files"), symbol: "folder")
         pick.addAction(UIAction { [weak self] _ in self?.pickFolder() }, for: .touchUpInside)
         let buttons = UIStackView(arrangedSubviews: [find, pick, UIView()])
         buttons.spacing = 10
-        return card("Already on this iPhone", [
-            note("Easiest: in the Files app, move your unpacked game folder into On My iPhone › GTA V Port. The app finds it there by itself, however deep it is."),
-            note("Somewhere else? Choose any folder above it, even On My iPhone itself, and the app searches everything inside."),
+        return card(String(localized: "Already on this iPhone", table: "Files"), [
+            note(String(localized: "Easiest: in the Files app, move your unpacked game folder into On My iPhone › GtaV Mobile. The app finds it there by itself, however deep it is.", table: "Files")),
+            note(String(localized: "Somewhere else? Choose any folder above it, even On My iPhone itself, and the app searches everything inside.", table: "Files")),
             buttons
         ])
     }
@@ -149,12 +150,12 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         linkField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 1))
         linkField.leftViewMode = .always
         linkField.heightAnchor.constraint(equalToConstant: 46).isActive = true
-        linkField.accessibilityLabel = "Link to your game files"
+        linkField.accessibilityLabel = String(localized: "Link to your game files", table: "Files")
         linkButton.addAction(UIAction { [weak self] _ in self?.useLink() }, for: .touchUpInside)
-        return card("From a link", [
-            note("Paste a direct link to your game archive (zip or rar): the app downloads it, unpacks it as it goes, checks every file and deletes the archive. It needs about \(GameFiles.Report.size(Self.gameBytes)) free, not double. Keep the app open while it works."),
-            note("A download page where you tap Download first works too: it opens here in a browser, and the app takes the download over."),
-            note("Or the address of your own game server (for example your computer over Tailscale): the game then streams its files from there."),
+        return card(String(localized: "From a link", table: "Files"), [
+            note(String(localized: "Paste a direct link to your game archive (zip or rar): the app downloads it, unpacks it as it goes, checks every file and deletes the archive. It needs about \(GameFiles.Report.size(Self.gameBytes)) free, not double. Keep the app open while it works.", table: "Files")),
+            note(String(localized: "A download page where you tap Download first works too: it opens here in a browser, and the app takes the download over.", table: "Files")),
+            note(String(localized: "Or the address of your own game server (for example your computer over Tailscale): the game then streams its files from there.", table: "Files")),
             linkField, linkButton
         ])
     }
@@ -162,11 +163,11 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
     private func archiveSection() -> UIView {
         archivesStack.axis = .vertical
         archivesStack.spacing = 8
-        let pick = Theme.glassButton("Choose an archive…", symbol: "doc.zipper")
+        let pick = Theme.glassButton(String(localized: "Choose an archive…", table: "Files"), symbol: "doc.zipper")
         pick.addAction(UIAction { [weak self] _ in self?.pickArchive() }, for: .touchUpInside)
         let buttons = UIStackView(arrangedSubviews: [pick, UIView()])
-        return card("From an archive in Files", [
-            note("Got a .zip or .rar of the game (or all parts of a multi-part one) in Files? The app unpacks it straight into its own folder and checks every file. No separate unzip app needed."),
+        return card(String(localized: "From an archive in Files", table: "Files"), [
+            note(String(localized: "Got a .zip or .rar of the game (or all parts of a multi-part one) in Files? The app unpacks it straight into its own folder and checks every file. No separate unzip app needed.", table: "Files")),
             archivesStack, buttons
         ])
     }
@@ -177,6 +178,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         progressDetail.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         progressDetail.textColor = Theme.secondaryText
         progressDetail.numberOfLines = 0
+        progressBar.accessibilityLabel = String(localized: "Game file installation progress", table: "Files")
         progressBar.progressTintColor = Theme.accent
         progressBar.trackTintColor = UIColor(white: 1, alpha: 0.12)
         cancelButton.addAction(UIAction { [weak self] _ in self?.install.cancel() }, for: .touchUpInside)
@@ -193,7 +195,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
 
     /// Shows the files in use (checking every one when asked) and any archives seen.
     private func refresh(recheck: Bool) {
-        setStatus(nil, title: "Checking your game files…", detail: "")
+        setStatus(nil, title: String(localized: "Checking your game files…", table: "Files"), detail: "")
         DispatchQueue.global(qos: .userInitiated).async {
             let found = GameFolder.isChosen || GameFolder.findInAppFolder()
             let report = found && recheck ? GameFolder.checkChosen() : nil
@@ -206,22 +208,25 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         let server = GameSettings.shared.assetServer
         if let report, found {
             if report.isComplete {
-                setStatus(true, title: "Ready to play", detail: "\"\(GameFolder.name)\" \(GameFolder.inAppFolder ? "in the GTA V Port folder" : "on this iPhone"): all \(report.fileCount) game files checked (\(GameFiles.Report.size(report.totalBytes))).")
+                let detail = GameFolder.inAppFolder
+                    ? String(localized: "\"\(GameFolder.name)\" in the GtaV Mobile folder: all \(report.fileCount.formatted()) game files checked (\(GameFiles.Report.size(report.totalBytes))).", table: "Files")
+                    : String(localized: "\"\(GameFolder.name)\" on this iPhone: all \(report.fileCount.formatted()) game files checked (\(GameFiles.Report.size(report.totalBytes))).", table: "Files")
+                setStatus(true, title: String(localized: "Ready to play", table: "Files"), detail: detail)
             } else {
                 // In use with problems: the player chose Play anyway for this folder.
-                setStatus(true, title: "Ready, with \(report.problems.count) problem \(report.problems.count == 1 ? "file" : "files")", detail: "You chose to play anyway. " + report.explanation.message)
+                setStatus(true, title: report.problems.count == 1 ? String(localized: "Ready, with 1 problem file", table: "Files") : String(localized: "Ready, with \(report.problems.count.formatted()) problem files", table: "Files"), detail: String(localized: "You chose to play anyway. \(report.explanation.message)", table: "Files"))
             }
         } else if found {
-            setStatus(true, title: "Ready to play", detail: "\"\(GameFolder.name)\" on this iPhone.")
+            setStatus(true, title: String(localized: "Ready to play", table: "Files"), detail: String(localized: "\"\(GameFolder.name)\" on this iPhone.", table: "Files"))
         } else if let problem = GameFolder.appFolderReport {
             let explanation = problem.explanation
-            setStatus(false, title: explanation.title, detail: "Found a game folder in GTA V Port, but it can't be used yet. " + explanation.message)
+            setStatus(false, title: explanation.title, detail: String(localized: "Found a game folder in GtaV Mobile, but it can't be used yet. \(explanation.message)", table: "Files"))
         } else if !server.isEmpty {
-            setStatus(true, title: "Streaming from your server", detail: server)
+            setStatus(true, title: String(localized: "Streaming from your server", table: "Files"), detail: server)
         } else if lookedAgain {
-            setStatus(false, title: "Nothing in this app's folder", detail: "The app looked through every folder in On My iPhone › GTA V Port and found no game. If your game is somewhere else (another folder, or another app's folder), tap Choose a folder… below and pick it, or pick On My iPhone itself to search everything. iOS only lets an app into other folders once you pick them.")
+            setStatus(false, title: String(localized: "Nothing in this app's folder", table: "Files"), detail: String(localized: "The app looked through every folder in On My iPhone › GtaV Mobile and found no game. If your game is somewhere else (another folder, or another app's folder), tap Choose a folder… below and pick it, or pick On My iPhone itself to search everything. iOS only lets an app into other folders once you pick them.", table: "Files"))
         } else {
-            setStatus(nil, title: "No game files yet", detail: "Use one of the ways below. Whichever you choose, the app checks every file before you play.")
+            setStatus(nil, title: String(localized: "No game files yet", table: "Files"), detail: String(localized: "Use one of the ways below. Whichever you choose, the app checks every file before you play.", table: "Files"))
         }
         lookedAgain = false
         detailsButton.isHidden = lastReport?.isComplete ?? true
@@ -242,7 +247,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         archivesStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for archive in GameFolder.archivesFound {
             let size = (try? archive.resourceValues(forKeys: [.fileSizeKey]).fileSize).map { GameFiles.Report.size(UInt64($0)) } ?? ""
-            let button = Theme.glassButton("Unpack \(archive.lastPathComponent) (\(size))", symbol: "archivebox")
+            let button = Theme.glassButton(String(localized: "Unpack \(archive.lastPathComponent) (\(size))", table: "Files"), symbol: "archivebox")
             button.contentHorizontalAlignment = .leading
             button.addAction(UIAction { [weak self] _ in self?.startInstall(.file(archive, ownedByApp: true)) }, for: .touchUpInside)
             archivesStack.addArrangedSubview(button)
@@ -252,19 +257,19 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
 
     private func confirmPlayAnyway() {
         guard let report = lastReport else { return }
-        let alert = UIAlertController(title: "Play with \(report.problems.count) problem \(report.problems.count == 1 ? "file" : "files")?", message: "The game starts, but it may crash or show missing things wherever it needs those files. Fixing the folder (unpacking again) is the real cure.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Play anyway", style: .destructive) { [weak self] _ in
+        let alert = UIAlertController(title: report.problems.count == 1 ? String(localized: "Play with 1 problem file?", table: "Files") : String(localized: "Play with \(report.problems.count.formatted()) problem files?", table: "Files"), message: String(localized: "The game starts, but it may crash or show missing things wherever it needs those files. Fixing the folder (unpacking again) is the real cure.", table: "Files"), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: String(localized: "Cancel", table: "Files"), style: .cancel))
+        alert.addAction(UIAlertAction(title: String(localized: "Play anyway", table: "Files"), style: .destructive) { [weak self] _ in
             guard let self else { return }
             DispatchQueue.global(qos: .userInitiated).async {
                 let ok = GameFolder.playAnyway(report)
                 DispatchQueue.main.async {
                     if ok {
-                        self.setStatus(true, title: "Ready, with \(report.problems.count) problem \(report.problems.count == 1 ? "file" : "files")", detail: "You chose to play anyway. The game may crash where it needs them.")
+                        self.setStatus(true, title: report.problems.count == 1 ? String(localized: "Ready, with 1 problem file", table: "Files") : String(localized: "Ready, with \(report.problems.count.formatted()) problem files", table: "Files"), detail: String(localized: "You chose to play anyway. The game may crash where it needs them.", table: "Files"))
                         self.anywayButton.isHidden = true
                         self.onChange?()
                     } else {
-                        self.setStatus(false, title: "Couldn't use that folder", detail: "Try choosing it again.")
+                        self.setStatus(false, title: String(localized: "Couldn't use that folder", table: "Files"), detail: String(localized: "Try choosing it again.", table: "Files"))
                     }
                 }
             }
@@ -275,19 +280,20 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
     private func showDetails() {
         guard let report = lastReport else { return }
         let text = UITextView()
-        text.text = report.explanation.message + "\n\nEvery problem:\n" + report.details
+        text.text = String(localized: "\(report.explanation.message)\n\nEvery problem:\n\(report.details)", table: "Files")
         text.isEditable = false
         text.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         text.textColor = Theme.text
         text.backgroundColor = Theme.night
         let controller = UIViewController()
-        controller.title = "\(report.problems.count) problems"
+        controller.title = report.problems.count == 1 ? String(localized: "1 problem", table: "Files") : String(localized: "\(report.problems.count.formatted()) problems", table: "Files")
         controller.view = text
         controller.navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .action, primaryAction: UIAction { [weak controller] _ in
             let share = UIActivityViewController(activityItems: [text.text ?? ""], applicationActivities: nil)
             share.popoverPresentationController?.barButtonItem = controller?.navigationItem.rightBarButtonItem
             controller?.present(share, animated: true)
         })
+        controller.navigationItem.rightBarButtonItem?.accessibilityLabel = String(localized: "Share problems", table: "Files")
         navigationController?.pushViewController(controller, animated: true)
     }
 
@@ -324,7 +330,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
             return
         }
         guard let folder = urls.first else { return }
-        setStatus(nil, title: "Searching \"\(folder.lastPathComponent)\"…", detail: "Looking through every folder inside for your game, then checking each file.")
+        setStatus(nil, title: String(localized: "Searching \"\(folder.lastPathComponent)\"…", table: "Files"), detail: String(localized: "Looking through every folder inside for your game, then checking each file.", table: "Files"))
         DispatchQueue.global(qos: .userInitiated).async {
             let choice = GameFolder.choose(folder)
             DispatchQueue.main.async {
@@ -333,14 +339,14 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
                 case let .incomplete(report):
                     self.lastReport = report
                     let explanation = report.explanation
-                    self.setStatus(false, title: explanation.title, detail: "Found the game in \"\(report.data.deletingLastPathComponent().lastPathComponent)\", but it can't be used yet. " + explanation.message)
+                    self.setStatus(false, title: explanation.title, detail: String(localized: "Found the game in \"\(report.data.deletingLastPathComponent().lastPathComponent)\", but it can't be used yet. \(explanation.message)", table: "Files"))
                     self.detailsButton.isHidden = false
                     self.anywayButton.isHidden = !GameFolder.playAnywayAllowed(report)
                 case let .archivesOnly(archives):
-                    self.setStatus(nil, title: "Found a game archive", detail: "\(archives[0].lastPathComponent) isn't unpacked yet. Tap Unpack below and the app does it for you.")
+                    self.setStatus(nil, title: String(localized: "Found a game archive", table: "Files"), detail: String(localized: "\(archives[0].lastPathComponent) isn't unpacked yet. Tap Unpack below and the app does it for you.", table: "Files"))
                     self.showArchives()
                 case let .refused(message):
-                    self.setStatus(false, title: "No game in that folder", detail: message)
+                    self.setStatus(false, title: String(localized: "No game in that folder", table: "Files"), detail: message)
                 }
             }
         }
@@ -357,10 +363,10 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         guard !text.isEmpty else { return }
         if !text.contains("://") { text = "https://" + text }
         guard let url = URL(string: text), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme), url.host != nil else {
-            setStatus(false, title: "That isn't a web link", detail: "Paste the full link, starting with https://")
+            setStatus(false, title: String(localized: "That isn't a web link", table: "Files"), detail: String(localized: "Paste the full link, starting with https://", table: "Files"))
             return
         }
-        setStatus(nil, title: "Checking the link…", detail: text)
+        setStatus(nil, title: String(localized: "Checking the link…", table: "Files"), detail: text)
         // A link to an archive file is always an install (some file hosts answer "OK" to any path).
         let archiveName = url.lastPathComponent.lowercased()
         if [".zip", ".rar", ".7z", ".001"].contains(where: archiveName.hasSuffix) || archiveName.range(of: #"\.(z|r)\d\d$"#, options: .regularExpression) != nil {
@@ -380,7 +386,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
                 guard let self else { return }
                 if isGameList {
                     self.onServer?(server)
-                    self.setStatus(true, title: "Streaming from your server", detail: "\(server) answers with the game's file list. The game reads its files from there while you play.")
+                    self.setStatus(true, title: String(localized: "Streaming from your server", table: "Files"), detail: String(localized: "\(server) answers with the game's file list. The game reads its files from there while you play.", table: "Files"))
                     self.onChange?()
                 } else {
                     self.openOrInstall(url)
@@ -404,7 +410,7 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
     }
 
     private func openBrowser(_ url: URL) {
-        setStatus(nil, title: "That link is a web page", detail: "Use the page's download button in the browser; the app takes over the download.")
+        setStatus(nil, title: String(localized: "That link is a web page", table: "Files"), detail: String(localized: "Use the page's download button in the browser; the app takes over the download.", table: "Files"))
         let browser = DownloadBrowserViewController(url: url)
         browser.onDownload = { [weak self] file, headers in self?.startInstall(.url(file, headers: headers)) }
         let navigation = UINavigationController(rootViewController: browser)
@@ -421,20 +427,20 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
         guard !install.isRunning else { return }
         if case let .file(url, true) = source, !confirmed {
             // Unpacking frees the archive as it goes (that's how it fits next to the game).
-            let alert = UIAlertController(title: "Unpack \(url.lastPathComponent)?", message: "To fit on this iPhone, the archive is used up while it unpacks: once it's done, only the unpacked game is left. If unpacking stops half way, you'll need the archive again.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Unpack", style: .default) { [weak self] _ in self?.startInstall(source, confirmed: true) })
+            let alert = UIAlertController(title: String(localized: "Unpack \(url.lastPathComponent)?", table: "Files"), message: String(localized: "To fit on this iPhone, the archive is used up while it unpacks: once it's done, only the unpacked game is left. If unpacking stops half way, you'll need the archive again.", table: "Files"), preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: String(localized: "Cancel", table: "Files"), style: .cancel))
+            alert.addAction(UIAlertAction(title: String(localized: "Unpack", table: "Files"), style: .default) { [weak self] _ in self?.startInstall(source, confirmed: true) })
             present(alert, animated: true)
             return
         }
         // Installing replaces streaming: a link saved as a game server earlier is forgotten.
         if !GameSettings.shared.assetServer.isEmpty { GameSettings.shared.assetServer = ""; onChange?() }
         progressPanel.isHidden = false
-        progressTitle.text = "Starting…"
+        progressTitle.text = String(localized: "Starting…", table: "Files")
         progressDetail.text = ""
         progressBar.progress = 0
         // The status card at the top follows the install too, and the progress comes into view.
-        setStatus(nil, title: "Getting your game files…", detail: "Downloading and unpacking. Keep the app open; progress is shown below.")
+        setStatus(nil, title: String(localized: "Getting your game files…", table: "Files"), detail: String(localized: "Downloading and unpacking. Keep the app open; progress is shown below.", table: "Files"))
         DispatchQueue.main.async {
             guard let scroll = self.stack.superview as? UIScrollView else { return }
             scroll.scrollRectToVisible(scroll.convert(self.progressPanel.bounds, from: self.progressPanel).insetBy(dx: 0, dy: -20), animated: true)
@@ -460,17 +466,17 @@ final class GameFilesViewController: UIViewController, UIDocumentPickerDelegate,
             switch result {
             case .success:
                 progressPanel.isHidden = false
-                progressTitle.text = "Done: every game file unpacked and checked"
+                progressTitle.text = String(localized: "Done: every game file unpacked and checked", table: "Files")
                 progressDetail.text = ""
                 progressBar.progress = 1
                 cancelButton.isHidden = true
                 refresh(recheck: true)
             case let .failure(message):
                 progressPanel.isHidden = false
-                progressTitle.text = "Couldn't finish"
+                progressTitle.text = String(localized: "Couldn't finish", table: "Files")
                 progressDetail.text = message
                 cancelButton.isHidden = true
-                setStatus(false, title: "Couldn't get the game files", detail: message)
+                setStatus(false, title: String(localized: "Couldn't get the game files", table: "Files"), detail: message)
             case let .webPage(url):
                 progressPanel.isHidden = true
                 openBrowser(url)

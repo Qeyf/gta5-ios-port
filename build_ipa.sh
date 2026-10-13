@@ -36,12 +36,14 @@ xcodebuild -project PlayGTA5Native.xcodeproj -scheme PlayGTA5Native \
   echo "Build failed; the full log is app/Build/xcodebuild.log"; exit 1; }
 grep -E 'BUILD SUCCEEDED' Build/xcodebuild.log
 
-APP=Build/Release/Build/Products/Release-iphoneos/PlayGTA5Native.app
+APP="Build/Release/Build/Products/Release-iphoneos/GtaV Mobile.app"
 # AltStore/SideStore re-sign the app; an ad-hoc signature with the chosen
 # entitlements tells them what to request.
 codesign --force --sign - --entitlements "$ENTITLEMENTS" --generate-entitlement-der "$APP"
 STAGE=Build/IPA
+rm -rf "$STAGE/Payload"
 mkdir -p "$STAGE/Payload"
-ditto "$APP" "$STAGE/Payload/PlayGTA5Native.app"
-(cd "$STAGE" && zip -qry ../../../GTA5Port.ipa Payload)
-echo "Done: $(cd .. && pwd)/GTA5Port.ipa"
+ditto "$APP" "$STAGE/Payload/GtaV Mobile.app"
+rm -f "../GtaV Mobile.ipa"
+(cd "$STAGE" && zip -qry "../../../GtaV Mobile.ipa" Payload)
+echo "Done: $(cd .. && pwd)/GtaV Mobile.ipa"

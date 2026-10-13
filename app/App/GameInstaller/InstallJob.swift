@@ -88,11 +88,11 @@ final class InstallJob {
             manifest = try GameManifest(url: manifestURL)
             log("Game file list: \(manifest.files.count) files, \(formatBytes(manifest.totalBytes))")
             do { try FileManager.default.createDirectory(at: dataFolder, withIntermediateDirectories: true) } catch {
-                throw InstallError(.writeFailed, "The game folder could not be created.", detail: error.localizedDescription)
+                throw InstallError(.writeFailed, String(localized: "The game folder could not be created.", table: "Files"), detail: error.localizedDescription)
             }
             try prepareSource()
             try checkSpace()
-            if isCancelled { throw InstallError(.cancelled, "The install was cancelled.") }
+            if isCancelled { throw InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
             startTimer()
             set(phase: byteSource is RemoteSource ? .downloading : .unpacking)
             remote?.start()
@@ -119,7 +119,7 @@ final class InstallJob {
             finish(.success(report))
         } catch let error as InstallError {
             var error = error
-            if isCancelled { error = InstallError(.cancelled, "The install was cancelled.") }
+            if isCancelled { error = InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
             byteSource?.cancel()
             byteSource?.finish(success: false)
             try? FileManager.default.removeItem(at: workFolder)
@@ -128,7 +128,7 @@ final class InstallJob {
             finish(.failure(error))
         } catch {
             stopTimer()
-            finish(.failure(InstallError(.writeFailed, "The install failed: \(error.localizedDescription)")))
+            finish(.failure(InstallError(.writeFailed, String(localized: "The install failed: \(error.localizedDescription)", table: "Files"))))
         }
     }
 
@@ -148,9 +148,9 @@ final class InstallJob {
     }
 
     private func makeRemote(_ urls: [URL]) throws {
-        guard !urls.isEmpty else { throw InstallError(.sourceUnreadable, "No download link was given.") }
+        guard !urls.isEmpty else { throw InstallError(.sourceUnreadable, String(localized: "No download link was given.", table: "Files")) }
         for url in urls where !["http", "https"].contains(url.scheme?.lowercased() ?? "") {
-            throw InstallError(.httpError, "The link must start with http:// or https:// (got \"\(url.absoluteString)\").")
+            throw InstallError(.httpError, String(localized: "The link must start with http:// or https:// (got \"\(url.absoluteString)\").", table: "Files"))
         }
         partCount = urls.count
         partNames = urls.map(\.lastPathComponent)
@@ -158,7 +158,7 @@ final class InstallJob {
     }
 
     private func makeLocal(_ parts: [URL]) throws {
-        guard !parts.isEmpty else { throw InstallError(.sourceUnreadable, "No archive file was given.") }
+        guard !parts.isEmpty else { throw InstallError(.sourceUnreadable, String(localized: "No archive file was given.", table: "Files")) }
         partCount = parts.count
         partNames = parts.map(\.lastPathComponent)
         if parts.count > 1 { log("Multi-part archive: \(partNames.joined(separator: ", "))") }
@@ -180,21 +180,26 @@ final class InstallJob {
         let game = max(0, manifest.totalBytes - existing)
         var needed: Int64
         var how: String
+        var localizedHow: String
+        let size = { (bytes: Int64) in ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
         if byteSource is RemoteSource {
             needed = game + options.maxPendingBytes
             how = "the game (\(formatBytes(game))) plus up to \(formatBytes(options.maxPendingBytes)) of download buffer"
+            localizedHow = String(localized: "the game (\(size(game))) plus up to \(size(options.maxPendingBytes)) of download buffer", table: "Files")
         } else if let local, local.modify, sameVolume(local.parts[0], destination) {
             needed = max(0, game - local.totalBytes) + (256 << 20)
             how = "the game minus the archive it replaces as it unpacks (\(formatBytes(max(0, game - local.totalBytes))))"
+            localizedHow = String(localized: "the game minus the archive it replaces as it unpacks (\(size(max(0, game - local.totalBytes))))", table: "Files")
         } else {
             needed = game
             how = "the game (\(formatBytes(game))) next to the archive"
+            localizedHow = String(localized: "the game (\(size(game))) next to the archive", table: "Files")
         }
         needed += options.spaceMargin
         let free = options.freeSpaceOverride ?? freeSpace(at: destination)
         log("Space check: need \(formatBytes(needed)) (\(how), plus \(formatBytes(options.spaceMargin)) to spare); free \(formatBytes(free))")
         if free < needed {
-            throw InstallError(.notEnoughSpace, "Not enough free storage. Installing needs \(formatBytes(needed)) free (\(how), plus \(formatBytes(options.spaceMargin)) to spare), but only \(formatBytes(free)) is free. Free up \(formatBytes(needed - free)) more and try again.",
+            throw InstallError(.notEnoughSpace, String(localized: "Not enough free storage. Installing needs \(size(needed)) free (\(localizedHow), plus \(size(options.spaceMargin)) to spare), but only \(size(free)) is free. Free up \(size(needed - free)) more and try again.", table: "Files"),
                                detail: "need \(needed), free \(free)")
         }
     }
@@ -216,12 +221,12 @@ final class InstallJob {
     // MARK: Unpacking
 
     private func extract() throws -> (prefix: String, skipped: Int, unsafe: [String], format: String) {
-        guard let byteSource else { throw InstallError(.sourceUnreadable, "No archive.") }
+        guard let byteSource else { throw InstallError(.sourceUnreadable, String(localized: "No archive.", table: "Files")) }
         let box = SourceBox(byteSource)
         let unmanaged = Unmanaged.passRetained(box)
         defer { unmanaged.release() }
         guard let reader = gi_reader_open(readCallback, unmanaged.toOpaque()) else {
-            throw InstallError(.writeFailed, "Out of memory.")
+            throw InstallError(.writeFailed, String(localized: "Out of memory.", table: "Files"))
         }
         defer { gi_reader_close(reader) }
 
@@ -233,7 +238,7 @@ final class InstallJob {
         var sawEncrypted = false
         let buffers = WriteState()
         while true {
-            if isCancelled { throw InstallError(.cancelled, "The install was cancelled.") }
+            if isCancelled { throw InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
             var info = gi_entry_info()
             let r = gi_reader_next(reader, &info)
             if r == GI_EOF { break }
@@ -273,7 +278,7 @@ final class InstallJob {
         lock.lock(); let done = filesDone; lock.unlock()
         if done == 0 {
             if sawEncrypted || gi_reader_has_encrypted_entries(reader) > 0 { throw passwordError() }
-            throw InstallError(.noGameFiles, "None of the files in this archive belong to the game. It is probably a different archive (or a different game version).", detail: "skipped \(skipped) entries")
+            throw InstallError(.noGameFiles, String(localized: "None of the files in this archive belong to the game. It is probably a different archive (or a different game version).", table: "Files"), detail: "skipped \(skipped) entries")
         }
         log("Unpacked \(done) game files; skipped \(skipped) other entries; refused \(unsafe.count) unsafe entries")
         return (matcher.prefixString, skipped, unsafe, format)
@@ -305,7 +310,7 @@ final class InstallJob {
             let r = gi_reader_data(reader, &buffer, &size, &offset)
             if r == GI_EOF { break }
             if r != GI_OK { throw archiveError(reader, box: box, file: file.path, firstHeader: false) }
-            if isCancelled { throw InstallError(.cancelled, "The install was cancelled.") }
+            if isCancelled { throw InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
             guard size > 0, var p = buffer else { continue }
             var left = size, at = offset
             while left > 0 {
@@ -328,57 +333,63 @@ final class InstallJob {
     // MARK: Errors
 
     private func passwordError() -> InstallError {
-        InstallError(.passwordProtected, "The archive is password-protected. The installer can't open protected archives: unpack it on a computer with the password and re-pack it without one (zip or rar).")
+        InstallError(.passwordProtected, String(localized: "The archive is password-protected. The installer can't open protected archives: unpack it on a computer with the password and re-pack it without one (zip or rar).", table: "Files"))
     }
 
     private func diskError(_ code: Int32, file: String) -> InstallError {
         if code == ENOSPC || code == EDQUOT {
-            return InstallError(.outOfSpace, "The device ran out of storage while unpacking \(file). Free up space and try again; files unpacked so far are kept.", files: [file], detail: String(cString: strerror(code)))
+            return InstallError(.outOfSpace, String(localized: "The device ran out of storage while unpacking \(file). Free up space and try again; files unpacked so far are kept.", table: "Files"), files: [file], detail: String(cString: strerror(code)))
         }
-        return InstallError(.writeFailed, "Writing \(file) failed: \(String(cString: strerror(code))).", files: [file], detail: String(cString: strerror(code)))
+        return InstallError(.writeFailed, String(localized: "Writing \(file) failed.", table: "Files"), files: [file], detail: String(cString: strerror(code)))
     }
 
     private func archiveError(_ reader: OpaquePointer, box: SourceBox, file: String?, firstHeader: Bool) -> InstallError {
-        if isCancelled { return InstallError(.cancelled, "The install was cancelled.") }
+        if isCancelled { return InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
         if let failure = box.source.failure { return failure }
         let message = gi_reader_error(reader).map { String(cString: $0) } ?? "unknown error"
         let code = gi_reader_errno(reader)
         let lower = message.lowercased()
-        if code == ENOSPC { return diskError(ENOSPC, file: file ?? "the game") }
+        if code == ENOSPC {
+            if let file { return diskError(ENOSPC, file: file) }
+            return InstallError(.outOfSpace, String(localized: "The device ran out of storage while unpacking the game. Free up space and try again; files unpacked so far are kept.", table: "Files"), detail: message)
+        }
         if lower.contains("encrypt") || lower.contains("passphrase") || lower.contains("password") { return passwordError() }
         if firstHeader && lower.contains("unrecognized archive format") || (firstHeader && box.head.isEmpty) {
             let head = [UInt8](box.head)
             if head.starts(with: [0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]) {
-                return InstallError(.unsupported, "7-Zip (.7z) archives are not supported. Re-pack the game as a zip or rar.", detail: message)
+                return InstallError(.unsupported, String(localized: "7-Zip (.7z) archives are not supported. Re-pack the game as a zip or rar.", table: "Files"), detail: message)
             }
             if box.head.isEmpty {
-                return InstallError(.notAnArchive, "The file is empty.", detail: message)
+                return InstallError(.notAnArchive, String(localized: "The file is empty.", table: "Files"), detail: message)
             }
             if let text = String(data: box.head, encoding: .utf8)?.lowercased(), text.contains("<!doctype") || text.contains("<html") {
-                return InstallError(.webPageNotFile, "This is a web page, not the game archive.", detail: message)
+                return InstallError(.webPageNotFile, String(localized: "This is a web page, not the game archive.", table: "Files"), detail: message)
             }
-            return InstallError(.notAnArchive, "This file is not an archive the installer can open. Supported: zip, rar, rar5, tar.", detail: message)
+            return InstallError(.notAnArchive, String(localized: "This file is not an archive the installer can open. Supported: zip, rar, rar5, tar.", table: "Files"), detail: message)
         }
         let multi = partCount > 1 || partNames.first.map { $0.range(of: #"\.part\d+\.rar$|\.r\d\d$|\.z\d\d$|\.\d{3}$"#, options: [.regularExpression, .caseInsensitive]) != nil } ?? false
         if lower.contains("crc") || lower.contains("checksum") {
             if let file {
-                return InstallError(.corrupted, "The archive is damaged: \(file) failed its integrity check (CRC error). Download the archive again.", files: [file], detail: message)
+                return InstallError(.corrupted, String(localized: "The archive is damaged: \(file) failed its integrity check (CRC error). Download the archive again.", table: "Files"), files: [file], detail: message)
             }
-            return InstallError(.corrupted, "The archive is damaged (an index entry failed its integrity check). Download the archive again.", detail: message)
+            return InstallError(.corrupted, String(localized: "The archive is damaged (an index entry failed its integrity check). Download the archive again.", table: "Files"), detail: message)
         }
         if lower.contains("multi-volume") || lower.contains("volume") && !lower.contains("invalid") {
-            return InstallError(.missingPart, "A part of the multi-part archive is missing or out of order. Make sure all parts are there and come from the same set.", detail: message)
+            return InstallError(.missingPart, String(localized: "A part of the multi-part archive is missing or out of order. Make sure all parts are there and come from the same set.", table: "Files"), detail: message)
         }
         if lower.contains("truncat") || lower.contains("premature") || lower.contains("end of") || lower.contains("eof") {
             if multi {
-                return InstallError(.missingPart, "The archive ends after \"\(partNames.last ?? "the last part")\" but continues in another part. A part of the multi-part set is missing: add the next part and try again.", files: file.map { [$0] } ?? [], detail: message)
+                let lastPart = partNames.last ?? String(localized: "the last part", table: "Files")
+                return InstallError(.missingPart, String(localized: "The archive ends after \"\(lastPart)\" but continues in another part. A part of the multi-part set is missing: add the next part and try again.", table: "Files"), files: file.map { [$0] } ?? [], detail: message)
             }
-            return InstallError(.truncated, "The archive ends too early\(file.map { " (in \($0))" } ?? ""): it is incomplete. The download probably didn't finish, or the file was cut short. Get the archive again.", files: file.map { [$0] } ?? [], detail: message)
+            let location = file.map { String(localized: " (in \($0))", table: "Files") } ?? ""
+            return InstallError(.truncated, String(localized: "The archive ends too early\(location): it is incomplete. The download probably didn't finish, or the file was cut short. Get the archive again.", table: "Files"), files: file.map { [$0] } ?? [], detail: message)
         }
         if lower.contains("unsupported") || lower.contains("not supported") {
-            return InstallError(.unsupported, "The archive uses a compression method the installer can't unpack (\(message)). Re-pack it as an ordinary zip or rar.", detail: message)
+            return InstallError(.unsupported, String(localized: "The archive uses a compression method the installer can't unpack (\(message)). Re-pack it as an ordinary zip or rar.", table: "Files"), detail: message)
         }
-        return InstallError(.corrupted, "The archive could not be read\(file.map { " at \($0)" } ?? ""): it seems damaged. Download it again.", files: file.map { [$0] } ?? [], detail: message)
+        let location = file.map { String(localized: " at \($0)", table: "Files") } ?? ""
+        return InstallError(.corrupted, String(localized: "The archive could not be read\(location): it seems damaged. Download it again.", table: "Files"), files: file.map { [$0] } ?? [], detail: message)
     }
 
     // MARK: Verify
@@ -400,11 +411,19 @@ final class InstallJob {
         log("Verified \(manifest.files.count) files: \(missing.count) missing, \(wrongSize.count) wrong size")
         guard missing.isEmpty && wrongSize.isEmpty else {
             var parts: [String] = []
-            if !missing.isEmpty { parts.append("\(missing.count) game file\(missing.count == 1 ? " is" : "s are") missing (e.g. \(missing.prefix(3).joined(separator: ", ")))") }
-            if !wrongSize.isEmpty { parts.append("\(wrongSize.count) game file\(wrongSize.count == 1 ? " has" : "s have") the wrong size (e.g. \(wrongSize.prefix(3).joined(separator: ", ")))") }
+            if !missing.isEmpty {
+                parts.append(missing.count == 1
+                    ? String(localized: "1 game file is missing (e.g. \(missing.prefix(3).joined(separator: ", ")))", table: "Files")
+                    : String(localized: "\(missing.count.formatted()) game files are missing (e.g. \(missing.prefix(3).joined(separator: ", ")))", table: "Files"))
+            }
+            if !wrongSize.isEmpty {
+                parts.append(wrongSize.count == 1
+                    ? String(localized: "1 game file has the wrong size (e.g. \(wrongSize.prefix(3).joined(separator: ", ")))", table: "Files")
+                    : String(localized: "\(wrongSize.count.formatted()) game files have the wrong size (e.g. \(wrongSize.prefix(3).joined(separator: ", ")))", table: "Files"))
+            }
             for name in missing.prefix(50) { log("missing: \(name)") }
             for name in wrongSize.prefix(50) { log("wrong size: \(name)") }
-            throw InstallError(.verificationFailed, "After unpacking, \(parts.joined(separator: " and ")). The archive is incomplete or holds a different game version.",
+            throw InstallError(.verificationFailed, String(localized: "After unpacking, \(ListFormatter.localizedString(byJoining: parts)). The archive is incomplete or holds a different game version.", table: "Files"),
                                files: missing + wrongSize, detail: "missing \(missing.count), wrong size \(wrongSize.count)")
         }
     }

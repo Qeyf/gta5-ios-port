@@ -6,11 +6,13 @@ enum GameMode: Int, CaseIterable {
     case story = 1
     case sandbox = 2
 
-    var title: String { self == .story ? "Story mode" : "Sandbox" }
+    var title: String {
+        self == .story ? String(localized: "Story mode", table: "Settings") : String(localized: "Sandbox", table: "Settings")
+    }
     var detail: String {
         switch self {
-        case .story: return "The campaign with missions. Continues your latest save, or starts from the Prologue."
-        case .sandbox: return "Free roam anywhere on the map with every weapon. No missions."
+        case .story: return String(localized: "The campaign with missions. Continues your latest save, or starts from the Prologue.", table: "Settings")
+        case .sandbox: return String(localized: "Free roam anywhere on the map with every weapon. No missions.", table: "Settings")
         }
     }
 }
@@ -83,7 +85,12 @@ final class GameSettings {
         get { defaults.object(forKey: "targetingMode") as? Int ?? 1 }
         set { defaults.set(newValue, forKey: "targetingMode") }
     }
-    static let targetingTitles = ["Traditional lock-on", "Assisted aim", "Assisted free aim", "Free aim"]
+    static let targetingTitles = [
+        String(localized: "Traditional lock-on", table: "Settings"),
+        String(localized: "Assisted aim", table: "Settings"),
+        String(localized: "Assisted free aim", table: "Settings"),
+        String(localized: "Free aim", table: "Settings")
+    ]
 
     /// nil until the player has chosen on the launch screen.
     /// Sandbox map: 0 the GTA V map, 1 the test level the game files include (env_test).
@@ -91,7 +98,10 @@ final class GameSettings {
         get { defaults.integer(forKey: "sandboxMap") == 1 ? 1 : 0 }
         set { defaults.set(newValue == 1 ? 1 : 0, forKey: "sandboxMap") }
     }
-    static let sandboxMapTitles = ["GTA V", "GTA VI test map"]
+    static let sandboxMapTitles = [
+        String(localized: "GTA V", table: "Settings"),
+        String(localized: "GTA VI test map", table: "Settings")
+    ]
     var gameModeChoice: GameMode? {
         get { (defaults.object(forKey: "gameMode") as? Int).flatMap(GameMode.init) }
         set { defaults.set(newValue?.rawValue, forKey: "gameMode") }
@@ -142,7 +152,9 @@ final class GameSettings {
         }
         set { defaults.set(newValue, forKey: "frameRateCap") }
     }
-    static func frameRateTitle(_ cap: Int) -> String { cap == 0 ? "Unlocked" : "\(cap) FPS" }
+    static func frameRateTitle(_ cap: Int) -> String {
+        cap == 0 ? String(localized: "Unlocked", table: "Settings") : String(localized: "\(cap) FPS", table: "Settings")
+    }
 
     // Crash fallback: a launch that never reached a stable world is treated
     // as a memory kill, and the last preset that worked is restored.

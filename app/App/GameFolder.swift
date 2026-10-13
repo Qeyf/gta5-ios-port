@@ -1,7 +1,7 @@
 import Foundation
 
 /// Where your own copy of the game lives on this iPhone. Two ways:
-/// - In the app's own folder (Files › On My iPhone › GTA V Port): found automatically, at any
+/// - In the app's own folder (Files › On My iPhone › GtaV Mobile): found automatically, at any
 ///   depth, with no picking and no permissions. Moving a folder within On My iPhone is instant.
 /// - A folder picked in Files, which can be any folder above the game (even On My iPhone itself):
 ///   the app looks through it for the game and keeps access between launches with a bookmark.
@@ -29,7 +29,7 @@ enum GameFolder {
 
     static var isChosen: Bool { inAppFolder || UserDefaults.standard.data(forKey: bookmarkKey) != nil }
     static var inAppFolder: Bool { UserDefaults.standard.bool(forKey: inAppKey) }
-    static var name: String { UserDefaults.standard.string(forKey: nameKey) ?? "folder" }
+    static var name: String { UserDefaults.standard.string(forKey: nameKey) ?? String(localized: "folder", table: "Files") }
     static var appFolder: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0] }
 
     static func clear() {
@@ -38,7 +38,7 @@ enum GameFolder {
 
     // MARK: The app's own folder
 
-    /// Looks for the game anywhere inside Files › On My iPhone › GTA V Port and checks every file.
+    /// Looks for the game anywhere inside Files › On My iPhone › GtaV Mobile and checks every file.
     /// Returns true when a complete game was found (and remembers it). Does nothing when a picked
     /// folder is already in use. Takes about a second.
     @discardableResult
@@ -56,7 +56,7 @@ enum GameFolder {
         guard best.isComplete || accepted(best, subpath: subpath) else {
             if previous != best.explanation.message {
                 log("Game folder in the app's folder can't be used (\(subpath)): \(best.problems.count) problems")
-                log(best.details.split(separator: "\n").prefix(20).joined(separator: "\n"))
+                log(best.diagnosticDetails.split(separator: "\n").prefix(20).joined(separator: "\n"))
             }
             appFolderReport = best
             if inAppFolder { clear() }
@@ -91,7 +91,7 @@ enum GameFolder {
         defer { if scoped { picked.stopAccessingSecurityScopedResource() } }
         log("Folder picked: \(picked.path) (access granted: \(scoped), \(describeLocation(picked)))")
         guard FileManager.default.isReadableFile(atPath: picked.path) else {
-            return .refused("The app was not allowed to open that folder. Move your game folder to Files › On My iPhone › GTA V Port instead; the app finds it there by itself.")
+            return .refused(String(localized: "The app was not allowed to open that folder. Move your game folder to Files › On My iPhone › GtaV Mobile instead; the app finds it there by itself.", table: "Files"))
         }
         let scan = GameFiles.scan(picked)
         archivesFound = scan.archives
@@ -103,7 +103,7 @@ enum GameFolder {
         guard best.isComplete || accepted(best, subpath: subpath) else {
             pendingPick = (picked, best)
             log("Picked game folder can't be used (\(subpath.isEmpty ? "the picked folder" : subpath)): \(best.problems.count) problems")
-            log(best.details.split(separator: "\n").prefix(20).joined(separator: "\n"))
+            log(best.diagnosticDetails.split(separator: "\n").prefix(20).joined(separator: "\n"))
             return .incomplete(best)
         }
         do {
@@ -116,7 +116,7 @@ enum GameFolder {
             log("Game folder accepted: data at \(subpath.isEmpty ? "(the picked folder)" : subpath), all \(best.fileCount) files checked")
             return .accepted(best)
         } catch {
-            return .refused("The app could not remember that folder: \(error.localizedDescription)")
+            return .refused(String(localized: "The app could not remember that folder: \(error.localizedDescription)", table: "Files"))
         }
     }
 
@@ -183,9 +183,9 @@ enum GameFolder {
         let hasEngine = manager.fileExists(atPath: picked.appendingPathComponent("game.wasm").path)
             || manager.fileExists(atPath: picked.appendingPathComponent("8b0b5899ed/game.wasm").path)
         if name == "b" || name == "8b0b5899ed" || name == "shaders" || hasEngine {
-            return "You opened the \"\(name)\" folder. Go back up one or two levels and pick the folder that has both \"data\" and \"b\" inside, then tap Open there."
+            return String(localized: "You opened the \"\(name)\" folder. Go back up one or two levels and pick the folder that has both \"data\" and \"b\" inside, then tap Open there.", table: "Files")
         }
-        return "There is no game in \"\(name)\". Pick the folder that has your game in it (any folder above it works, even On My iPhone itself).\n\nEasiest: move your game folder into Files › On My iPhone › GTA V Port. The app finds it there by itself."
+        return String(localized: "There is no game in \"\(name)\". Pick the folder that has your game in it (any folder above it works, even On My iPhone itself).\n\nEasiest: move your game folder into Files › On My iPhone › GtaV Mobile. The app finds it there by itself.", table: "Files")
     }
 
     /// The name shown for a game folder: the folder holding data/, or data/'s own name.

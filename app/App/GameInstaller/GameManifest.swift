@@ -12,7 +12,7 @@ struct GameManifest {
         guard let data = try? Data(contentsOf: url),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let list = json["files"] as? [[Any]] else {
-            throw InstallError(.manifestUnreadable, "The app's game file list (manifest.json) is missing or damaged.", detail: url.path)
+            throw InstallError(.manifestUnreadable, String(localized: "The app's game file list (manifest.json) is missing or damaged.", table: "Files"), detail: url.path)
         }
         var files: [File] = []
         files.reserveCapacity(list.count)
@@ -23,7 +23,7 @@ struct GameManifest {
             files.append(File(path: path, size: size))
         }
         guard !files.isEmpty else {
-            throw InstallError(.manifestUnreadable, "The app's game file list (manifest.json) is empty.", detail: url.path)
+            throw InstallError(.manifestUnreadable, String(localized: "The app's game file list (manifest.json) is empty.", table: "Files"), detail: url.path)
         }
         self.files = files
         totalBytes = files.reduce(0) { $0 + $1.size }

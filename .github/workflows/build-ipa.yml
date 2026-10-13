@@ -1,7 +1,7 @@
 # Builds YOUR unsigned IPA from YOUR game files.
 # Run it from the Actions tab of your own PRIVATE copy of this repository
 # (or let the website builder start it for you).
-name: Build my IPA
+name: Build GtaV Mobile IPA
 
 on:
   workflow_dispatch:
@@ -89,8 +89,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: GTA5Port-ipa
-          path: GTA5Port.ipa
+          name: GtaV-Mobile-ipa
+          path: GtaV Mobile.ipa
           retention-days: 3
 
       - name: Publish the IPA as a release in this private repository (easy to download on a phone)
@@ -98,5 +98,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest-ipa --repo "${{ github.repository }}" --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest-ipa GTA5Port.ipa --repo "${{ github.repository }}" --title "Your app (built $(date -u +%Y-%m-%d))" \
-            --notes "Download GTA5Port.ipa and open it with SideStore or AltStore. This release is private like the repository."
+          gh release create latest-ipa "GtaV Mobile.ipa" --repo "${{ github.repository }}" --title "GtaV Mobile (built $(date -u +%Y-%m-%d))" \
+            --notes "Download GtaV Mobile.ipa and open it with SideStore or AltStore. This release is private like the repository."

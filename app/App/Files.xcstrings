@@ -1,0 +1,3222 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    " (in %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (in %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%@ içinde)"
+          }
+        }
+      }
+    },
+    " at %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " at %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%@ konumunda)"
+          }
+        }
+      }
+    },
+    "\"%@\" in the GtaV Mobile folder: all %@ game files checked (%@).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" in the GtaV Mobile folder: all %@ game files checked (%@)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” klasörü GtaV Mobile klasöründe: %@ oyun dosyasının tamamı denetlendi (%@)."
+          }
+        }
+      }
+    },
+    "\"%@\" on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" on this iPhone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” bu iPhone’da."
+          }
+        }
+      }
+    },
+    "\"%@\" on this iPhone: all %@ game files checked (%@).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" on this iPhone: all %@ game files checked (%@)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone’daki “%@” klasörü: %@ oyun dosyasının tamamı denetlendi (%@)."
+          }
+        }
+      }
+    },
+    "%@\n\nEvery problem:\n%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@\n\nEvery problem:\n%@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@\n\nTüm sorunlar:\n%@"
+          }
+        }
+      }
+    },
+    "%@ answers with the game's file list. The game reads its files from there while you play.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ answers with the game's file list. The game reads its files from there while you play."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oyunun dosya listesini sağlıyor. Oyun, oynarken dosyalarını buradan okur."
+          }
+        }
+      }
+    },
+    "%@ files are missing (%@ in all), for example %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files are missing (%@ in all), for example %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dosya eksik (toplam %@); örneğin %@."
+          }
+        }
+      }
+    },
+    "%@ files are only in iCloud, not on this iPhone (for example %@). The game can't read them from there: move the game folder to Files › On My iPhone › GtaV Mobile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files are only in iCloud, not on this iPhone (for example %@). The game can't read them from there: move the game folder to Files › On My iPhone › GtaV Mobile."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dosya yalnızca iCloud’da; bu iPhone’da bulunmuyor (örneğin %@). Oyun, bu dosyaları iCloud’dan okuyamaz. Oyun klasörünü Dosyalar › iPhone’umda › GtaV Mobile içine taşıyın."
+          }
+        }
+      }
+    },
+    "%@ files have the wrong size, for example %@ (%@ instead of %@). These files are damaged, usually by an interrupted download or unpack, or come from a different version of the game. Delete the folder and unpack the game again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files have the wrong size, for example %@ (%@ instead of %@). These files are damaged, usually by an interrupted download or unpack, or come from a different version of the game. Delete the folder and unpack the game again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ dosyanın boyutu yanlış; örneğin %2$@ (%4$@ yerine %3$@). Bu dosyalar, genellikle indirme veya arşivden çıkarma işlemi kesildiği için bozulmuştur ya da oyunun farklı bir sürümüne aittir. Klasörü silin ve oyun arşivini yeniden açın."
+          }
+        }
+      }
+    },
+    "%@ game files are missing (e.g. %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ game files are missing (e.g. %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oyun dosyası eksik (ör. %@)"
+          }
+        }
+      }
+    },
+    "%@ game files have the wrong size (e.g. %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ game files have the wrong size (e.g. %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oyun dosyasının boyutu yanlış (ör. %@)"
+          }
+        }
+      }
+    },
+    "%@ isn't unpacked yet. Tap Unpack below and the app does it for you.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ isn't unpacked yet. Tap Unpack below and the app does it for you."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ arşivi henüz açılmamış. Aşağıdaki Arşivi aç düğmesine dokunun; uygulama dosyaları sizin için çıkarır."
+          }
+        }
+      }
+    },
+    "%@ minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ minutes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dakika"
+          }
+        }
+      }
+    },
+    "%@ of %@ unpacked · %@ of %@ files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of %@ unpacked · %@ of %@ files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ verinin %1$@ kısmı çıkarıldı · %4$@ dosyadan %3$@ tamamlandı"
+          }
+        }
+      }
+    },
+    "%@ problems": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sorun"
+          }
+        }
+      }
+    },
+    "%@ seconds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ seconds"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ saniye"
+          }
+        }
+      }
+    },
+    "%@ · %@/s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@/s"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@/sn"
+          }
+        }
+      }
+    },
+    "1 file has the wrong size, for example %@ (%@ instead of %@). This file is damaged, usually by an interrupted download or unpack, or comes from a different version of the game. Delete the folder and unpack the game again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 file has the wrong size, for example %@ (%@ instead of %@). This file is damaged, usually by an interrupted download or unpack, or comes from a different version of the game. Delete the folder and unpack the game again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 dosyanın boyutu yanlış; örneğin %1$@ (%3$@ yerine %2$@). Bu dosya, genellikle indirme veya arşivden çıkarma işlemi kesildiği için bozulmuştur ya da oyunun farklı bir sürümüne aittir. Klasörü silin ve oyun arşivini yeniden açın."
+          }
+        }
+      }
+    },
+    "1 file is missing (%@ in all), for example %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 file is missing (%@ in all), for example %@."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 dosya eksik (toplam %@); örneğin %@."
+          }
+        }
+      }
+    },
+    "1 file is only in iCloud, not on this iPhone (for example %@). The game can't read it from there: move the game folder to Files › On My iPhone › GtaV Mobile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 file is only in iCloud, not on this iPhone (for example %@). The game can't read it from there: move the game folder to Files › On My iPhone › GtaV Mobile."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 dosya yalnızca iCloud’da; bu iPhone’da bulunmuyor (örneğin %@). Oyun, bu dosyayı iCloud’dan okuyamaz. Oyun klasörünü Dosyalar › iPhone’umda › GtaV Mobile içine taşıyın."
+          }
+        }
+      }
+    },
+    "1 game file has the wrong size (e.g. %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 game file has the wrong size (e.g. %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 oyun dosyasının boyutu yanlış (ör. %@)"
+          }
+        }
+      }
+    },
+    "1 game file is missing (e.g. %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 game file is missing (e.g. %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 oyun dosyası eksik (ör. %@)"
+          }
+        }
+      }
+    },
+    "1 problem": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 problem"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 sorun"
+          }
+        }
+      }
+    },
+    "1 second": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 second"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 saniye"
+          }
+        }
+      }
+    },
+    "7-Zip (.7z) archives are not supported. Re-pack the game as a zip or rar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-Zip (.7z) archives are not supported. Re-pack the game as a zip or rar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-Zip (.7z) arşivleri desteklenmiyor. Oyunu zip veya rar olarak yeniden arşivleyin."
+          }
+        }
+      }
+    },
+    "A download page where you tap Download first works too: it opens here in a browser, and the app takes the download over.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A download page where you tap Download first works too: it opens here in a browser, and the app takes the download over."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce İndir düğmesine dokunmanız gereken bir indirme sayfası da kullanılabilir. Sayfa burada bir tarayıcıda açılır ve uygulama indirmeyi devralır."
+          }
+        }
+      }
+    },
+    "A downloaded chunk could not be opened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A downloaded chunk could not be opened."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilen bir veri parçası açılamadı."
+          }
+        }
+      }
+    },
+    "A part of the multi-part archive is missing or out of order. Make sure all parts are there and come from the same set.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A part of the multi-part archive is missing or out of order. Make sure all parts are there and come from the same set."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çok parçalı arşivin bir parçası eksik veya yanlış sırada. Tüm parçaların mevcut olduğundan ve aynı arşive ait olduğundan emin olun."
+          }
+        }
+      }
+    },
+    "About %@ minutes left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ minutes left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşık %@ dakika kaldı"
+          }
+        }
+      }
+    },
+    "About 1 minute left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About 1 minute left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşık 1 dakika kaldı"
+          }
+        }
+      }
+    },
+    "About a minute left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About a minute left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaklaşık bir dakika kaldı"
+          }
+        }
+      }
+    },
+    "After unpacking, %@. The archive is incomplete or holds a different game version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After unpacking, %@. The archive is incomplete or holds a different game version."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivden çıkarma sonrasında %@. Arşiv eksik veya oyunun farklı bir sürümünü içeriyor."
+          }
+        }
+      }
+    },
+    "All %@ game files are there and complete.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All %@ game files are there and complete."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oyun dosyasının tamamı mevcut ve eksiksiz."
+          }
+        }
+      }
+    },
+    "All game files on device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All game files on device"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm oyun dosyaları cihazda"
+          }
+        }
+      }
+    },
+    "Already on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on this iPhone"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone’da mevcut"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İptal"
+          }
+        }
+      }
+    },
+    "Cancelled. Files already unpacked are kept; starting again replaces them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled. Files already unpacked are kept; starting again replaces them."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İptal edildi. Çıkarılan dosyalar korunur; yeniden başlatıldığında bu dosyalar değiştirilir."
+          }
+        }
+      }
+    },
+    "Check every file again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check every file again"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm dosyaları yeniden denetle"
+          }
+        }
+      }
+    },
+    "Checking every file…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking every file…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm dosyalar denetleniyor…"
+          }
+        }
+      }
+    },
+    "Checking space and the archive…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking space and the archive…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boş alan ve arşiv denetleniyor…"
+          }
+        }
+      }
+    },
+    "Checking the link…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking the link…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı denetleniyor…"
+          }
+        }
+      }
+    },
+    "Checking your game files…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your game files…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyalarınız denetleniyor…"
+          }
+        }
+      }
+    },
+    "Choose a folder…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasör seç…"
+          }
+        }
+      }
+    },
+    "Choose an archive…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an archive…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv seç…"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        }
+      }
+    },
+    "Connection dropped %@× and resumed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection dropped %@× and resumed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı %@ kez kesildi ve yeniden kuruldu"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam et"
+          }
+        }
+      }
+    },
+    "Could not reach the game server. Check that Tailscale is connected, then resume.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not reach the game server. Check that Tailscale is connected, then resume."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun sunucusuna ulaşılamadı. Tailscale bağlantısını kontrol edin, ardından devam edin."
+          }
+        }
+      }
+    },
+    "Couldn't finish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't finish"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşlem tamamlanamadı"
+          }
+        }
+      }
+    },
+    "Couldn't get the game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't get the game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları alınamadı"
+          }
+        }
+      }
+    },
+    "Couldn't send the log": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't send the log"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük gönderilemedi"
+          }
+        }
+      }
+    },
+    "Couldn't use that folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't use that folder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasör kullanılamadı"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti"
+          }
+        }
+      }
+    },
+    "Done: every game file unpacked and checked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done: every game file unpacked and checked"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlandı: tüm oyun dosyaları çıkarıldı ve denetlendi"
+          }
+        }
+      }
+    },
+    "Download caught. Starting…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download caught. Starting…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme devralındı. Başlatılıyor…"
+          }
+        }
+      }
+    },
+    "Downloaded %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ indirildi"
+          }
+        }
+      }
+    },
+    "Downloaded %@ of %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded %@ of %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ verinin %1$@ kısmı indirildi"
+          }
+        }
+      }
+    },
+    "Downloading and unpacking. Keep the app open; progress is shown below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading and unpacking. Keep the app open; progress is shown below."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar indiriliyor ve arşivden çıkarılıyor. Uygulamayı açık tutun; ilerleme aşağıda gösterilir."
+          }
+        }
+      }
+    },
+    "Downloading and unpacking… %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading and unpacking… %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndiriliyor ve arşivden çıkarılıyor… %@"
+          }
+        }
+      }
+    },
+    "Downloading game files: %@ (%@ of %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading game files: %@ (%@ of %@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları indiriliyor: %1$@ (%3$@ verinin %2$@ kısmı)"
+          }
+        }
+      }
+    },
+    "Downloads are not available here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads are not available here."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burada indirme yapılamaz."
+          }
+        }
+      }
+    },
+    "Easiest: in the Files app, move your unpacked game folder into On My iPhone › GtaV Mobile. The app finds it there by itself, however deep it is.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Easiest: in the Files app, move your unpacked game folder into On My iPhone › GtaV Mobile. The app finds it there by itself, however deep it is."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En kolay yol: Dosyalar uygulamasında, arşivden çıkardığınız oyun klasörünü iPhone’umda › GtaV Mobile içine taşıyın. Uygulama, kaç alt klasör içinde olursa olsun oyunu otomatik olarak bulur."
+          }
+        }
+      }
+    },
+    "Found a game archive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found a game archive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun arşivi bulundu"
+          }
+        }
+      }
+    },
+    "Found a game folder in GtaV Mobile, but it can't be used yet. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found a game folder in GtaV Mobile, but it can't be used yet. %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GtaV Mobile içinde bir oyun klasörü bulundu, ancak henüz kullanılamıyor. %@"
+          }
+        }
+      }
+    },
+    "Found the game in \"%@\", but it can't be used yet. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found the game in \"%@\", but it can't be used yet. %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun “%@” içinde bulundu, ancak henüz kullanılamıyor. %@"
+          }
+        }
+      }
+    },
+    "From a link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From a link"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıdan"
+          }
+        }
+      }
+    },
+    "From an archive in Files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From an archive in Files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar’daki bir arşivden"
+          }
+        }
+      }
+    },
+    "Game file download paused at %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game file download paused at %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyalarının indirilmesi %@ düzeyinde duraklatıldı"
+          }
+        }
+      }
+    },
+    "Game file installation progress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game file installation progress"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyası yükleme ilerlemesi"
+          }
+        }
+      }
+    },
+    "Game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları"
+          }
+        }
+      }
+    },
+    "Game files OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game files OK"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları eksiksiz"
+          }
+        }
+      }
+    },
+    "Game files are in iCloud": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game files are in iCloud"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları iCloud’da"
+          }
+        }
+      }
+    },
+    "Getting your game files…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getting your game files…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyalarınız alınıyor…"
+          }
+        }
+      }
+    },
+    "Got a .zip or .rar of the game (or all parts of a multi-part one) in Files? The app unpacks it straight into its own folder and checks every file. No separate unzip app needed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got a .zip or .rar of the game (or all parts of a multi-part one) in Files? The app unpacks it straight into its own folder and checks every file. No separate unzip app needed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunun .zip veya .rar arşivi ya da çok parçalı bir arşivin tüm parçaları Dosyalar’da mı? Uygulama, dosyaları doğrudan kendi klasörüne çıkarır ve her dosyayı denetler. Ayrı bir arşiv açma uygulaması gerekmez."
+          }
+        }
+      }
+    },
+    "Link to your game files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link to your game files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyalarınızın bağlantısı"
+          }
+        }
+      }
+    },
+    "Log sent, thank you!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log sent, thank you!"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük gönderildi, teşekkürler!"
+          }
+        }
+      }
+    },
+    "Look again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look again"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden ara"
+          }
+        }
+      }
+    },
+    "Looking through every folder inside for your game, then checking each file.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking through every folder inside for your game, then checking each file."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçindeki tüm klasörlerde oyununuz aranıyor, ardından her dosya denetleniyor."
+          }
+        }
+      }
+    },
+    "No archive file was given.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No archive file was given."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv dosyası belirtilmedi."
+          }
+        }
+      }
+    },
+    "No archive.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No archive."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv yok."
+          }
+        }
+      }
+    },
+    "No download link was given.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No download link was given."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme bağlantısı belirtilmedi."
+          }
+        }
+      }
+    },
+    "No game files yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No game files yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz oyun dosyası yok"
+          }
+        }
+      }
+    },
+    "No game in that folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No game in that folder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasörde oyun yok"
+          }
+        }
+      }
+    },
+    "No internet connection? Try again, or use Share log instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No internet connection? Try again, or use Share log instead."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İnternet bağlantısı yok mu? Yeniden deneyin veya Günlüğü paylaş seçeneğini kullanın."
+          }
+        }
+      }
+    },
+    "No log yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No log yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz günlük yok"
+          }
+        }
+      }
+    },
+    "None of the files in this archive belong to the game. It is probably a different archive (or a different game version).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of the files in this archive belong to the game. It is probably a different archive (or a different game version)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu arşivdeki dosyaların hiçbiri oyuna ait değil. Muhtemelen farklı bir arşiv veya oyunun farklı bir sürümü."
+          }
+        }
+      }
+    },
+    "Not enough free space. The rest of the game needs %@ plus %@ to spare, but only %@ is free. Free up %@ and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough free space. The rest of the game needs %@ plus %@ to spare, but only %@ is free. Free up %@ and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli boş alan yok. Oyunun kalan kısmı için %@ ve buna ek olarak %@ boş alan gerekir. Kullanılabilir alan yalnızca %@. %@ yer açın ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Not enough free storage. Installing needs %@ free (%@, plus %@ to spare), but only %@ is free. Free up %@ more and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough free storage. Installing needs %@ free (%@, plus %@ to spare), but only %@ is free. Free up %@ more and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli boş depolama alanı yok. Yükleme için %@ boş alan gerekir (%@ ve buna ek olarak %@ boş alan). Kullanılabilir alan yalnızca %@. %@ daha yer açın ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Nothing in this app's folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in this app's folder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamanın klasöründe oyun bulunamadı"
+          }
+        }
+      }
+    },
+    "Or the address of your own game server (for example your computer over Tailscale): the game then streams its files from there.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or the address of your own game server (for example your computer over Tailscale): the game then streams its files from there."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kendi oyun sunucunuzun adresini de girebilirsiniz (örneğin Tailscale üzerinden bilgisayarınızı). Oyun, dosyalarını oynarken bu sunucudan alır."
+          }
+        }
+      }
+    },
+    "Out of memory.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Out of memory."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli bellek yok."
+          }
+        }
+      }
+    },
+    "Page loading progress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page loading progress"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa yükleme ilerlemesi"
+          }
+        }
+      }
+    },
+    "Part \"%@\" of the multi-part archive is missing. Put all parts in the same folder (\"%@\" was found) and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part \"%@\" of the multi-part archive is missing. Put all parts in the same folder (\"%@\" was found) and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çok parçalı arşivin “%@” parçası eksik. Tüm parçaları aynı klasöre yerleştirin (“%@” bulundu) ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Paste a direct link to your game archive (zip or rar): the app downloads it, unpacks it as it goes, checks every file and deletes the archive. It needs about %@ free, not double. Keep the app open while it works.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a direct link to your game archive (zip or rar): the app downloads it, unpacks it as it goes, checks every file and deletes the archive. It needs about %@ free, not double. Keep the app open while it works."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun arşivinizin (zip veya rar) doğrudan bağlantısını yapıştırın. Uygulama arşivi indirirken dosyaları çıkarır, her dosyayı denetler ve arşivi siler. Yaklaşık %@ boş alan gerekir; iki katı gerekmez. İşlem sürerken uygulamayı açık tutun."
+          }
+        }
+      }
+    },
+    "Paste the full link, starting with https://": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the full link, starting with https://"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https:// ile başlayan bağlantının tamamını yapıştırın"
+          }
+        }
+      }
+    },
+    "Paused because this iPhone is almost out of storage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused because this iPhone is almost out of storage."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone’da neredeyse hiç boş alan kalmadığı için duraklatıldı."
+          }
+        }
+      }
+    },
+    "Play anyway": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play anyway"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de oyna"
+          }
+        }
+      }
+    },
+    "Play with %@ problem files?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play with %@ problem files?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sorunlu dosyayla oynansın mı?"
+          }
+        }
+      }
+    },
+    "Play with 1 problem file?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play with 1 problem file?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 sorunlu dosyayla oynansın mı?"
+          }
+        }
+      }
+    },
+    "Reading a downloaded chunk failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading a downloaded chunk failed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilen bir veri parçası okunamadı."
+          }
+        }
+      }
+    },
+    "Reading the archive \"%@\" failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the archive \"%@\" failed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” arşivi okunamadı."
+          }
+        }
+      }
+    },
+    "Ready to play": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to play"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oynamaya hazır"
+          }
+        }
+      }
+    },
+    "Ready, with %@ problem files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready, with %@ problem files"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır, %@ dosyada sorun var"
+          }
+        }
+      }
+    },
+    "Ready, with 1 problem file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready, with 1 problem file"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır, 1 dosyada sorun var"
+          }
+        }
+      }
+    },
+    "Reference: %@. Mention it if you also ask for help in the community.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference: %@. Mention it if you also ask for help in the community."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referans: %@. Toplulukta yardım istediğinizde bu referansı belirtin."
+          }
+        }
+      }
+    },
+    "Reload page": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload page"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfayı yeniden yükle"
+          }
+        }
+      }
+    },
+    "Restart the app to remove files; the game is using them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart the app to remove files; the game is using them."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları silmek için uygulamayı yeniden başlatın; oyun bu dosyaları kullanıyor."
+          }
+        }
+      }
+    },
+    "Saving the download failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving the download failed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilen veriler kaydedilemedi."
+          }
+        }
+      }
+    },
+    "Searching \"%@\"…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching \"%@\"…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” aranıyor…"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönder"
+          }
+        }
+      }
+    },
+    "Send log to the developer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send log to the developer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geliştiriciye günlük gönder"
+          }
+        }
+      }
+    },
+    "Sending…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönderiliyor…"
+          }
+        }
+      }
+    },
+    "Sends this run's game log and the previous one: your iPhone model, iOS version, app settings and what the game printed. No personal data, photos or contacts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends this run's game log and the previous one: your iPhone model, iOS version, app settings and what the game printed. No personal data, photos or contacts."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturumun ve önceki oturumun oyun günlüklerini gönderir: iPhone modeliniz, iOS sürümü, uygulama ayarları ve oyunun günlük çıktısı. Kişisel veriler, fotoğraflar veya kişiler gönderilmez."
+          }
+        }
+      }
+    },
+    "Set your game file server first (Play screen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set your game file server first (Play screen)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce Oyna ekranında oyun dosyası sunucunuzu ayarlayın."
+          }
+        }
+      }
+    },
+    "Share problems": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share problems"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorunları paylaş"
+          }
+        }
+      }
+    },
+    "Show every problem": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show every problem"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm sorunları göster"
+          }
+        }
+      }
+    },
+    "Simulator uses its app container for engine files.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulator uses its app container for engine files."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simülatör, motor dosyaları için uygulamanın kendi alanını kullanır."
+          }
+        }
+      }
+    },
+    "Some game files are damaged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some game files are damaged"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı oyun dosyaları bozuk"
+          }
+        }
+      }
+    },
+    "Some game files are missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some game files are missing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı oyun dosyaları eksik"
+          }
+        }
+      }
+    },
+    "Somewhere else? Choose any folder above it, even On My iPhone itself, and the app searches everything inside.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Somewhere else? Choose any folder above it, even On My iPhone itself, and the app searches everything inside."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir yerde mi? Oyunun üstündeki herhangi bir klasörü, hatta iPhone’umda konumunu seçin. Uygulama içindeki her şeyi arar."
+          }
+        }
+      }
+    },
+    "Start the game once, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game once, then try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunu bir kez başlatın, ardından yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Starting…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlatılıyor…"
+          }
+        }
+      }
+    },
+    "Still removing files. Try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still removing files. Try again in a moment."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar hâlâ siliniyor. Biraz sonra yeniden deneyin."
+          }
+        }
+      }
+    },
+    "Stop the download first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop the download first."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce indirmeyi durdurun."
+          }
+        }
+      }
+    },
+    "Stopped because files could not be saved. Free up storage, then resume.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopped because files could not be saved. Free up storage, then resume."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar kaydedilemediği için durduruldu. Depolama alanı açın, ardından devam edin."
+          }
+        }
+      }
+    },
+    "Streaming from your server": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streaming from your server"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar sunucunuzdan alınıyor"
+          }
+        }
+      }
+    },
+    "Tap the page's download button. The app takes the download over by itself and unpacks it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the page's download button. The app takes the download over by itself and unpacks it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfanın indirme düğmesine dokunun. Uygulama indirmeyi otomatik olarak devralır ve arşivi açar."
+          }
+        }
+      }
+    },
+    "That isn't a web link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That isn't a web link"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir web bağlantısı değil"
+          }
+        }
+      }
+    },
+    "That link is a web page": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That link is a web page"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bağlantı bir web sayfasına açılıyor"
+          }
+        }
+      }
+    },
+    "The app could not remember that folder: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app could not remember that folder: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama bu klasörü kaydedemedi: %@"
+          }
+        }
+      }
+    },
+    "The app looked through every folder in On My iPhone › GtaV Mobile and found no game. If your game is somewhere else (another folder, or another app's folder), tap Choose a folder… below and pick it, or pick On My iPhone itself to search everything. iOS only lets an app into other folders once you pick them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app looked through every folder in On My iPhone › GtaV Mobile and found no game. If your game is somewhere else (another folder, or another app's folder), tap Choose a folder… below and pick it, or pick On My iPhone itself to search everything. iOS only lets an app into other folders once you pick them."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama, iPhone’umda › GtaV Mobile içindeki tüm klasörleri aradı, ancak oyun bulamadı. Oyununuz başka bir yerdeyse (başka bir klasörde veya başka bir uygulamanın klasöründe), aşağıdaki Klasör seç… düğmesine dokunarak o klasörü seçin. Her yerde aramak için iPhone’umda konumunu da seçebilirsiniz. iOS, diğer klasörlere ancak siz seçtikten sonra erişim sağlar."
+          }
+        }
+      }
+    },
+    "The app was not allowed to open that folder. Move your game folder to Files › On My iPhone › GtaV Mobile instead; the app finds it there by itself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app was not allowed to open that folder. Move your game folder to Files › On My iPhone › GtaV Mobile instead; the app finds it there by itself."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamanın bu klasörü açmasına izin verilmedi. Oyun klasörünüzü Dosyalar › iPhone’umda › GtaV Mobile içine taşıyın; uygulama oyunu burada otomatik olarak bulur."
+          }
+        }
+      }
+    },
+    "The app's game file list (manifest.json) is empty.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app's game file list (manifest.json) is empty."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamanın oyun dosyası listesi (manifest.json) boş."
+          }
+        }
+      }
+    },
+    "The app's game file list (manifest.json) is missing or damaged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app's game file list (manifest.json) is missing or damaged."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamanın oyun dosyası listesi (manifest.json) eksik veya bozuk."
+          }
+        }
+      }
+    },
+    "The app's game file list is missing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app's game file list is missing."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulamanın oyun dosyası listesi eksik."
+          }
+        }
+      }
+    },
+    "The archive \"%@\" could not be opened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive \"%@\" could not be opened."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” arşivi açılamadı."
+          }
+        }
+      }
+    },
+    "The archive could not be read%@: it seems damaged. Download it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive could not be read%@: it seems damaged. Download it again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv%@ okunamadı; bozuk görünüyor. Yeniden indirin."
+          }
+        }
+      }
+    },
+    "The archive ends after \"%@\" but continues in another part. A part of the multi-part set is missing: add the next part and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive ends after \"%@\" but continues in another part. A part of the multi-part set is missing: add the next part and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv, “%@” sonrasında bitiyor ancak başka bir parçada devam ediyor. Çok parçalı arşivin bir parçası eksik. Sonraki parçayı ekleyin ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "The archive ends too early%@: it is incomplete. The download probably didn't finish, or the file was cut short. Get the archive again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive ends too early%@: it is incomplete. The download probably didn't finish, or the file was cut short. Get the archive again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv%@ beklenenden erken bitiyor; eksik. İndirme muhtemelen tamamlanmadı veya dosya kesildi. Arşivi yeniden edinin."
+          }
+        }
+      }
+    },
+    "The archive is damaged (an index entry failed its integrity check). Download the archive again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive is damaged (an index entry failed its integrity check). Download the archive again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv bozuk (bir dizin kaydı bütünlük denetiminden geçemedi). Arşivi yeniden indirin."
+          }
+        }
+      }
+    },
+    "The archive is damaged: %@ failed its integrity check (CRC error). Download the archive again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive is damaged: %@ failed its integrity check (CRC error). Download the archive again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv bozuk: %@ bütünlük denetiminden geçemedi (CRC hatası). Arşivi yeniden indirin."
+          }
+        }
+      }
+    },
+    "The archive is password-protected. The installer can't open protected archives: unpack it on a computer with the password and re-pack it without one (zip or rar).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive is password-protected. The installer can't open protected archives: unpack it on a computer with the password and re-pack it without one (zip or rar)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv parola korumalı. Yükleyici, korumalı arşivleri açamaz. Arşivi bir bilgisayarda parolayla açın ve parola kullanmadan yeniden arşivleyin (zip veya rar)."
+          }
+        }
+      }
+    },
+    "The archive uses a compression method the installer can't unpack (%@). Re-pack it as an ordinary zip or rar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive uses a compression method the installer can't unpack (%@). Re-pack it as an ordinary zip or rar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşiv, yükleyicinin açamadığı bir sıkıştırma yöntemi kullanıyor (%@). Standart zip veya rar olarak yeniden arşivleyin."
+          }
+        }
+      }
+    },
+    "The device ran out of storage while downloading. Free up space and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The device ran out of storage while downloading. Free up space and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme sırasında cihazda boş alan kalmadı. Yer açın ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "The device ran out of storage while unpacking %@. Free up space and try again; files unpacked so far are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The device ran out of storage while unpacking %@. Free up space and try again; files unpacked so far are kept."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ arşivden çıkarılırken cihazda boş alan kalmadı. Yer açın ve yeniden deneyin; şimdiye kadar çıkarılan dosyalar korunur."
+          }
+        }
+      }
+    },
+    "The device ran out of storage while unpacking the game. Free up space and try again; files unpacked so far are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The device ran out of storage while unpacking the game. Free up space and try again; files unpacked so far are kept."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun arşivden çıkarılırken cihazda boş alan kalmadı. Yer açın ve yeniden deneyin; şimdiye kadar çıkarılan dosyalar korunur."
+          }
+        }
+      }
+    },
+    "The download could not start.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The download could not start."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme başlatılamadı."
+          }
+        }
+      }
+    },
+    "The download folder could not be created.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The download folder could not be created."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme klasörü oluşturulamadı."
+          }
+        }
+      }
+    },
+    "The file is empty.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is empty."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya boş."
+          }
+        }
+      }
+    },
+    "The file is not at that link (HTTP %lld). The link is wrong or the file was removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is not at that link (HTTP %lld). The link is wrong or the file was removed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya bu bağlantıda bulunamadı (HTTP %lld). Bağlantı yanlış veya dosya kaldırılmış."
+          }
+        }
+      }
+    },
+    "The file on the server changed while it was downloading. Start the install again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file on the server changed while it was downloading. Start the install again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirme sırasında sunucudaki dosya değişti. Yüklemeyi yeniden başlatın."
+          }
+        }
+      }
+    },
+    "The files could not be removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The files could not be removed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar silinemedi."
+          }
+        }
+      }
+    },
+    "The game files are already on this iPhone (folder \"%@\"), so nothing needs downloading.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game files are already on this iPhone (folder \"%@\"), so nothing needs downloading."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dosyaları bu iPhone’da zaten mevcut (“%@” klasöründe). İndirilmesi gereken bir dosya yok."
+          }
+        }
+      }
+    },
+    "The game folder could not be created.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game folder could not be created."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun klasörü oluşturulamadı."
+          }
+        }
+      }
+    },
+    "The game starts, but it may crash or show missing things wherever it needs those files. Fixing the folder (unpacking again) is the real cure.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The game starts, but it may crash or show missing things wherever it needs those files. Fixing the folder (unpacking again) is the real cure."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun başlar, ancak bu dosyalara ihtiyaç duyduğunda çökebilir veya bazı içerikleri eksik gösterebilir. Kalıcı çözüm, arşivi yeniden açarak klasörü düzeltmektir."
+          }
+        }
+      }
+    },
+    "The install failed: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The install failed: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükleme başarısız oldu: %@"
+          }
+        }
+      }
+    },
+    "The install was cancelled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The install was cancelled."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükleme iptal edildi."
+          }
+        }
+      }
+    },
+    "The internet connection was lost and did not come back for %@. Check your connection and start again; what was unpacked so far is kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The internet connection was lost and did not come back for %@. Check your connection and start again; what was unpacked so far is kept."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İnternet bağlantısı kesildi ve %@ boyunca yeniden kurulamadı. Bağlantınızı kontrol edin ve yeniden başlayın; şimdiye kadar çıkarılan dosyalar korunur."
+          }
+        }
+      }
+    },
+    "The link could not be opened: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link could not be opened: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı açılamadı: %@"
+          }
+        }
+      }
+    },
+    "The link did not answer like a web server.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link did not answer like a web server."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıdan geçerli bir web sunucusu yanıtı alınamadı."
+          }
+        }
+      }
+    },
+    "The link must start with http:// or https:// (got \"%@\").": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link must start with http:// or https:// (got \"%@\")."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı http:// veya https:// ile başlamalıdır (girilen: “%@”)."
+          }
+        }
+      }
+    },
+    "The link opens a web page, not the game file. On the download site, copy the address of the actual download (often behind a \"Download\" button), not the page's address.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link opens a web page, not the game file. On the download site, copy the address of the actual download (often behind a \"Download\" button), not the page's address."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı oyun dosyasına değil, bir web sayfasına açılıyor. İndirme sitesinde sayfanın adresi yerine asıl indirme bağlantısını kopyalayın (genellikle “İndir” düğmesindedir)."
+          }
+        }
+      }
+    },
+    "The link redirects somewhere that could not be followed (HTTP %lld).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The link redirects somewhere that could not be followed (HTTP %lld)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı, takip edilemeyen bir adrese yönlendiriyor (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "The server answered with an error (HTTP %lld).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server answered with an error (HTTP %lld)."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu hata yanıtı verdi (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "The server could not accept the log: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server could not accept the log: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu günlüğü kabul edemedi: %@"
+          }
+        }
+      }
+    },
+    "The server had a problem (HTTP %lld). This is on the server's side; try again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server had a problem (HTTP %lld). This is on the server's side; try again later."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucuda bir sorun oluştu (HTTP %lld). Sorun sunucu tarafında; daha sonra yeniden deneyin."
+          }
+        }
+      }
+    },
+    "The server refused to give out the file (HTTP %lld). The link may have expired, need a login, or only work in a browser. Get a fresh link and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused to give out the file (HTTP %lld). The link may have expired, need a login, or only work in a browser. Get a fresh link and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu dosyayı vermeyi reddetti (HTTP %lld). Bağlantının süresi dolmuş olabilir, oturum açmak gerekebilir veya bağlantı yalnızca tarayıcıda çalışıyor olabilir. Yeni bir bağlantı edinin ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "The server says too many downloads were started (HTTP 429). Wait a while and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server says too many downloads were started (HTTP 429). Wait a while and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu, çok fazla indirme başlatıldığını bildiriyor (HTTP 429). Bir süre bekleyin ve yeniden deneyin."
+          }
+        }
+      }
+    },
+    "The server sent the wrong part of the file when resuming.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server sent the wrong part of the file when resuming."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam edilirken sunucu dosyanın yanlış bölümünü gönderdi."
+          }
+        }
+      }
+    },
+    "The simulator reads the Mac's game files directly. Launch with --stream-assets to test downloads.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The simulator reads the Mac's game files directly. Launch with --stream-assets to test downloads."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simülatör, Mac’teki oyun dosyalarını doğrudan okur. İndirmeleri sınamak için --stream-assets ile başlatın."
+          }
+        }
+      }
+    },
+    "There is no game in \"%@\". Pick the folder that has your game in it (any folder above it works, even On My iPhone itself).\n\nEasiest: move your game folder into Files › On My iPhone › GtaV Mobile. The app finds it there by itself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no game in \"%@\". Pick the folder that has your game in it (any folder above it works, even On My iPhone itself).\n\nEasiest: move your game folder into Files › On My iPhone › GtaV Mobile. The app finds it there by itself."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” içinde oyun yok. Oyununuzu içeren klasörü seçin (oyunun üstündeki herhangi bir klasör, hatta iPhone’umda konumu kullanılabilir).\n\nEn kolay yol: oyun klasörünüzü Dosyalar › iPhone’umda › GtaV Mobile içine taşıyın. Uygulama oyunu burada otomatik olarak bulur."
+          }
+        }
+      }
+    },
+    "This file is not an archive the installer can open. Supported: zip, rar, rar5, tar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is not an archive the installer can open. Supported: zip, rar, rar5, tar."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya, yükleyicinin açabileceği bir arşiv değil. Desteklenen biçimler: zip, rar, rar5, tar."
+          }
+        }
+      }
+    },
+    "This folder has none of the game's files.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder has none of the game's files."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasörde oyunun hiçbir dosyası yok."
+          }
+        }
+      }
+    },
+    "This is a web page, not the game archive.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a web page, not the game archive."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya oyun arşivi değil, bir web sayfası."
+          }
+        }
+      }
+    },
+    "To fit on this iPhone, the archive is used up while it unpacks: once it's done, only the unpacked game is left. If unpacking stops half way, you'll need the archive again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To fit on this iPhone, the archive is used up while it unpacks: once it's done, only the unpacked game is left. If unpacking stops half way, you'll need the archive again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone’daki alana sığması için dosyalar çıkarıldıkça arşivin okunan bölümleri silinir. İşlem bittiğinde yalnızca çıkarılan oyun dosyaları kalır. İşlem yarıda durursa arşivi yeniden edinmeniz gerekir."
+          }
+        }
+      }
+    },
+    "Try again later, or use Share log instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again later, or use Share log instead."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha sonra yeniden deneyin veya Günlüğü paylaş seçeneğini kullanın."
+          }
+        }
+      }
+    },
+    "Try choosing it again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try choosing it again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasörü yeniden seçmeyi deneyin."
+          }
+        }
+      }
+    },
+    "Unpack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpack"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivi aç"
+          }
+        }
+      }
+    },
+    "Unpack %@ (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpack %@ (%@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ arşivini aç (%@)"
+          }
+        }
+      }
+    },
+    "Unpack %@?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpack %@?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ arşivi açılsın mı?"
+          }
+        }
+      }
+    },
+    "Unpacking or copying probably stopped before the end, most often because the iPhone ran out of storage. Free up space, delete this folder and unpack the game again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpacking or copying probably stopped before the end, most often because the iPhone ran out of storage. Free up space, delete this folder and unpack the game again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivden çıkarma veya kopyalama işlemi muhtemelen tamamlanmadan durdu. Bunun en yaygın nedeni, iPhone’da boş alan kalmamasıdır. Yer açın, bu klasörü silin ve oyun arşivini yeniden açın."
+          }
+        }
+      }
+    },
+    "Unpacking… %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpacking… %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arşivden çıkarılıyor… %@"
+          }
+        }
+      }
+    },
+    "Use one of the ways below. Whichever you choose, the app checks every file before you play.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use one of the ways below. Whichever you choose, the app checks every file before you play."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki yöntemlerden birini kullanın. Hangi yöntemi seçerseniz seçin, uygulama oynamadan önce her dosyayı denetler."
+          }
+        }
+      }
+    },
+    "Use the page's download button in the browser; the app takes over the download.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the page's download button in the browser; the app takes over the download."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarayıcıda sayfanın indirme düğmesini kullanın. Uygulama indirmeyi devralır."
+          }
+        }
+      }
+    },
+    "What happened? (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happened? (optional)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne oldu? (isteğe bağlı)"
+          }
+        }
+      }
+    },
+    "Writing %@ failed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Writing %@ failed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ yazılamadı."
+          }
+        }
+      }
+    },
+    "You chose to play anyway. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You chose to play anyway. %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de oynamayı seçtiniz. %@"
+          }
+        }
+      }
+    },
+    "You chose to play anyway. The game may crash where it needs them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You chose to play anyway. The game may crash where it needs them."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de oynamayı seçtiniz. Oyun, bu dosyalara ihtiyaç duyduğunda çökebilir."
+          }
+        }
+      }
+    },
+    "You opened the \"%@\" folder. Go back up one or two levels and pick the folder that has both \"data\" and \"b\" inside, then tap Open there.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You opened the \"%@\" folder. Go back up one or two levels and pick the folder that has both \"data\" and \"b\" inside, then tap Open there."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” klasörünü açtınız. Bir veya iki üst düzeye dönün, içinde hem “data” hem de “b” bulunan klasörü seçin ve Aç’a dokunun."
+          }
+        }
+      }
+    },
+    "about %@ left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about %@ left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yaklaşık %@ kaldı"
+          }
+        }
+      }
+    },
+    "folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "folder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "klasör"
+          }
+        }
+      }
+    },
+    "missing: %@ (%@ bytes)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "missing: %@ (%@ bytes)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eksik: %@ (%@ bayt)"
+          }
+        }
+      }
+    },
+    "only in iCloud: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "only in iCloud: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yalnızca iCloud’da: %@"
+          }
+        }
+      }
+    },
+    "the game (%@) next to the archive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the game (%@) next to the archive"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "arşivin yanında oyun için gerekli alan (%@)"
+          }
+        }
+      }
+    },
+    "the game (%@) plus up to %@ of download buffer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the game (%@) plus up to %@ of download buffer"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oyun (%@) ve en fazla %@ indirme arabelleği"
+          }
+        }
+      }
+    },
+    "the game minus the archive it replaces as it unpacks (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the game minus the archive it replaces as it unpacks (%@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "arşivden çıkarma sırasında silinen arşivin yerine geçen oyunun ek alan ihtiyacı (%@)"
+          }
+        }
+      }
+    },
+    "the last part": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the last part"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son parça"
+          }
+        }
+      }
+    },
+    "under a minute left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "under a minute left"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bir dakikadan az kaldı"
+          }
+        }
+      }
+    },
+    "wrong size: %@ is %@ bytes, expected %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wrong size: %@ is %@ bytes, expected %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yanlış boyut: %1$@, %3$@ yerine %2$@ bayt"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

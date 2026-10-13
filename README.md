@@ -1,4 +1,17 @@
-# GTA V on iPhone (5★ Port)
+# GtaV Mobile
+
+[English](README.md) · [Türkçe](README.tr.md)
+
+Qeyf fork of [kevinerikjs/gta5-ios-port](https://github.com/kevinerikjs/gta5-ios-port), based on upstream v1.3.1. The app is **GtaV Mobile**; the build output is **`GtaV Mobile.ipa`**. The underlying Xcode target/scheme remains `PlayGTA5Native` so the native engine build stays compatible.
+
+### Turkish and English
+
+All native app screens, settings, touch-control accessibility labels, installer errors and progress use Apple String Catalogs with complete English and Turkish translations. Open **Settings › Language › App language** to choose **Türkçe** or **English** in iOS's per-app settings. The app follows the device language until you choose an override; iOS handles relaunching it after a change.
+
+**Settings › Cheat codes** contains 24 Story mode cheat references with translated names, effects, instructions, search and copy actions. Codes and phone numbers stay exactly the same in both languages. This page does not inject or activate cheats; enter them using the game's supported phone/keyboard input. The game engine, dialogue and menus embedded in your own game data are outside these native UI catalogs and keep the languages supported by that data.
+
+The public fork runs **Verify GtaV Mobile UI and translations**, which compiles all Swift app files against the iOS SDK, compiles every String Catalog, and checks compiler-extracted keys for missing translations. A full IPA still requires your own **`game.wasm`**, **`data/manifest.json`**, and **`shaders.zip`** (or the unpacked shaders folder). Use a **private template copy** for the full build, as upstream requires; no engine or game data is published in this source fork. The icon uses the existing GTA V logo; see [asset sources](docs/asset-sources.md).
+
 
 > [!TIP]
 > **🆕 New in v1.2: build the app right from your iPhone, no computer needed.**
@@ -33,7 +46,7 @@ Copy your game folder (the one with `data/` and `b/` inside) onto the iPhone, so
 
 Any way that gets the folder there works, for example:
 - **AirDrop** it from a Mac, or download and unzip it in the Files app.
-- **With a cable**, once the app is installed (step 3): Finder on a Mac, or the Apple Devices app on Windows. Select your iPhone, open **Files**, and drag the folder onto **GTA V Port**. It then shows up in Files under On My iPhone › GTA V Port.
+- **With a cable**, once the app is installed (step 3): Finder on a Mac, or the Apple Devices app on Windows. Select your iPhone, open **Files**, and drag the folder onto **GtaV Mobile**. It then shows up in Files under On My iPhone › GtaV Mobile.
 
 ### 2. Build your app with 5★ Port Builder
 
@@ -45,15 +58,15 @@ Open **[fivestarport.vercel.app](https://fivestarport.vercel.app)** on your iPho
    - `data/manifest.json`
 3. **Upload and build.** About 85 MB goes to your own private repository; the big `data` folder stays on your phone. GitHub then builds the app in about 25 minutes. You can close the page and come back later.
 
-When it's done, tap **Download my app** to get `GTA5Port.ipa`. It also stays in your GitHub account, under your repository's Releases.
+When it's done, tap **Download my app** to get `GtaV Mobile.ipa`. It also stays in your GitHub account, under your repository's Releases.
 
 ### 3. Install it
 
-Open **SideStore** or **AltStore**, go to **My Apps**, tap **+** and pick `GTA5Port.ipa`. A free Apple ID re-signs the app every 7 days; SideStore does that on the phone, and AltStore does it over Wi-Fi from your computer.
+Open **SideStore** or **AltStore**, go to **My Apps**, tap **+** and pick `GtaV Mobile.ipa`. A free Apple ID re-signs the app every 7 days; SideStore does that on the phone, and AltStore does it over Wi-Fi from your computer.
 
 ### 4. Give the app your game files and play
 
-**Easiest:** open the app once, then in the Files app long-press your game folder, tap **Move**, and choose **On My iPhone › GTA V Port**. Moving within On My iPhone is instant. Open the app again: it finds the game by itself, at any depth (a `mirror/playgta5.com/…` folder works as is).
+**Easiest:** open the app once, then in the Files app long-press your game folder, tap **Move**, and choose **On My iPhone › GtaV Mobile**. Moving within On My iPhone is instant. Open the app again: it finds the game by itself, at any depth (a `mirror/playgta5.com/…` folder works as is).
 
 **Or pick it:** in the app tap the **Game files** card, then **Choose a folder…**, and open any folder that has your game somewhere inside (even On My iPhone itself). The app searches it.
 
@@ -81,9 +94,9 @@ The biggest upgrade is **more memory**: iOS normally gives the app about half of
 Players report this works great and makes the game far more playable.
 
 1. On [fivestarport.vercel.app](https://fivestarport.vercel.app), tick **Enable increased memory entitlements** before tapping Upload and build (already built? tick it and tap **Build again**).
-2. Install the new `GTA5Port.ipa` with **SideStore** as usual.
-3. Install **[GetMoreRam](https://github.com/hugeBlack/GetMoreRam)**, sign in with the **same Apple ID** you use in SideStore, pick **GTA V Port** and add **Increased Memory Limit**.
-4. In SideStore, **refresh** GTA V Port so it picks up the change.
+2. Install the new `GtaV Mobile.ipa` with **SideStore** as usual.
+3. Install **[GetMoreRam](https://github.com/hugeBlack/GetMoreRam)**, sign in with the **same Apple ID** you use in SideStore, pick **GtaV Mobile** and add **Increased Memory Limit**.
+4. In SideStore, **refresh** GtaV Mobile so it picks up the change.
 5. Open the app: **Settings** shows the memory limit at the bottom. It should now be clearly higher than before (for example above ~3,500 MB on a 6 GB iPhone).
 
 A paid Apple developer account or TrollStore gets you the same result without GetMoreRam (see *Free vs paid* below).
@@ -122,7 +135,7 @@ Needs an Apple Silicon Mac with Xcode (free) and `brew install xcodegen`. Point 
 ./build_ipa.sh --mirror /path/to/your/game-folder --paid   # paid developer account
 ```
 
-This makes `GTA5Port.ipa` next to the script (about 30 to 60 minutes); install it with SideStore or AltStore. To install straight from Xcode instead, open `app/PlayGTA5Native.xcodeproj` (created by the script), choose your iPhone as the destination, pick your Apple ID under **Signing & Capabilities** (free accounts appear as *Personal Team*; change the bundle identifier to something unique if Xcode asks), and press **Run**.
+This makes `GtaV Mobile.ipa` next to the script (about 30 to 60 minutes); install it with SideStore or AltStore. To install straight from Xcode instead, open `app/PlayGTA5Native.xcodeproj` (created by the script), choose your iPhone as the destination, pick your Apple ID under **Signing & Capabilities** (free accounts appear as *Personal Team*; change the bundle identifier to something unique if Xcode asks), and press **Run**.
 
 ### With GitHub Actions yourself, streaming from your computer
 
@@ -147,8 +160,8 @@ Only devices on your own tailnet can reach it. To stop sharing: `tailscale serve
 1. On this repository's page, press **Use this template** › **Create a new repository**, and choose **Private**. The build refuses to run in a public copy, because the finished app contains the game engine from your files.
 2. In the Tailscale admin console: **Settings › Keys › Generate auth key**. Turn on **Reusable** and **Ephemeral**, pick a short expiry such as 7 days, and copy the key.
 3. In your new repository: **Settings › Secrets and variables › Actions › New repository secret**. Add `TS_AUTHKEY` (the key) and `GAME_SERVER_URL` (your server address, e.g. `https://my-pc.tailnet-name.ts.net`).
-4. **Actions › Build my IPA › Run workflow**, with game files set to **my server (Tailscale)**. Tick *paid account* only if you have one.
-5. After about 25 minutes, download `GTA5Port.ipa` from your repository's **Releases** (or the run's artifacts).
+4. **Actions › Build GtaV Mobile IPA › Run workflow**, with game files set to **my server (Tailscale)**. Tick *paid account* only if you have one.
+5. After about 25 minutes, download `GtaV Mobile.ipa` from your repository's **Releases** (or the run's artifacts).
 
 A Mac works for this route too: `./build_ipa.sh https://my-pc.tailnet-name.ts.net`.
 

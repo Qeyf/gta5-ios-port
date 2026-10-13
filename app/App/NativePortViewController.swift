@@ -90,18 +90,19 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         metalView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(metalView)
 
-        controllerLabel.text = "Controller: none connected"
+        controllerLabel.text = String(localized: "Controller: none connected", table: "Main")
         // Progress text (preparing assets, loading) shows on the disabled Play button.
         let playStyle = launchButton.configurationUpdateHandler
         launchButton.configurationUpdateHandler = { [weak self] button in
             playStyle?(button)
             // Before Play is pressed a disabled button still says Play (files or mode missing).
-            let title = button.isEnabled || !(self?.engineStarted ?? false) ? "Play" : button.title(for: .disabled) ?? "Loading…"
+            let playTitle = String(localized: "Play", table: "Main")
+            let title = button.isEnabled || !(self?.engineStarted ?? false) ? playTitle : button.title(for: .disabled) ?? String(localized: "Loading…", table: "Main")
             var text = AttributedString(title)
             text.font = Theme.display(20, .heavy)
             text.foregroundColor = button.isEnabled ? UIColor(red: 0.16, green: 0.07, blue: 0.02, alpha: 1) : UIColor(white: 1, alpha: 0.7)
             button.configuration?.attributedTitle = text
-            button.configuration?.image = title == "Play" ? UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(weight: .heavy)) : nil
+            button.configuration?.image = title == playTitle ? UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(weight: .heavy)) : nil
         }
         launchButton.addTarget(self, action: #selector(startEngine), for: .touchUpInside)
         output.isEditable = false
@@ -139,7 +140,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         refreshModeChoice()
         home.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(home)
-        fpsLabel.text = "— FPS"
+        fpsLabel.text = String(localized: "— FPS", table: "Main")
         fpsLabel.isHidden = true
         fpsLabel.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
         fpsLabel.textColor = .white
@@ -148,7 +149,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         fpsLabel.layer.cornerRadius = 6
         fpsLabel.clipsToBounds = true
         fpsLabel.isUserInteractionEnabled = false
-        fpsLabel.accessibilityLabel = "Game frame rate"
+        fpsLabel.accessibilityLabel = String(localized: "Game frame rate", table: "Main")
         fpsLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(fpsLabel)
         touchControls.translatesAutoresizingMaskIntoConstraints = false
@@ -197,11 +198,11 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             try? FileManager.default.moveItem(at: logFile!, to: previous)
         }
         try? Data().write(to: logFile!)
-        appendLog("GTA V Port \(Theme.appVersion) on iOS \(UIDevice.current.systemVersion)")
+        appendLog("GtaV Mobile \(Theme.appVersion) on iOS \(UIDevice.current.systemVersion)")
         appendLog("Native UIKit + Metal host. Engine compiled into the app; no WebView or JIT.")
         appendLog("Metal device: \(device?.name ?? "unavailable")")
         GameFolder.log = { [weak self] line in self?.appendLog(line) }
-        // A game folder moved into Files › On My iPhone › GTA V Port is found without any picking.
+        // A game folder moved into Files › On My iPhone › GtaV Mobile is found without any picking.
         lookForGameFiles()
         NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(installChanged), name: .gameInstallChanged, object: nil)
@@ -262,11 +263,15 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         if line.hasPrefix("ASSET_WARM_PROGRESS ") {
             let parts = line.split(separator: " ")
             if parts.count >= 3 {
-                let size = Double(parts[2]).map { String(format: "%.1f GB", $0 * 1048576 / 1_000_000_000) } ?? ""
-                launchButton.setTitle("Preparing assets… \(parts[1])% · \(size)", for: .disabled); launchButton.setNeedsUpdateConfiguration()
+                let size = Double(parts[2]).map { amount in
+                    let gigabytes = (amount * 1048576 / 1_000_000_000).formatted(.number.precision(.fractionLength(1)))
+                    return String(localized: "\(gigabytes) GB", table: "Main")
+                } ?? ""
+                let percent = Int(parts[1]) ?? 0
+                launchButton.setTitle(String(localized: "Preparing assets… \(percent)% · \(size)", table: "Main"), for: .disabled); launchButton.setNeedsUpdateConfiguration()
             }
         }
-        if line == "ASSET_WARM_COMPLETE" { launchButton.setTitle("Loading…", for: .disabled); launchButton.setNeedsUpdateConfiguration() }
+        if line == "ASSET_WARM_COMPLETE" { launchButton.setTitle(String(localized: "Loading…", table: "Main"), for: .disabled); launchButton.setNeedsUpdateConfiguration() }
         if line == "WORLD_READY", ProcessInfo.processInfo.arguments.contains("--capture-world") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 35) { PGCaptureNativeFrame("optimized-world") }
         }
@@ -322,7 +327,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     /// The launch screen asks for a mode once; after that it remembers it.
     private func refreshModeChoice() {
         let choice = GameSettings.shared.gameModeChoice
-        home.setMode(choice.flatMap { GameMode.allCases.firstIndex(of: $0) }, detail: choice?.detail ?? "Choose Story mode or Sandbox to play.", enabled: !engineStarted)
+        home.setMode(choice.flatMap { GameMode.allCases.firstIndex(of: $0) }, detail: choice?.detail ?? String(localized: "Choose Story mode or Sandbox to play.", table: "Main"), enabled: !engineStarted)
         home.setMap(GameSettings.shared.sandboxMap, visible: choice == .sandbox, enabled: !engineStarted)
         updatePlayEnabled()
     }
@@ -355,7 +360,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         appendLog("Graphics: " + GraphicsConfiguration.apply(GameSettings.shared, screen: view.bounds.size))
         appendLog("Device: " + GameSettings.shared.tier.summary)
         GameSettings.shared.markBootStarted()
-        launchButton.setTitle("Loading…", for: .disabled); launchButton.setNeedsUpdateConfiguration()
+        launchButton.setTitle(String(localized: "Loading…", table: "Main"), for: .disabled); launchButton.setNeedsUpdateConfiguration()
         appendLog("Native touch controls support held buttons, sprint and weapon selection.")
         startAudio()
         let (root, rootNote) = EnginePaths.filesRoot()
@@ -370,8 +375,8 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         if GameFolder.isChosen {
             guard let data = GameFolder.open() else {
                 appendLog("The game folder on this iPhone can't be opened any more. Choose it again.")
-                showWhenFree(title: "Game files not found", message: "The game folder was moved or deleted. Put it back in Files › On My iPhone › GTA V Port, or pick it again.")
-                GameFolder.clear(); updateServerStatus(); launchButton.isEnabled = true; launchButton.setTitle("Play", for: .normal)
+                showWhenFree(title: String(localized: "Game files not found", table: "Main"), message: String(localized: "The game folder was moved or deleted. Put it back in Files › On My iPhone › GtaV Mobile, or pick it again.", table: "Main"))
+                GameFolder.clear(); updateServerStatus(); launchButton.isEnabled = true; launchButton.setTitle(String(localized: "Play", table: "Main"), for: .normal)
                 return
             }
             PGSetLocalGameFolder(data.path)
@@ -525,7 +530,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     @objc private func lookForGameFiles() {
         guard !engineStarted, !GameFolder.isChosen || GameFolder.inAppFolder, !lookingForGameFiles, !GameInstallManager.shared.isRunning else { return }
         lookingForGameFiles = true
-        if !GameFolder.isChosen { home.setFiles(.busy, title: "Looking for your game files…", detail: "") }
+        if !GameFolder.isChosen { home.setFiles(.busy, title: String(localized: "Looking for your game files…", table: "Main"), detail: "") }
         DispatchQueue.global(qos: .userInitiated).async {
             GameFolder.findInAppFolder()
             DispatchQueue.main.async {
@@ -543,7 +548,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         GameInstallManager.shared.acknowledge()
         switch result {
         case .success: appendLog("Game files installed and checked.")
-        case let .failure(message): showWhenFree(title: "Couldn't get the game files", message: message)
+        case let .failure(message): showWhenFree(title: String(localized: "Couldn't get the game files", table: "Main"), message: message)
         case .webPage: showGameFiles()
         }
     }
@@ -551,7 +556,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private func updateServerStatus(_ status: String? = nil) {
         // A download running in the background shows on the card (tap it for the full progress).
         if case let .running(update) = GameInstallManager.shared.state {
-            home.setFiles(.busy, title: update.title, detail: update.detail.split(separator: "\n").first.map(String.init) ?? "Tap to see the progress.")
+            home.setFiles(.busy, title: update.title, detail: update.detail.split(separator: "\n").first.map(String.init) ?? String(localized: "Tap to see the progress.", table: "Main"))
             updatePlayEnabled()
             return
         }
@@ -559,21 +564,23 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let raw = GameSettings.shared.assetServer
         let server = Self.isServerAddress(raw) ? raw : ""
         if GameFolder.isChosen {
-            let place = GameFolder.inAppFolder ? "In the GTA V Port folder" : "On this iPhone"
+            let place = GameFolder.inAppFolder ? String(localized: "In the GtaV Mobile folder", table: "Main") : String(localized: "On this iPhone", table: "Main")
             let problems = GameFolder.acceptedProblemCount
+            let problemDetail = String(localized: "\(problems) problem files, playing anyway", table: "Main")
             home.setFiles(problems > 0 ? .attention : .ready, title: "\"\(GameFolder.name)\"",
-                          detail: problems > 0 ? "\(place) · \(problems) problem \(problems == 1 ? "file" : "files"), playing anyway" : "\(place) · every file checked")
+                          detail: problems > 0 ? String(localized: "\(place) · \(problemDetail)", table: "Main") : String(localized: "\(place) · every file checked", table: "Main"))
         } else if server.isEmpty, let report = GameFolder.appFolderReport {
-            home.setFiles(.problem, title: report.explanation.title, detail: "Found your game folder, but it can't be used yet. Tap to see why and how to fix it.")
+            home.setFiles(.problem, title: report.explanation.title, detail: String(localized: "Found your game folder, but it can't be used yet. Tap to see why and how to fix it.", table: "Main"))
         } else if server.isEmpty, !raw.isEmpty {
-            home.setFiles(.problem, title: "Server address isn't a web address", detail: "Tap to change it.")
+            home.setFiles(.problem, title: String(localized: "Server address isn't a web address", table: "Main"), detail: String(localized: "Tap to change it.", table: "Main"))
         } else if server.isEmpty {
-            home.setFiles(.attention, title: "Add your game files", detail: GameFolder.archivesFound.isEmpty ? "Tap to find them on this iPhone, or get them from a link or an archive." : "Found a game archive. Tap to unpack it.")
-        } else if status == "checking…" {
-            home.setFiles(.busy, title: "Streaming from your server", detail: server)
+            home.setFiles(.attention, title: String(localized: "Add your game files", table: "Main"), detail: GameFolder.archivesFound.isEmpty ? String(localized: "Tap to find them on this iPhone, or get them from a link or an archive.", table: "Main") : String(localized: "Found a game archive. Tap to unpack it.", table: "Main"))
+        } else if status == String(localized: "checking…", table: "Main") {
+            home.setFiles(.busy, title: String(localized: "Streaming from your server", table: "Main"), detail: server)
         } else {
-            let ok = status == nil || status == "connected ✓"
-            home.setFiles(ok ? .ready : .problem, title: "Streaming from your server", detail: server + (status.map { " · " + $0 } ?? ""))
+            let ok = status == nil || status == String(localized: "connected ✓", table: "Main")
+            let detail = status.map { String(localized: "\(server) · \($0)", table: "Main") } ?? server
+            home.setFiles(ok ? .ready : .problem, title: String(localized: "Streaming from your server", table: "Main"), detail: detail)
         }
         updatePlayEnabled()
     }
@@ -610,7 +617,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             return
         }
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: String(localized: "OK", table: "Main"), style: .default))
         present(alert, animated: true)
     }
     /// Checks that the server answers with the game's file list.
@@ -618,33 +625,37 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         var server = GameSettings.shared.assetServer
         while server.hasSuffix("/") { server.removeLast() }
         guard let url = URL(string: server + "/data/manifest.json"), url.scheme?.hasPrefix("http") == true else {
-            updateServerStatus("not a valid address"); return
+            updateServerStatus(String(localized: "not a valid address", table: "Main")); return
         }
-        updateServerStatus("checking…")
+        updateServerStatus(String(localized: "checking…", table: "Main"))
         var request = URLRequest(url: url, timeoutInterval: 10)
         request.httpMethod = "HEAD"
         URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             DispatchQueue.main.async {
-                if code == 200 { self?.updateServerStatus("connected ✓") }
-                else if let error { self?.updateServerStatus("can't connect (\(error.localizedDescription))") }
-                else { self?.updateServerStatus("answered \(code); is the address the folder with data/ and b/?") }
+                if code == 200 { self?.updateServerStatus(String(localized: "connected ✓", table: "Main")) }
+                else if let error { self?.updateServerStatus(String(localized: "can't connect (\(error.localizedDescription))", table: "Main")) }
+                else { self?.updateServerStatus(String(localized: "answered \(code); is the address the folder with data/ and b/?", table: "Main")) }
             }
         }.resume()
     }
     /// The popup after a launch that ran out of memory: what happened, what changed, and the way back.
     private func explainRecovery(_ recovery: GameSettings.BootRecovery) {
         let lowered = recovery.fallback != recovery.failed
-        let title = lowered ? "Graphics lowered to \(recovery.fallback.title)" : "Resolution set back to Auto"
-        var message = "The game closed while starting on \(recovery.failed.title)"
-        if let height = recovery.resetHeight { message += " at \(height)p" }
-        message += ". That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB)."
-        message += lowered ? "\n\nThe game now starts on \(recovery.fallback.title)" : "\n\nThe game now starts at its usual resolution"
-        message += recovery.resetHeight != nil && lowered ? " with Auto resolution." : "."
-        message += " You can change this any time in Settings."
+        let title = lowered ? String(localized: "Graphics lowered to \(recovery.fallback.title)", table: "Main") : String(localized: "Resolution set back to Auto", table: "Main")
+        let message: String
+        if lowered, let height = recovery.resetHeight {
+            message = String(localized: "The game closed while starting on \(recovery.failed.title) at \(height)p. That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts on \(recovery.fallback.title) with Auto resolution. You can change this any time in Settings.", table: "Main")
+        } else if lowered {
+            message = String(localized: "The game closed while starting on \(recovery.failed.title). That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts on \(recovery.fallback.title). You can change this any time in Settings.", table: "Main")
+        } else if let height = recovery.resetHeight {
+            message = String(localized: "The game closed while starting on \(recovery.failed.title) at \(height)p. That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts at its usual resolution. You can change this any time in Settings.", table: "Main")
+        } else {
+            message = String(localized: "The game closed while starting on \(recovery.failed.title). That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts at its usual resolution. You can change this any time in Settings.", table: "Main")
+        }
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Share log", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: String(localized: "OK", table: "Main"), style: .cancel))
+        alert.addAction(UIAlertAction(title: String(localized: "Share log", table: "Main"), style: .default) { _ in
             let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             let logs = ["native-port-previous.log", "native-port.log"].map { documents.appendingPathComponent($0) }
                 .filter { FileManager.default.fileExists(atPath: $0.path) }
@@ -652,7 +663,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             sheet.popoverPresentationController?.sourceView = self.view
             self.present(sheet, animated: true)
         })
-        alert.addAction(UIAlertAction(title: "Try \(recovery.failed.title) again", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: String(localized: "Try \(recovery.failed.title) again", table: "Main"), style: .destructive) { _ in
             GameSettings.shared.undoRecovery(recovery)
             self.appendLog("Kept \(recovery.failed.title) after the warning.")
         })
@@ -747,7 +758,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let now = CACurrentMediaTime()
         if now - lastFPSLabelUpdate >= 0.25 {
             let fps = PGRenderedFramesPerSecond()
-            fpsLabel.text = fps > 0 ? String(format: "%.0f FPS", fps) : "— FPS"
+            fpsLabel.text = fps > 0 ? String(localized: "\(Int(fps.rounded())) FPS", table: "Main") : String(localized: "— FPS", table: "Main")
             lastFPSLabelUpdate = now
         }
         let elapsed = lastControllerPoll.map { now - $0 } ?? (1.0 / 60.0)
@@ -766,9 +777,12 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         if let controller = GCController.controllers().first(where: { $0.extendedGamepad != nil }), let pad = controller.extendedGamepad {
             state = PGPadState(gamepad: pad)
             hasController = true
-            if diagnosticsOverlay?.isHidden != true { controllerLabel.text = "Controller: \(controller.vendorName ?? "Gamepad")" }
+            if diagnosticsOverlay?.isHidden != true {
+                let name = controller.vendorName ?? String(localized: "Gamepad", table: "Main")
+                controllerLabel.text = String(localized: "Controller: \(name)", table: "Main")
+            }
         } else if diagnosticsOverlay?.isHidden != true {
-            controllerLabel.text = "Touch controls ready"
+            controllerLabel.text = String(localized: "Touch controls ready", table: "Main")
         }
         // With a controller connected the touch controls step aside (Settings › Touch controls).
         // Keyboard and mouse: every frame while the game runs (keys go straight to the game as they change).

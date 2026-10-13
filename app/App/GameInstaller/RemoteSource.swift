@@ -59,7 +59,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
         chunkFolder = workFolder.appendingPathComponent("chunks", isDirectory: true)
         try? FileManager.default.removeItem(at: chunkFolder)
         do { try FileManager.default.createDirectory(at: chunkFolder, withIntermediateDirectories: true) } catch {
-            throw InstallError(.writeFailed, "The download folder could not be created.", detail: error.localizedDescription)
+            throw InstallError(.writeFailed, String(localized: "The download folder could not be created.", table: "Files"), detail: error.localizedDescription)
         }
         partLengths = Array(repeating: nil, count: urls.count)
         buffer = UnsafeMutableRawPointer.allocate(byteCount: readSize, alignment: 16)
@@ -95,7 +95,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
     func cancel() {
         cond.lock()
         cancelled = true
-        if stopError == nil { stopError = InstallError(.cancelled, "The install was cancelled.") }
+        if stopError == nil { stopError = InstallError(.cancelled, String(localized: "The install was cancelled.", table: "Files")) }
         cond.broadcast()
         cond.unlock()
         queue.addOperation { self.task?.cancel(); self.session.invalidateAndCancel() }
@@ -123,7 +123,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
                     return (UnsafeRawPointer(buffer), n)
                 }
                 if n < 0 {
-                    fail(InstallError(.writeFailed, "Reading a downloaded chunk failed.", detail: String(cString: strerror(errno))))
+                    fail(InstallError(.writeFailed, String(localized: "Reading a downloaded chunk failed.", table: "Files"), detail: String(cString: strerror(errno))))
                     return nil
                 }
                 // Chunk used up: delete it and make room for more downloading.
@@ -144,7 +144,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
             readFD = open(next.url.path, O_RDONLY)
             readChunk = next
             if readFD < 0 {
-                fail(InstallError(.writeFailed, "A downloaded chunk could not be opened.", detail: String(cString: strerror(errno))))
+                fail(InstallError(.writeFailed, String(localized: "A downloaded chunk could not be opened.", table: "Files"), detail: String(cString: strerror(errno))))
                 return nil
             }
         }
@@ -203,7 +203,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
                     completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard dataTask === task else { completionHandler(.cancel); return }
         guard let http = response as? HTTPURLResponse else {
-            responseFailure = InstallError(.httpError, "The link did not answer like a web server.", detail: response.url?.absoluteString)
+            responseFailure = InstallError(.httpError, String(localized: "The link did not answer like a web server.", table: "Files"), detail: response.url?.absoluteString)
             completionHandler(.cancel); return
         }
         let status = http.statusCode
@@ -222,7 +222,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
             }
             if partOffset > 0 {
                 if validator != nil && (http.value(forHTTPHeaderField: "ETag") != validator?.etag || http.value(forHTTPHeaderField: "Last-Modified") != validator?.lastModified) {
-                    responseFailure = InstallError(.fileChangedOnServer, "The file on the server changed while it was downloading. Start the install again.", detail: "HTTP 200 to a resume request")
+                    responseFailure = InstallError(.fileChangedOnServer, String(localized: "The file on the server changed while it was downloading. Start the install again.", table: "Files"), detail: "HTTP 200 to a resume request")
                     completionHandler(.cancel); return
                 }
                 // The server ignores Range: skip what we already have.
@@ -235,7 +235,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
             // "bytes start-end/total"
             let numbers = range.split(whereSeparator: { !$0.isNumber }).compactMap { Int64($0) }
             guard numbers.count >= 2, numbers[0] == partOffset else {
-                responseFailure = InstallError(.httpError, "The server sent the wrong part of the file when resuming.", detail: "Content-Range: \(range), wanted \(partOffset)")
+                responseFailure = InstallError(.httpError, String(localized: "The server sent the wrong part of the file when resuming.", table: "Files"), detail: "Content-Range: \(range), wanted \(partOffset)")
                 completionHandler(.cancel); return
             }
             if numbers.count >= 3 { noteLength(numbers[2]) }
@@ -315,7 +315,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
         if isStopped { return }
         if let failure = responseFailure {
             if failure.kind == .httpError, failure.detail?.hasPrefix("retry") == true {
-                retry(reason: failure.message, hardFailure: failure); return
+                retry(reason: failure.description, hardFailure: failure); return
             }
             stop(failure); return
         }
@@ -327,7 +327,7 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
                 if error.code == NSURLErrorCannotFindHost && Date().timeIntervalSince(lastProgress) < 20 {
                     retry(reason: error.localizedDescription, hardFailure: nil); return
                 }
-                stop(InstallError(.httpError, "The link could not be opened: \(error.localizedDescription)", detail: "\(error.domain) \(error.code)")); return
+                stop(InstallError(.httpError, String(localized: "The link could not be opened: \(error.localizedDescription)", table: "Files"), detail: "\(error.domain) \(error.code)")); return
             }
             retry(reason: error.localizedDescription, hardFailure: nil); return
         }
@@ -357,7 +357,10 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
     private func retry(reason: String, hardFailure: InstallError?) {
         let stalled = Date().timeIntervalSince(lastProgress)
         if stalled > options.giveUpAfter {
-            stop(hardFailure ?? InstallError(.networkLost, "The internet connection was lost and did not come back for \(options.giveUpAfter >= 120 ? "\(Int(options.giveUpAfter / 60)) minutes" : "\(Int(options.giveUpAfter)) seconds"). Check your connection and start again; what was unpacked so far is kept.", detail: reason))
+            let duration = options.giveUpAfter >= 120
+                ? String(localized: "\(Int(options.giveUpAfter / 60).formatted()) minutes", table: "Files")
+                : Int(options.giveUpAfter) == 1 ? String(localized: "1 second", table: "Files") : String(localized: "\(Int(options.giveUpAfter).formatted()) seconds", table: "Files")
+            stop(hardFailure ?? InstallError(.networkLost, String(localized: "The internet connection was lost and did not come back for \(duration). Check your connection and start again; what was unpacked so far is kept.", table: "Files"), detail: reason))
             return
         }
         attempt += 1
@@ -429,27 +432,27 @@ final class RemoteSource: NSObject, ArchiveByteSource, URLSessionDataDelegate, @
     }
 
     private func webPageError(detail: String) -> InstallError {
-        InstallError(.webPageNotFile, "The link opens a web page, not the game file. On the download site, copy the address of the actual download (often behind a \"Download\" button), not the page's address.", detail: detail)
+        InstallError(.webPageNotFile, String(localized: "The link opens a web page, not the game file. On the download site, copy the address of the actual download (often behind a \"Download\" button), not the page's address.", table: "Files"), detail: detail)
     }
 
     private func httpError(_ status: Int, retryAfter: String?) -> InstallError {
         let message: String
         var retryable = false
         switch status {
-        case 401, 403: message = "The server refused to give out the file (HTTP \(status)). The link may have expired, need a login, or only work in a browser. Get a fresh link and try again."
-        case 404, 410: message = "The file is not at that link (HTTP \(status)). The link is wrong or the file was removed."
-        case 429: message = "The server says too many downloads were started (HTTP 429). Wait a while and try again."; retryable = true
-        case 500...599: message = "The server had a problem (HTTP \(status)). This is on the server's side; try again later."; retryable = true
-        case 300...399: message = "The link redirects somewhere that could not be followed (HTTP \(status))."
-        default: message = "The server answered with an error (HTTP \(status))."
+        case 401, 403: message = String(localized: "The server refused to give out the file (HTTP \(status)). The link may have expired, need a login, or only work in a browser. Get a fresh link and try again.", table: "Files")
+        case 404, 410: message = String(localized: "The file is not at that link (HTTP \(status)). The link is wrong or the file was removed.", table: "Files")
+        case 429: message = String(localized: "The server says too many downloads were started (HTTP 429). Wait a while and try again.", table: "Files"); retryable = true
+        case 500...599: message = String(localized: "The server had a problem (HTTP \(status)). This is on the server's side; try again later.", table: "Files"); retryable = true
+        case 300...399: message = String(localized: "The link redirects somewhere that could not be followed (HTTP \(status)).", table: "Files")
+        default: message = String(localized: "The server answered with an error (HTTP \(status)).", table: "Files")
         }
         return InstallError(.httpError, message, detail: (retryable ? "retry " : "") + "HTTP \(status)" + (retryAfter.map { ", Retry-After \($0)" } ?? ""))
     }
 
     private func diskError(_ code: Int32) -> InstallError {
         if code == ENOSPC || code == EDQUOT {
-            return InstallError(.outOfSpace, "The device ran out of storage while downloading. Free up space and try again.", detail: String(cString: strerror(code)))
+            return InstallError(.outOfSpace, String(localized: "The device ran out of storage while downloading. Free up space and try again.", table: "Files"), detail: String(cString: strerror(code)))
         }
-        return InstallError(.writeFailed, "Saving the download failed.", detail: String(cString: strerror(code)))
+        return InstallError(.writeFailed, String(localized: "Saving the download failed.", table: "Files"), detail: String(cString: strerror(code)))
     }
 }

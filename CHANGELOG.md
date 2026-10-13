@@ -1,3 +1,13 @@
+# Qeyf fork — v1.3.2
+
+- App name and IPA output changed to GtaV Mobile; separate `io.github.qeyf.gtavmobile` bundle identifier.
+- GTA V logo app icon and matching home-screen icon, with asset provenance documented.
+- English/Turkish Apple String Catalogs throughout the native UI, including settings, controls, installer errors and progress.
+- App-language entry opens iOS's native per-app preferred language settings.
+- Bilingual Story mode cheat reference with 24 codes, search, descriptions and copy options; no game-memory or cheat-activation patch.
+- macOS CI compiles all Swift UI, compiles the catalogs and validates compiler-extracted key coverage without game files.
+- English/Turkish fork documentation. Full game build retains upstream's private-repository and user-owned input requirements.
+
 # Changelog
 
 ## v1.3.1

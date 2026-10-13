@@ -149,7 +149,7 @@ public final class InstallTask {
     public func cancel() { job?.cancel() }
 }
 
-/// Plain-English install failures.
+/// Player-facing install failures.
 public struct InstallError: Error, LocalizedError, CustomStringConvertible {
     public enum Kind: String {
         case notEnoughSpace, outOfSpace, webPageNotFile, httpError, networkLost, fileChangedOnServer
@@ -164,7 +164,10 @@ public struct InstallError: Error, LocalizedError, CustomStringConvertible {
     /// Technical detail for logs (libarchive message, HTTP status...).
     public var detail: String?
     public var errorDescription: String? { message }
-    public var description: String { "[\(kind.rawValue)] \(message)" + (detail.map { " (\($0))" } ?? "") }
+    public var description: String {
+        "[\(kind.rawValue)]" + (files.isEmpty ? "" : " files: \(files.joined(separator: ", "))")
+            + (detail.map { " (\($0))" } ?? "")
+    }
 
     init(_ kind: Kind, _ message: String, files: [String] = [], detail: String? = nil) {
         self.kind = kind; self.message = message; self.files = files; self.detail = detail

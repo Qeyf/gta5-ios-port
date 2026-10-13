@@ -45,12 +45,13 @@ final class DownloadBrowserViewController: UIViewController, WKNavigationDelegat
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
-        hint.text = "Tap the page's download button. The app takes the download over by itself and unpacks it."
+        hint.text = String(localized: "Tap the page's download button. The app takes the download over by itself and unpacks it.", table: "Files")
         hint.font = Theme.body(13, .medium)
         hint.textColor = Theme.text
         hint.numberOfLines = 2
         hint.textAlignment = .center
         hint.backgroundColor = Theme.accentDeep.withAlphaComponent(0.9)
+        progress.accessibilityLabel = String(localized: "Page loading progress", table: "Files")
         progress.progressTintColor = Theme.accent
         for item in [webView!, hint, progress] as [UIView] { item.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(item) }
         let guide = view.safeAreaLayoutGuide
@@ -65,10 +66,13 @@ final class DownloadBrowserViewController: UIViewController, WKNavigationDelegat
             webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         navigationItem.leftBarButtonItem = UIBarButtonItem(systemItem: .close, primaryAction: UIAction { [weak self] _ in self?.dismiss(animated: true) })
+        navigationItem.leftBarButtonItem?.accessibilityLabel = String(localized: "Close", table: "Files")
         navigationItem.rightBarButtonItems = [
             UIBarButtonItem(image: UIImage(systemName: "arrow.clockwise"), primaryAction: UIAction { [weak self] _ in self?.webView.reload() }),
             UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), primaryAction: UIAction { [weak self] _ in self?.webView.goBack() })
         ]
+        navigationItem.rightBarButtonItems?[0].accessibilityLabel = String(localized: "Reload page", table: "Files")
+        navigationItem.rightBarButtonItems?[1].accessibilityLabel = String(localized: "Back", table: "Files")
         observation = webView.observe(\.estimatedProgress) { [weak self] web, _ in
             self?.progress.setProgress(Float(web.estimatedProgress), animated: true)
             self?.progress.isHidden = web.estimatedProgress >= 1
@@ -169,7 +173,7 @@ final class DownloadBrowserViewController: UIViewController, WKNavigationDelegat
     private func take(_ url: URL) {
         guard !caught else { return }
         caught = true
-        hint.text = "Download caught. Starting…"
+        hint.text = String(localized: "Download caught. Starting…", table: "Files")
         let referer = webView.url?.absoluteString
         webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { [weak self] cookies in
             guard let self else { return }

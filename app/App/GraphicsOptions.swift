@@ -8,13 +8,23 @@ import os
 enum GraphicsPreset: Int, CaseIterable {
     case battery, performance, balanced, quality, ultra, max
 
-    var title: String { ["Battery", "Performance", "Balanced", "Quality", "Ultra", "Max"][rawValue] }
+    var title: String {
+        [String(localized: "Battery", table: "Settings"),
+         String(localized: "Performance", table: "Settings"),
+         String(localized: "Balanced", table: "Settings"),
+         String(localized: "Quality", table: "Settings"),
+         String(localized: "Ultra", table: "Settings"),
+         String(localized: "Max", table: "Settings")][rawValue]
+    }
     /// Render height in pixels; width follows the screen's shape.
     var height: Int { [432, 540, 720, 900, 1080, 1290][rawValue] }
     var detail: String {
-        ["Lowest load, longest play time", "Today's tested setup for 6 GB iPhones", "Sharper image and shadows",
-         "Higher detail textures, effects and draw distance", "1080p with high shaders, shadows and reflections",
-         "Near-native resolution, high textures and full draw distance (newest Pro phones)"][rawValue]
+        [String(localized: "Lowest load, longest play time", table: "Settings"),
+         String(localized: "Today's tested setup for 6 GB iPhones", table: "Settings"),
+         String(localized: "Sharper image and shadows", table: "Settings"),
+         String(localized: "Higher detail textures, effects and draw distance", table: "Settings"),
+         String(localized: "1080p with high shaders, shadows and reflections", table: "Settings"),
+         String(localized: "Near-native resolution, high textures and full draw distance (newest Pro phones)", table: "Settings")][rawValue]
     }
 
     /// Engine command-line options. Shader quality never goes below 1 (the
@@ -83,7 +93,13 @@ struct DeviceTier {
     var allowed: [GraphicsPreset] { GraphicsPreset.allCases }
     /// Presets shown with a warning because they may run out of memory or heat up.
     func risky(_ preset: GraphicsPreset) -> Bool { preset.rawValue > recommended.rawValue }
-    var summary: String { "\(model) · \(physicalMemoryMB / 1024) GB · app limit \(memoryLimitMB) MB\(supportsBCTextures ? " · BC textures" : "")" }
+    var summary: String {
+        let memoryGB = physicalMemoryMB / 1024
+        if supportsBCTextures {
+            return String(localized: "\(model) · \(memoryGB) GB · app limit \(memoryLimitMB) MB · BC textures", table: "Settings")
+        }
+        return String(localized: "\(model) · \(memoryGB) GB · app limit \(memoryLimitMB) MB", table: "Settings")
+    }
 }
 
 enum GraphicsConfiguration {
@@ -117,6 +133,6 @@ enum GraphicsConfiguration {
                 PGConfigureEngine($0, UInt32(buffer.count), Int32(width), Int32(height), settings.frameRateCap == 0 ? 0 : settings.frameRateCap == 60 ? 1 : 2)
             }
         }
-        return "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(settings.frameRateCap))"
+        return String(localized: "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(settings.frameRateCap))", table: "Settings")
     }
 }

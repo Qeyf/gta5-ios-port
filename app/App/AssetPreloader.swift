@@ -20,7 +20,7 @@ enum EnginePaths {
             try FileManager.default.createDirectory(atPath: simulatorRoot, withIntermediateDirectories: true)
             return (simulatorRoot, nil)
         } catch {
-            return (documents, "Simulator uses its app container for engine files.")
+            return (documents, String(localized: "Simulator uses its app container for engine files.", table: "Files"))
         }
         #else
         return (documents, nil)
@@ -88,10 +88,10 @@ final class AssetPreloader {
 
     var phase: Phase {
         if GameFolder.isChosen {
-            return .unavailable("The game files are already on this iPhone (folder \"\(GameFolder.name)\"), so nothing needs downloading.")
+            return .unavailable(String(localized: "The game files are already on this iPhone (folder \"\(GameFolder.name)\"), so nothing needs downloading.", table: "Files"))
         }
         if prepared && !PGAssetPreloadSupported() {
-            return .unavailable("The simulator reads the Mac's game files directly. Launch with --stream-assets to test downloads.")
+            return .unavailable(String(localized: "The simulator reads the Mac's game files directly. Launch with --stream-assets to test downloads.", table: "Files"))
         }
         if running { return .downloading }
         if measured && totalBytes > 0 && cachedBytes >= totalBytes { return .complete }
@@ -150,11 +150,11 @@ final class AssetPreloader {
     @discardableResult
     func start() -> String? {
         prepare()
-        guard !GameSettings.shared.assetServer.isEmpty else { return "Set your game file server first (Play screen)." }
+        guard !GameSettings.shared.assetServer.isEmpty else { return String(localized: "Set your game file server first (Play screen).", table: "Files") }
         PGSetAssetServer(GameSettings.shared.assetServer)
-        guard PGAssetPreloadSupported() else { return "Downloads are not available here." }
+        guard PGAssetPreloadSupported() else { return String(localized: "Downloads are not available here.", table: "Files") }
         if running { return nil }
-        if removing { return "Still removing files. Try again in a moment." }
+        if removing { return String(localized: "Still removing files. Try again in a moment.", table: "Files") }
         var total: UInt64 = 0, cached: UInt64 = 0, files: UInt32 = 0
         if let filter { filter.withCString { PGAssetPreloadMeasure($0, &total, &cached, &files) } }
         else { PGAssetPreloadMeasure(nil, &total, &cached, &files) }
@@ -163,7 +163,7 @@ final class AssetPreloader {
         let needed = total - cached + Self.reserveBytes
         let free = availableBytes()
         if free < needed {
-            let message = "Not enough free space. The rest of the game needs \(Self.format(total - cached)) plus \(Self.format(Self.reserveBytes)) to spare, but only \(Self.format(free)) is free. Free up \(Self.format(needed - free)) and try again."
+            let message = String(localized: "Not enough free space. The rest of the game needs \(Self.format(total - cached)) plus \(Self.format(Self.reserveBytes)) to spare, but only \(Self.format(free)) is free. Free up \(Self.format(needed - free)) and try again.", table: "Files")
             lastError = message
             notify()
             return message
@@ -174,7 +174,7 @@ final class AssetPreloader {
         samples = []
         let lanes: UInt32 = engineRunning ? 2 : 6
         let started = filter.map { $0.withCString { PGAssetPreloadStart($0, lanes) } } ?? PGAssetPreloadStart(nil, lanes)
-        guard started else { return "The download could not start." }
+        guard started else { return String(localized: "The download could not start.", table: "Files") }
         running = true
         NSLog("[asset-preload] started: %llu of %llu bytes on device, %u files", cached, total, files)
         startTimer()
@@ -201,8 +201,8 @@ final class AssetPreloader {
     /// background queue; thousands of files can take a few seconds.
     /// Returns a message when it cannot run now.
     func removeDownloads(completion: @escaping (String?) -> Void) {
-        guard !running else { completion("Stop the download first."); return }
-        guard !engineRunning else { completion("Restart the app to remove files; the game is using them."); return }
+        guard !running else { completion(String(localized: "Stop the download first.", table: "Files")); return }
+        guard !engineRunning else { completion(String(localized: "Restart the app to remove files; the game is using them.", table: "Files")); return }
         guard !removing else { completion(nil); return }
         removing = true
         wanted = false
@@ -217,7 +217,7 @@ final class AssetPreloader {
                 if removed { self.cachedBytes = 0 }
                 NSLog("[asset-preload] removed cache: %d, %llu bytes", removed ? 1 : 0, freed)
                 self.refresh()
-                completion(removed ? nil : "The files could not be removed.")
+                completion(removed ? nil : String(localized: "The files could not be removed.", table: "Files"))
             }
         }
     }
@@ -229,7 +229,9 @@ final class AssetPreloader {
         refresh { [weak self] in
             guard let self, !self.removing, PGAssetPreloadSupported(), self.wanted, !self.userPaused, !self.running,
                   self.cachedBytes < self.totalBytes else { return }
-            if let message = self.start() { NSLog("[asset-preload] resume refused: %@", message) }
+            if self.start() != nil {
+                NSLog("[asset-preload] resume refused: %llu free bytes, %llu bytes needed, server configured %d", self.availableBytes(), self.missingBytes + Self.reserveBytes, GameSettings.shared.assetServer.isEmpty ? 0 : 1)
+            }
             else { NSLog("[asset-preload] resumed after relaunch or return") }
         }
     }
@@ -246,7 +248,7 @@ final class AssetPreloader {
         samples.removeAll { now - $0.time > 20 }
         if status.totalBytes > 0 { totalBytes = status.totalBytes; cachedBytes = status.cachedBytes }
         if status.running, availableBytes() < 300_000_000 {
-            lastError = "Paused because this iPhone is almost out of storage."
+            lastError = String(localized: "Paused because this iPhone is almost out of storage.", table: "Files")
             PGAssetPreloadStop()
         }
         if !status.running {
@@ -254,9 +256,9 @@ final class AssetPreloader {
             timer?.invalidate(); timer = nil
             switch status.error {
             case Int32(PGAssetPreloadErrorNetwork.rawValue):
-                lastError = "Could not reach the game server. Check that Tailscale is connected, then resume."
+                lastError = String(localized: "Could not reach the game server. Check that Tailscale is connected, then resume.", table: "Files")
             case Int32(PGAssetPreloadErrorStorage.rawValue):
-                lastError = "Stopped because files could not be saved. Free up storage, then resume."
+                lastError = String(localized: "Stopped because files could not be saved. Free up storage, then resume.", table: "Files")
             default: break
             }
             NSLog("[asset-preload] stopped: %llu of %llu bytes on device, error %d", status.cachedBytes, status.totalBytes, status.error)
@@ -294,21 +296,21 @@ final class AssetPreloader {
         return formatter.string(fromByteCount: Int64(bytes))
     }
     static func formatDuration(_ seconds: Double) -> String {
-        if seconds < 60 { return "under a minute left" }
+        if seconds < 60 { return String(localized: "under a minute left", table: "Files") }
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .short
         formatter.allowedUnits = seconds >= 3600 ? [.hour, .minute] : [.minute]
         formatter.maximumUnitCount = 2
-        return "about \(formatter.string(from: seconds) ?? "") left"
+        return String(localized: "about \(formatter.string(from: seconds) ?? "") left", table: "Files")
     }
 
     /// One-line summary for the launch screen; nil when there is nothing to say.
     var launchSummary: String? {
-        let percent = Int((fraction * 100).rounded(.down))
+        let percent = (Double(Int((fraction * 100).rounded(.down))) / 100).formatted(.percent.precision(.fractionLength(0)))
         switch phase {
-        case .downloading: return "Downloading game files: \(percent)% (\(Self.format(cachedBytes)) of \(Self.format(totalBytes)))"
-        case .paused: return "Game file download paused at \(percent)%"
-        case .complete: return wanted ? "All game files on device" : nil
+        case .downloading: return String(localized: "Downloading game files: \(percent) (\(Self.format(cachedBytes)) of \(Self.format(totalBytes)))", table: "Files")
+        case .paused: return String(localized: "Game file download paused at \(percent)", table: "Files")
+        case .complete: return wanted ? String(localized: "All game files on device", table: "Files") : nil
         case .idle, .unavailable: return nil
         }
     }

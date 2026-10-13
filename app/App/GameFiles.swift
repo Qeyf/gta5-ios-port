@@ -28,18 +28,23 @@ enum GameFiles {
 
         /// A short title and an explanation of what is wrong and what to do.
         var explanation: (title: String, message: String) {
-            if isComplete { return ("Game files OK", "All \(fileCount) game files are there and complete.") }
+            if isComplete { return (String(localized: "Game files OK", table: "Files"), String(localized: "All \(fileCount.formatted()) game files are there and complete.", table: "Files")) }
             var parts: [String] = []
             if !inICloud.isEmpty {
-                parts.append("\(Self.count(inICloud.count, "file is", "files are")) only in iCloud, not on this iPhone (for example \(inICloud[0].path)). The game can't read them from there: move the game folder to Files › On My iPhone › GTA V Port.")
+                let message = inICloud.count == 1
+                    ? String(localized: "1 file is only in iCloud, not on this iPhone (for example \(inICloud[0].path)). The game can't read it from there: move the game folder to Files › On My iPhone › GtaV Mobile.", table: "Files")
+                    : String(localized: "\(inICloud.count.formatted()) files are only in iCloud, not on this iPhone (for example \(inICloud[0].path)). The game can't read them from there: move the game folder to Files › On My iPhone › GtaV Mobile.", table: "Files")
+                parts.append(message)
             }
             if !missing.isEmpty {
                 let bytes = missing.reduce(0) { $0 + $1.expected }
-                var text = "\(Self.count(missing.count, "file is", "files are")) missing (\(Self.size(bytes)) in all), for example \(Self.examples(missing))."
+                var text = missing.count == 1
+                    ? String(localized: "1 file is missing (\(Self.size(bytes)) in all), for example \(Self.examples(missing)).", table: "Files")
+                    : String(localized: "\(missing.count.formatted()) files are missing (\(Self.size(bytes)) in all), for example \(Self.examples(missing)).", table: "Files")
                 if missing.count == fileCount {
-                    text = "This folder has none of the game's files."
+                    text = String(localized: "This folder has none of the game's files.", table: "Files")
                 } else {
-                    text += " Unpacking or copying probably stopped before the end, most often because the iPhone ran out of storage. Free up space, delete this folder and unpack the game again."
+                    text += " " + String(localized: "Unpacking or copying probably stopped before the end, most often because the iPhone ran out of storage. Free up space, delete this folder and unpack the game again.", table: "Files")
                 }
                 parts.append(text)
             }
@@ -47,14 +52,28 @@ enum GameFiles {
                 let first = wrongSize[0]
                 var actual: UInt64 = 0
                 if case let .wrongSize(size) = first.kind { actual = size }
-                parts.append("\(Self.count(wrongSize.count, "file has", "files have")) the wrong size, for example \(first.path) (\(Self.size(actual)) instead of \(Self.size(first.expected))). These files are damaged, usually by an interrupted download or unpack, or come from a different version of the game. Delete the folder and unpack the game again.")
+                let message = wrongSize.count == 1
+                    ? String(localized: "1 file has the wrong size, for example \(first.path) (\(Self.size(actual)) instead of \(Self.size(first.expected))). This file is damaged, usually by an interrupted download or unpack, or comes from a different version of the game. Delete the folder and unpack the game again.", table: "Files")
+                    : String(localized: "\(wrongSize.count.formatted()) files have the wrong size, for example \(first.path) (\(Self.size(actual)) instead of \(Self.size(first.expected))). These files are damaged, usually by an interrupted download or unpack, or come from a different version of the game. Delete the folder and unpack the game again.", table: "Files")
+                parts.append(message)
             }
-            let title = !inICloud.isEmpty ? "Game files are in iCloud" : !wrongSize.isEmpty ? "Some game files are damaged" : "Some game files are missing"
+            let title = !inICloud.isEmpty ? String(localized: "Game files are in iCloud", table: "Files") : !wrongSize.isEmpty ? String(localized: "Some game files are damaged", table: "Files") : String(localized: "Some game files are missing", table: "Files")
             return (title, parts.joined(separator: "\n\n"))
         }
 
-        /// Every problem, one per line, for the log or for sharing.
+        /// Every problem, one per line, for the screen or for sharing.
         var details: String {
+            problems.map { problem in
+                switch problem.kind {
+                case .missing: return String(localized: "missing: \(problem.path) (\(problem.expected.formatted()) bytes)", table: "Files")
+                case .inICloud: return String(localized: "only in iCloud: \(problem.path)", table: "Files")
+                case let .wrongSize(actual): return String(localized: "wrong size: \(problem.path) is \(actual.formatted()) bytes, expected \(problem.expected.formatted())", table: "Files")
+                }
+            }.joined(separator: "\n")
+        }
+
+        /// Stable English diagnostics, independent of the app's display language.
+        var diagnosticDetails: String {
             problems.map { problem in
                 switch problem.kind {
                 case .missing: return "missing: \(problem.path) (\(problem.expected) bytes)"
@@ -64,8 +83,7 @@ enum GameFiles {
             }.joined(separator: "\n")
         }
 
-        private static func count(_ n: Int, _ one: String, _ many: String) -> String { n == 1 ? "1 \(one)" : "\(n) \(many)" }
-        private static func examples(_ list: [Problem]) -> String { list.prefix(2).map(\.path).joined(separator: " and ") }
+        private static func examples(_ list: [Problem]) -> String { ListFormatter.localizedString(byJoining: list.prefix(2).map(\.path)) }
         static func size(_ bytes: UInt64) -> String { ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file) }
     }
 
