@@ -49,6 +49,22 @@ GitHub'da **Use this template › Create a new repository › Private** yoluyla
 Tailscale üzerinden derleme adımlarını uygulayın. Xcode proje ve şema adı
 uyumluluk için `PlayGTA5Native` olarak kalır.
 
+Qeyf'in mevcut **`Qeyf/muguet-ios-game-build`** özel deposu, bu forkta sabitlenmiş
+bir kaynak commitini ve kendi özel Release girdilerini kullanarak derleme yapar.
+**Actions › Build GtaV Mobile › Run workflow** ekranında aynı girdi Release'ine
+yüklenen shader ZIP dosyasının adını ve SHA-256 özetini girin. ZIP, indekste
+belirtilen 18 paketin tamamını içermelidir; aynı `index.json` dosyası da olabilir.
+Mevcut motor/manifest/indeks arşivi tek başına yeterli değildir. Eksik veya
+kısmi paketler macOS derlemesi başlamadan kontrol edilir.
+
+Her başarılı derleme otomatik olarak yeni bir Release yayımlar: **GtaV Mobile.ipa**,
+**release-metadata.json**, **SHA256SUMS** ve Türkçe/İngilizce sürüm notları.
+Notlarda IPA'nın gerçek sürümü, build kodu, kaynak commit, iş akışı bağlantısı,
+iOS gereksinimi, diller, dosya boyutu, SHA-256 ve Xcode/SDK bilgisi bulunur.
+Önceki Release'ler korunur. `app/project.yml` sürüm `1.3.2` ve taban build `8`
+değerlerini tutar: ilk iş akışı çalışması `9.1`, tekrarı `9.2`, ikinci çalışma
+`10.1` olur. Etiket örneği: `v1.3.2-build.9.1`.
+
 Apple Silicon Mac üzerinde:
 
 ```sh
@@ -57,8 +73,9 @@ Apple Silicon Mac üzerinde:
 ```
 
 İkinci komut yalnızca ücretli Apple Developer hesabının ek bellek yetkileri
-içindir. IPA imzasız üretilir; SideStore veya AltStore ile kendi hesabınızla
-imzalayıp kurabilirsiniz.
+içindir. IPA ad-hoc imzalı üretilir; SideStore veya AltStore ile kendi hesabınızla
+yeniden imzalayıp kurabilirsiniz. Derleme ve arşiv doğrulaması cihazda oyun
+testi anlamına gelmez.
 
 Uygulamayı bir kez açtıktan sonra oyun klasörünü **Dosyalar › iPhone'umda ›
 GtaV Mobile** içine taşıyın. Klasörde `data/` ve `b/` bulunmalıdır. Uygulama

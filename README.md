@@ -12,6 +12,14 @@ All native app screens, settings, touch-control accessibility labels, installer 
 
 The public fork runs **Verify GtaV Mobile UI and translations**, which compiles all Swift app files against the iOS SDK, compiles every String Catalog, and checks compiler-extracted keys for missing translations. A full IPA still requires your own **`game.wasm`**, **`data/manifest.json`**, and **`shaders.zip`** (or the unpacked shaders folder). Use a **private template copy** for the full build, as upstream requires; no engine or game data is published in this source fork. The icon uses the existing GTA V logo; see [asset sources](docs/asset-sources.md).
 
+### Versioned IPA releases
+
+Every successful **Build GtaV Mobile IPA** run automatically publishes a new private Release containing `GtaV Mobile.ipa`, `release-metadata.json`, `SHA256SUMS` and bilingual release notes. The notes include the actual packaged version/build, source commit, workflow link, minimum iOS, languages, file size, SHA-256 and toolchain. Previous releases are retained. Version `1.3.2` and base build `8` live in `app/project.yml`; workflow run 1 produces build `9.1`, its retry `9.2`, and run 2 build `10.1`. The tag comes from the packaged plist, for example `v1.3.2-build.9.1`.
+
+Qeyf's existing **`Qeyf/muguet-ios-game-build`** private repository can invoke this workflow using a pinned source commit and its own private input Release. In **Actions › Build GtaV Mobile › Run workflow**, provide the name and SHA-256 of a shader ZIP uploaded to the same input Release. The shader-folder ZIP may include an identical `index.json`; it must include all 18 packs referenced by that index. The existing engine/manifest/index ZIP alone is insufficient. Input checks run on Linux before the macOS build, and missing/truncated packs block publication.
+
+Private template copies also retain the website-upload and Tailscale routes. A successful compile/IPA validation is not a gameplay or device test. The IPA has an ad-hoc signature and must be re-signed by SideStore/AltStore for installation; the large runtime game assets stay on your device.
+
 
 > [!TIP]
 > **🆕 New in v1.2: build the app right from your iPhone, no computer needed.**

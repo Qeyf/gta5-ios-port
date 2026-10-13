@@ -1,102 +1,290 @@
-# Builds YOUR unsigned IPA from YOUR game files.
-# Run it from the Actions tab of your own PRIVATE copy of this repository
-# (or let the website builder start it for you).
+# Full engine builds and input/output artifacts remain in the private caller.
 name: Build GtaV Mobile IPA
 
 on:
   workflow_dispatch:
     inputs:
       game_files:
-        description: "Where the build gets your game files"
+        description: Where the build gets your game files
         type: choice
         options:
           - my server (Tailscale)
           - uploaded with the website builder
+          - private release archive
         default: my server (Tailscale)
       paid_account:
-        description: "I have a paid Apple developer account (request extra memory)"
+        description: Request extra memory entitlements for a paid Apple account
         type: boolean
         default: false
+      archive_tag:
+        description: Private input Release tag (archive mode)
+        type: string
+      archive_name:
+        description: ZIP asset containing engine, manifest and shader index
+        type: string
+      archive_sha256:
+        description: SHA-256 of that ZIP asset
+        type: string
+      shaders_archive_name:
+        description: Optional additional ZIP asset containing shader packs
+        type: string
+      shaders_archive_sha256:
+        description: SHA-256 of the additional shader ZIP
+        type: string
+  workflow_call:
+    inputs:
+      game_files:
+        type: string
+        required: true
+      paid_account:
+        type: boolean
+        default: false
+      archive_tag:
+        type: string
+        default: ''
+      archive_name:
+        type: string
+        default: ''
+      archive_sha256:
+        type: string
+        default: ''
+      shaders_archive_name:
+        type: string
+        default: ''
+      shaders_archive_sha256:
+        type: string
+        default: ''
+      source_repository:
+        type: string
+        default: ''
+      source_ref:
+        type: string
+        default: ''
+    secrets:
+      TS_AUTHKEY:
+        required: false
+      GAME_SERVER_URL:
+        required: false
 
 permissions:
   contents: write
 
+concurrency:
+  group: gtav-ipa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  build:
-    runs-on: macos-15
-    timeout-minutes: 240
+  prepare_inputs:
+    name: Validate private build inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+      source_repository: ${{ steps.source.outputs.repository }}
+      input_artifact: ${{ steps.source.outputs.artifact_name }}
     env:
-      FROM_UPLOAD: ${{ inputs.game_files == 'uploaded with the website builder' }}
+      INPUT_MODE: ${{ inputs.game_files }}
     steps:
-      - name: Refuse to build in a public repository
+      - name: Require a private build repository
         if: ${{ !github.event.repository.private }}
         run: |
-          echo "::error::Make your copy of this repository PRIVATE first. The app you build contains the game engine from your own files, and public build results can be downloaded by anyone."
+          echo "::error::Run full IPA builds in a PRIVATE repository. The public fork verifies source and translations only."
           exit 1
 
       - uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ inputs.source_repository || github.repository }}
+          ref: ${{ inputs.source_ref || github.sha }}
+          persist-credentials: false
 
-      - name: Get the files you uploaded with the website builder
-        if: ${{ env.FROM_UPLOAD == 'true' }}
+      - name: Record the exact source checkout
+        id: source
+        env:
+          SOURCE_REPOSITORY: ${{ inputs.source_repository || github.repository }}
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "repository=$SOURCE_REPOSITORY" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=gtav-build-inputs-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          case "$INPUT_MODE" in
+            'my server (Tailscale)'|'uploaded with the website builder'|'private release archive') ;;
+            *) echo '::error::Unknown game input mode.'; exit 1 ;;
+          esac
+
+      - name: Verify release tooling
+        run: python3 -m unittest discover -s app/Tests -p '*.py'
+
+      - name: Get files uploaded with the website builder
+        if: ${{ inputs.game_files == 'uploaded with the website builder' }}
         uses: actions/checkout@v7.0.1
         with:
+          repository: ${{ github.repository }}
           ref: build-inputs
           path: uploaded-inputs
+          persist-credentials: false
 
-      - name: Join your tailnet (to reach your game-file server)
-        if: ${{ env.FROM_UPLOAD != 'true' }}
+      - name: Assemble website uploads
+        if: ${{ inputs.game_files == 'uploaded with the website builder' }}
+        run: python3 app/Scripts/assemble_inputs.py --inputs uploaded-inputs --out "$RUNNER_TEMP/game-files"
+
+      - name: Download and stage private Release inputs
+        if: ${{ inputs.game_files == 'private release archive' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.archive_tag }}
+          INPUT_ARCHIVE: ${{ inputs.archive_name }}
+          INPUT_SHA256: ${{ inputs.archive_sha256 }}
+          SHADERS_ARCHIVE: ${{ inputs.shaders_archive_name }}
+          SHADERS_SHA256: ${{ inputs.shaders_archive_sha256 }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          if not os.environ['INPUT_TAG']:
+              raise SystemExit('A private input Release tag is required.')
+          for name_key, hash_key, required in [('INPUT_ARCHIVE', 'INPUT_SHA256', True), ('SHADERS_ARCHIVE', 'SHADERS_SHA256', False)]:
+              name, digest = os.environ[name_key], os.environ[hash_key]
+              if not required and not name and not digest:
+                  continue
+              if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._ -]*\.zip', name):
+                  raise SystemExit(f'{name_key} must be a literal ZIP asset filename.')
+              if not re.fullmatch(r'[0-9a-fA-F]{64}', digest):
+                  raise SystemExit(f'{hash_key} must contain a SHA-256 checksum.')
+          PY
+          mkdir -p "$RUNNER_TEMP/release-inputs"
+          gh release download "$INPUT_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$INPUT_ARCHIVE" --dir "$RUNNER_TEMP/release-inputs"
+          printf '%s  %s\n' "$INPUT_SHA256" "$RUNNER_TEMP/release-inputs/$INPUT_ARCHIVE" | sha256sum --check -
+          EXTRA_ARGS=()
+          if [ -n "$SHADERS_ARCHIVE" ]; then
+            gh release download "$INPUT_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$SHADERS_ARCHIVE" --dir "$RUNNER_TEMP/release-inputs"
+            printf '%s  %s\n' "$SHADERS_SHA256" "$RUNNER_TEMP/release-inputs/$SHADERS_ARCHIVE" | sha256sum --check -
+            EXTRA_ARGS+=(--shaders-archive "$RUNNER_TEMP/release-inputs/$SHADERS_ARCHIVE")
+          fi
+          python3 app/Scripts/stage_release_inputs.py --archive "$RUNNER_TEMP/release-inputs/$INPUT_ARCHIVE" "${EXTRA_ARGS[@]}" --out "$RUNNER_TEMP/game-files"
+
+      - name: Join your tailnet
+        if: ${{ inputs.game_files == 'my server (Tailscale)' }}
         uses: tailscale/github-action@v4
         with:
           authkey: ${{ secrets.TS_AUTHKEY }}
 
-      - name: Check your server answers
-        if: ${{ env.FROM_UPLOAD != 'true' }}
+      - name: Download server build inputs
+        if: ${{ inputs.game_files == 'my server (Tailscale)' }}
         env:
           SERVER: ${{ secrets.GAME_SERVER_URL }}
         run: |
-          for i in $(seq 1 30); do
-            if curl -sfI "$SERVER/data/manifest.json" > /dev/null; then echo "Server reachable."; exit 0; fi
-            sleep 5
-          done
-          echo "::error::Can't reach $SERVER/data/manifest.json from the build machine. Is your server running and is GAME_SERVER_URL right?"
-          exit 1
+          test -n "$SERVER" || { echo '::error::GAME_SERVER_URL is missing.'; exit 1; }
+          python3 app/Scripts/fetch_game_files.py --server "$SERVER" --out "$RUNNER_TEMP/game-files"
+
+      - name: Require every supported engine and shader input
+        run: python3 app/Scripts/check_game_files.py --mirror "$RUNNER_TEMP/game-files"
+
+      - name: Transfer validated inputs to the macOS build
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: ${{ steps.source.outputs.artifact_name }}
+          path: ${{ runner.temp }}/game-files/
+          if-no-files-found: error
+          retention-days: 1
+
+  build:
+    name: Compile and publish versioned IPA
+    needs: prepare_inputs
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ needs.prepare_inputs.outputs.source_repository }}
+          ref: ${{ needs.prepare_inputs.outputs.source_sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: ${{ needs.prepare_inputs.outputs.input_artifact }}
+          path: ${{ runner.temp }}/game-files
+
+      - name: Resolve the unique build number
+        run: |
+          test "$(uname -m)" = arm64 || { echo '::error::An Apple Silicon runner is required.'; exit 1; }
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          values = re.findall(r'^\s*CURRENT_PROJECT_VERSION:\s*"([0-9]+)"\s*$', Path('app/project.yml').read_text(), re.M)
+          if len(values) != 1:
+              raise SystemExit('Set exactly one numeric CURRENT_PROJECT_VERSION base in app/project.yml.')
+          build = f"{int(values[0]) + int(os.environ['GITHUB_RUN_NUMBER'])}.{int(os.environ['GITHUB_RUN_ATTEMPT'])}"
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'GTV_BUILD_NUMBER={build}\n')
+          print(f'Build number: {build}')
+          PY
 
       - name: Install build tools
         run: brew install xcodegen
 
-      - name: Use this repository's prebuilt shader translator, if it has one
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release download shadertool-1 --repo "${{ github.repository }}" --pattern pgmsl-macos-arm64.tar.gz --dir "$RUNNER_TEMP" 2>/dev/null; then
-            echo "PGMSL_PREBUILT_URL=file://$RUNNER_TEMP/pgmsl-macos-arm64.tar.gz" >> "$GITHUB_ENV"
-          fi
-
-      - name: Make sure the Metal shader compiler is installed
+      - name: Make sure the Metal compiler is installed
         run: xcrun -sdk iphoneos metal --version > /dev/null 2>&1 || xcodebuild -downloadComponent MetalToolchain
 
-      - name: Build the IPA (about 25 minutes)
+      - name: Build GtaV Mobile IPA
         env:
-          SERVER: ${{ secrets.GAME_SERVER_URL }}
-          JOBS: "2"
+          GTV_DEFAULT_ASSET_SERVER: ${{ inputs.game_files == 'my server (Tailscale)' && secrets.GAME_SERVER_URL || '' }}
+          JOBS: '2'
+          PAID_ACCOUNT: ${{ inputs.paid_account }}
         run: |
-          if [ "$FROM_UPLOAD" = "true" ]; then
-            /usr/bin/python3 app/Scripts/assemble_inputs.py --inputs uploaded-inputs --out "$RUNNER_TEMP/game-files"
-            ./build_ipa.sh --mirror "$RUNNER_TEMP/game-files" ${{ inputs.paid_account && '--paid' || '' }}
-          else
-            ./build_ipa.sh "$SERVER" ${{ inputs.paid_account && '--paid' || '' }}
-          fi
+          EXTRA_ARGS=()
+          if [ "$PAID_ACCOUNT" = true ]; then EXTRA_ARGS+=(--paid); fi
+          ./build_ipa.sh --mirror "$RUNNER_TEMP/game-files" "${EXTRA_ARGS[@]}"
 
-      - uses: actions/upload-artifact@v7.0.2
+      - name: Validate the built app and create Release details
+        id: release
+        env:
+          SOURCE_REPOSITORY: ${{ needs.prepare_inputs.outputs.source_repository }}
+          SOURCE_COMMIT: ${{ needs.prepare_inputs.outputs.source_sha }}
+        run: |
+          APP='app/Build/Release/Build/Products/Release-iphoneos/GtaV Mobile.app'
+          codesign --verify --deep --strict "$APP"
+          EXECUTABLE=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")
+          test "$(lipo -archs "$APP/$EXECUTABLE")" = arm64
+          for language in en tr; do test -s "$APP/$language.lproj/Cheats.strings"; done
+          python3 app/Scripts/create_release_metadata.py \
+            --ipa 'GtaV Mobile.ipa' --output release \
+            --commit "$SOURCE_COMMIT" --source-repository "$SOURCE_REPOSITORY" \
+            --run-id "$GITHUB_RUN_ID" --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --xcode-version "$(xcodebuild -version | tr '\n' ' ')" \
+            --sdk-version "$(xcrun --sdk iphoneos --show-sdk-version)" \
+            --signing adhoc --github-output "$GITHUB_OUTPUT"
+          cat release/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the IPA and Release metadata artifact
+        uses: actions/upload-artifact@v7.0.2
         with:
-          name: GtaV-Mobile-ipa
-          path: GtaV Mobile.ipa
-          retention-days: 3
+          name: GtaV-Mobile-${{ steps.release.outputs.version }}-build-${{ steps.release.outputs.build }}
+          path: |
+            GtaV Mobile.ipa
+            release/release-metadata.json
+            release/SHA256SUMS
+            release/release-notes.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
-      - name: Publish the IPA as a release in this private repository (easy to download on a phone)
+      - name: Publish this successful build as a new private Release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
         run: |
-          gh release delete latest-ipa --repo "${{ github.repository }}" --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest-ipa "GtaV Mobile.ipa" --repo "${{ github.repository }}" --title "GtaV Mobile (built $(date -u +%Y-%m-%d))" \
-            --notes "Download GtaV Mobile.ipa and open it with SideStore or AltStore. This release is private like the repository."
+          gh release create "$RELEASE_TAG" \
+            'GtaV Mobile.ipa' release/release-metadata.json release/SHA256SUMS release/release-notes.md \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$RELEASE_TITLE" --notes-file release/release-notes.md --draft
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+
+      - name: Preserve build diagnostics on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: gtav-build-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: app/Build/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 3

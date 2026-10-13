@@ -5,6 +5,8 @@
 #                                                                    the folder with data/manifest.json and b/)
 #   --paid  request the extra-memory entitlements (paid Apple developer account)
 # Needs: an Apple Silicon Mac (or the GitHub Actions workflow), Xcode, xcodegen.
+# Optional GTV_BUILD_NUMBER overrides the build; GTV_DEFAULT_ASSET_SERVER
+# preserves a streaming server when using locally staged --mirror inputs.
 set -euo pipefail
 SERVER=""
 MIRROR=""
@@ -25,9 +27,16 @@ fi
 "$PY" Scripts/check_game_files.py --mirror "$MIRROR"
 "$PY" Scripts/prepare.py --mirror "$MIRROR"
 # The app opens with your server already filled in (without one, it asks where your files are).
-/usr/libexec/PlistBuddy -c "Set :PGDefaultAssetServer $SERVER" App/Info.plist
+/usr/libexec/PlistBuddy -c "Set :PGDefaultAssetServer ${GTV_DEFAULT_ASSET_SERVER:-$SERVER}" App/Info.plist
 
-xcodebuild -project PlayGTA5Native.xcodeproj -scheme PlayGTA5Native \
+BUILD_ARGS=(-project PlayGTA5Native.xcodeproj -scheme PlayGTA5Native)
+if [ -n "${GTV_BUILD_NUMBER:-}" ]; then
+  [[ "$GTV_BUILD_NUMBER" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || {
+    echo "Invalid GTV_BUILD_NUMBER: use one to three numeric components."; exit 1; }
+  BUILD_ARGS+=("CURRENT_PROJECT_VERSION=$GTV_BUILD_NUMBER")
+fi
+
+xcodebuild "${BUILD_ARGS[@]}" \
   -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
   -derivedDataPath Build/Release -jobs "$JOBS" \
   GCC_OPTIMIZATION_LEVEL=2 SWIFT_OPTIMIZATION_LEVEL=-O DEBUG_INFORMATION_FORMAT=dwarf \

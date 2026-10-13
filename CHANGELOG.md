@@ -1,5 +1,7 @@
 # Qeyf fork — v1.3.2
 
+- Successful private IPA builds publish separate version/build tags, packaged metadata, bilingual notes and SHA-256 checksums without deleting release history.
+- Private Release ZIP inputs are validated before macOS compilation, including all referenced shader pack sizes; the build workflow can be reused from a source-pinned private orchestration repository.
 - App name and IPA output changed to GtaV Mobile; separate `io.github.qeyf.gtavmobile` bundle identifier.
 - GTA V logo app icon and matching home-screen icon, with asset provenance documented.
 - English/Turkish Apple String Catalogs throughout the native UI, including settings, controls, installer errors and progress.
