@@ -34,11 +34,11 @@ jobs:
           echo "::error::Make your copy of this repository PRIVATE first. The app you build contains the game engine from your own files, and public build results can be downloaded by anyone."
           exit 1
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: Get the files you uploaded with the website builder
         if: ${{ env.FROM_UPLOAD == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           ref: build-inputs
           path: uploaded-inputs
@@ -87,7 +87,7 @@ jobs:
             ./build_ipa.sh "$SERVER" ${{ inputs.paid_account && '--paid' || '' }}
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: GtaV-Mobile-ipa
           path: GtaV Mobile.ipa
