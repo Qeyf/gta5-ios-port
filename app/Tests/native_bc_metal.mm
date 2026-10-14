@@ -183,13 +183,13 @@ static void probeBC1PartialUpdates() {
     bool beforeCorrect = !before || probeIsSolidRed(before);
     const float *bottom = values+(4*8+4)*4;
     fprintf(stderr,"BC1 partial %s: original-block shadow=%s, GPU raw blocks=%s [top-left %02x %02x, bottom-right %02x %02x], top-left=(%.6g %.6g %.6g %.6g), bottom-right=(%.6g %.6g %.6g %.6g), pixels=%s, preceding read=%s\n",
-      staged ? "GPU staging after encoded read" : "direct CPU replace",
+      staged ? "GPU staging after encoded read" : "GPU staging without pending reads",
       shadowCorrect ? "correct" : "INCORRECT",rawCorrect ? "correct" : "INCORRECT",actual[0],actual[1],actual[24],actual[25],
       values[0],values[1],values[2],values[3],bottom[0],bottom[1],bottom[2],bottom[3],
       gpuCorrect ? "correct" : "INCORRECT",beforeCorrect ? "correct or absent" : "INCORRECT");
     correct &= rawCorrect && shadowCorrect && gpuCorrect && beforeCorrect;
   }
-  assert(correct && "Partial BC1 updates must preserve untouched blocks through CPU replacement and GPU staging.");
+  assert(correct && "Partial BC1 updates must preserve untouched blocks before and after prior GPU reads.");
 }
 
 static void checkReadback(Texture *t,uint32_t mip,uint32_t layer) {
