@@ -23,18 +23,25 @@ struct NativeLogTests {
         let metrics = try JSONSerialization.jsonObject(with: Data(contentsOf: folder.appendingPathComponent("native-metrics.json"))) as! [String: String]
         precondition(metrics["Health:"] == "Health: complete")
 
+        // Fatal engine diagnostics must reach the file before append returns;
+        // the process may terminate before the ordinary 50 ms batch executes.
+        let fatal = "Native trap 3; regression fixture"
+        log.append(fatal)
+        let playedContents = try String(contentsOf: folder.appendingPathComponent("native-port.log"), encoding: .utf8)
+        precondition(playedContents == contents + fatal + "\n", "Fatal diagnostics were left in an asynchronous batch")
+
         // Preserve the last played run across repeated shell-only launches.
         let next = NativeLog(directory: folder)
         next.append("shell only")
         next.flush()
         let previous = folder.appendingPathComponent("native-port-previous.log")
         let saved = try String(contentsOf: previous, encoding: .utf8)
-        precondition(saved == contents)
+        precondition(saved == playedContents)
         let third = NativeLog(directory: folder)
         third.append("another shell launch")
         third.flush()
         let retained = try String(contentsOf: previous, encoding: .utf8)
-        precondition(retained == contents)
+        precondition(retained == playedContents)
         print("PASS: concurrent log bursts, ordered flush, bounded UI tail, metrics and played-run rotation")
     }
 }
