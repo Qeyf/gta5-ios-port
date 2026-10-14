@@ -219,5 +219,36 @@ launch_and_check en-home en
 launch_and_check tr-home tr
 launch_and_check en-settings en --open-settings
 launch_and_check tr-cheats tr --open-cheats
-printf 'All four iOS 27 UI launch checks completed.\n' > "$output/verified.txt"
+# A full-screen modal removes the presenting view from its window. The owning
+# scene must still fence Metal when the player leaves from the cheat screen.
+echo 'Verifying scene suspension with the full-screen cheat menu open.'
+python3 - "$data_container/Documents/native-port.log" "$output/lifecycle-before.json" <<'PY'
+import json, pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+pathlib.Path(sys.argv[2]).write_text(json.dumps({key: text.count(key) for key in ('Scene inactive:', 'Scene active:')}))
+PY
+xcrun simctl launch "$simulator_id" com.apple.Preferences > "$output/background-launch.log"
+python3 - "$data_container/Documents/native-port.log" "$output/lifecycle-before.json" 'Scene inactive:' <<'PY'
+import json, pathlib, sys, time
+log, before, event = pathlib.Path(sys.argv[1]), json.loads(pathlib.Path(sys.argv[2]).read_text()), sys.argv[3]
+for _ in range(50):
+    if log.read_text().count(event) > before[event]:
+        break
+    time.sleep(0.1)
+else:
+    raise SystemExit('The full-screen modal prevented the Metal scene lifecycle callback: ' + event)
+PY
+xcrun simctl launch "$simulator_id" "$bundle_id" > "$output/foreground-launch.log"
+python3 - "$data_container/Documents/native-port.log" "$output/lifecycle-before.json" 'Scene active:' <<'PY'
+import json, pathlib, sys, time
+log, before, event = pathlib.Path(sys.argv[1]), json.loads(pathlib.Path(sys.argv[2]).read_text()), sys.argv[3]
+for _ in range(50):
+    if log.read_text().count(event) > before[event]:
+        break
+    time.sleep(0.1)
+else:
+    raise SystemExit('Metal did not resume after returning to the full-screen cheat menu.')
+PY
+cp "$data_container/Documents/native-port.log" "$output/full-screen-lifecycle.log"
+printf 'All four iOS 27 UI launches and full-screen scene suspension/resumption completed.\n' > "$output/verified.txt"
 verification_complete=true
