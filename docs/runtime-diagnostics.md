@@ -39,6 +39,8 @@ on a serial background queue, keeps the handle open, retains the last 500 UI
 lines and refreshes the visible log at four updates per second. Only lifecycle
 and boot progress events reach UIKit. Log sharing and background entry flush
 pending writes; the previous played run remains preserved.
+Fatal engine traps, stack frames and heap-access faults flush synchronously so
+the final diagnostic is not lost when a process exits before the next batch.
 
 The previous log contains a Metal
 `kIOGPUCommandBufferCallbackErrorBackgroundExecutionNotPermitted` error. Scene

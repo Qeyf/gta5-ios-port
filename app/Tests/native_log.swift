@@ -42,6 +42,6 @@ struct NativeLogTests {
         third.flush()
         let retained = try String(contentsOf: previous, encoding: .utf8)
         precondition(retained == playedContents)
-        print("PASS: concurrent log bursts, ordered flush, bounded UI tail, metrics and played-run rotation")
+        print("PASS: concurrent log bursts, ordered flush, fatal diagnostic durability, bounded UI tail, metrics and played-run rotation")
     }
 }

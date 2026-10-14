@@ -47,8 +47,12 @@ void pg_record_memory_fault(unsigned long long address,unsigned long long bytes,
 }
 
 void pg_log(const char *message) {
+  bool fatal = !strncmp(message, "Native trap ", sizeof("Native trap ")-1) ||
+    !strncmp(message, "  native frame ", sizeof("  native frame ")-1) ||
+    !strncmp(message, "Native heap access fault:", sizeof("Native heap access fault:")-1) ||
+    !strncmp(message, "Engine stopped at unported host function:", sizeof("Engine stopped at unported host function:")-1);
+  if (!logCallback || fatal) fprintf(stderr, "[native-port] %s\n", message);
   if (logCallback) logCallback(message, logContext);
-  else fprintf(stderr, "[native-port] %s\n", message);
 }
 
 void pg_missing_import(const char *name) {

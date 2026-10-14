@@ -85,7 +85,7 @@ static id<MTLBuffer> sample(Texture *t,uint32_t mip,uint32_t layer,uint32_t dxgi
   return output;
 }
 
-static void compare(id<MTLBuffer> a,id<MTLBuffer> b,int kind) {
+static void compare(id<MTLBuffer> a,id<MTLBuffer> b,int kind,const char *stage = "unspecified") {
   completeGPU();
   assert(a.length == b.length);
   const float *x = (const float *)a.contents, *y = (const float *)b.contents;
@@ -93,7 +93,7 @@ static void compare(id<MTLBuffer> a,id<MTLBuffer> b,int kind) {
     assert(std::isfinite(x[i]) && std::isfinite(y[i]));
     float tolerance = kind == 6 ? std::max(0.002f,std::abs(y[i])*0.01f) : 2.1f/255;
     if (std::abs(x[i]-y[i]) > tolerance) {
-      fprintf(stderr,"BC%d sample %zu: native %.9g, CPU fallback %.9g, tolerance %.9g\n",kind,i,x[i],y[i],tolerance);
+      fprintf(stderr,"BC%d [%s] sample %zu: native %.9g, CPU fallback %.9g, tolerance %.9g\n",kind,stage,i,x[i],y[i],tolerance);
       abort();
     }
   }
@@ -149,6 +149,49 @@ static void probeBC1UploadsAndReads() {
   assert(correct && "Known BC1 bytes must survive both uploads and read/sample correctly without texture views.");
 }
 
+static void probeBC1PartialUpdates() {
+  const uint8_t red[] = {0x00,0xf8,0,0,0,0,0,0}, blue[] = {0x1f,0x00,0,0,0,0,0,0};
+  uint8_t fullRed[32], expected[32];
+  for (unsigned i = 0; i < 4; i++) memcpy(fullRed+i*8,red,8);
+  memcpy(expected,fullRed,sizeof expected); memcpy(expected+24,blue,8);
+  bool correct = true;
+  for (bool staged : {false,true}) {
+    Texture *t = makeTexture(71,8,8,1,1,true);
+    uploadTextureBytes(t,0,0,0,0,0,8,8,1,16,0,fullRed,sizeof fullRed);
+    completeGPU();
+    id<MTLBuffer> before = nil;
+    if (staged) {
+      before = probeBaseTexture(t->tex,samplingPipeline);
+      t->lastUse = R->serial; // Same bookkeeping as an encoded production draw.
+    }
+    uploadTextureBytes(t,0,0,4,4,0,4,4,1,8,0,blue,sizeof blue);
+    id<MTLBuffer> after = probeBaseTexture(t->tex,samplingPipeline);
+    completeGPU();
+    uint8_t actual[32] = {};
+    [t->tex getBytes:actual bytesPerRow:16 bytesPerImage:0 fromRegion:MTLRegionMake2D(0,0,8,8) mipmapLevel:0 slice:0];
+    bool rawCorrect = !memcmp(actual,expected,sizeof actual);
+    bool shadowCorrect = t->compressedShadow.at(0).size() == sizeof expected &&
+      !memcmp(t->compressedShadow.at(0).data(),expected,sizeof expected);
+    bool gpuCorrect = true;
+    const float *values = (const float *)after.contents;
+    for (unsigned y = 0; y < 8; y++) for (unsigned x = 0; x < 8; x++) for (unsigned channel = 0; channel < 4; channel++) {
+      bool bottomRight = x >= 4 && y >= 4;
+      float expectedValue = channel == 3 || (bottomRight ? channel == 2 : channel == 0) ? 1 : 0;
+      float value = values[(y*8+x)*4+channel];
+      if (!std::isfinite(value) || std::abs(value-expectedValue) > 0.001f) gpuCorrect = false;
+    }
+    bool beforeCorrect = !before || probeIsSolidRed(before);
+    const float *bottom = values+(4*8+4)*4;
+    fprintf(stderr,"BC1 partial %s: original-block shadow=%s, GPU raw blocks=%s [top-left %02x %02x, bottom-right %02x %02x], top-left=(%.6g %.6g %.6g %.6g), bottom-right=(%.6g %.6g %.6g %.6g), pixels=%s, preceding read=%s\n",
+      staged ? "GPU staging after encoded read" : "direct CPU replace",
+      shadowCorrect ? "correct" : "INCORRECT",rawCorrect ? "correct" : "INCORRECT",actual[0],actual[1],actual[24],actual[25],
+      values[0],values[1],values[2],values[3],bottom[0],bottom[1],bottom[2],bottom[3],
+      gpuCorrect ? "correct" : "INCORRECT",beforeCorrect ? "correct or absent" : "INCORRECT");
+    correct &= rawCorrect && shadowCorrect && gpuCorrect && beforeCorrect;
+  }
+  assert(correct && "Partial BC1 updates must preserve untouched blocks through CPU replacement and GPU staging.");
+}
+
 static void checkReadback(Texture *t,uint32_t mip,uint32_t layer) {
   uint32_t w,h,d; mipExtent(t,mip,w,h,d);
   PGBCUploadLayout layout;
@@ -172,34 +215,36 @@ static void verifyFormat(uint32_t dxgi) {
   id<MTLBuffer> beforeNative = sample(native,0,0), beforeFallback = sample(fallback,0,0);
   uploadPair(native,fallback,0,0x146facbu+dxgi,false);
   id<MTLBuffer> afterNative = sample(native,0,0), afterFallback = sample(fallback,0,0);
-  compare(beforeNative,beforeFallback,native->bcKind);
-  compare(afterNative,afterFallback,native->bcKind);
+  compare(beforeNative,beforeFallback,native->bcKind,"in-flight sample before update");
+  compare(afterNative,afterFallback,native->bcKind,"in-flight sample after update");
   for (uint32_t mip = 0; mip < 4; mip++) for (uint32_t layer = 0; layer < 2; layer++) {
-    compare(sample(native,mip,layer),sample(fallback,mip,layer),native->bcKind);
+    char stage[64]; snprintf(stage,sizeof stage,"initial chain mip %u layer %u",mip,layer);
+    compare(sample(native,mip,layer),sample(fallback,mip,layer),native->bcKind,stage);
     checkReadback(native,mip,layer); checkReadback(fallback,mip,layer);
   }
   // Odd source padding must repack into block-aligned rows before a Metal blit.
   uploadPair(native,fallback,0,0x9f00812u+dxgi,true);
-  compare(sample(native,0,1),sample(fallback,0,1),native->bcKind);
+  compare(sample(native,0,1),sample(fallback,0,1),native->bcKind,"odd-padded source upload layer 1");
 
   for (bool destinationNative : {true,false}) {
     Texture *target = makeTexture(dxgi,8,8,4,2,destinationNative);
     copyResource(target->oid,native->oid);
     for (uint32_t mip = 0; mip < 4; mip++) {
-      compare(sample(target,mip,1),sample(fallback,mip,1),native->bcKind);
+      char stage[80]; snprintf(stage,sizeof stage,"CopyResource native source to %s destination mip %u layer 1",destinationNative ? "native" : "decoded",mip);
+      compare(sample(target,mip,1),sample(fallback,mip,1),native->bcKind,stage);
       assert(target->compressedShadow.at(((uint64_t)mip<<32)|1) == native->compressedShadow.at(((uint64_t)mip<<32)|1));
       checkReadback(target,mip,1);
     }
     // Software source to native destination is the reverse mixed-format path.
     copyResource(target->oid,fallback->oid);
-    compare(sample(target,0,0),sample(fallback,0,0),native->bcKind);
+    compare(sample(target,0,0),sample(fallback,0,0),native->bcKind,destinationNative ? "CopyResource decoded source to native destination layer 0" : "CopyResource decoded source to decoded destination layer 0");
   }
   // A self copy must snapshot blocks before overwriting the destination.
   for (Texture *t : {native,fallback}) {
     uint32_t region[14] = {t->oid,0,4,4,0,t->oid,0,1,0,0,0,4,4,1};
     copyRegion(region);
   }
-  compare(sample(native,0,0),sample(fallback,0,0),native->bcKind);
+  compare(sample(native,0,0),sample(fallback,0,0),native->bcKind,"self-copy 4x4 block to bottom-right of 8x8 mip");
   assert(native->compressedShadow.at(0) == fallback->compressedShadow.at(0));
   std::vector<uint8_t> beforeInvalid = native->compressedShadow.at(0);
   uint64_t uploadedBeforeInvalid = R->bcNativeUploadBytes;
@@ -207,10 +252,10 @@ static void verifyFormat(uint32_t dxgi) {
   assert(native->compressedShadow.at(0) == beforeInvalid && R->bcNativeUploadBytes == uploadedBeforeInvalid);
   // Both directions of an sRGB/linear reinterpretation use actual SRV views.
   if (native->bcKind == 1 || native->bcKind == 2 || native->bcKind == 3 || native->bcKind == 7) {
-    compare(sample(native,0,0,dxgi+1),sample(fallback,0,0,dxgi+1),native->bcKind);
+    compare(sample(native,0,0,dxgi+1),sample(fallback,0,0,dxgi+1),native->bcKind,"linear texture sampled through sRGB SRV");
     Texture *s = makeTexture(dxgi+1,8,8,4,2,true), *f = makeTexture(dxgi+1,8,8,4,2,false);
     uploadPair(s,f,0,0x315fca1u+dxgi,false);
-    compare(sample(s,0,0,dxgi),sample(f,0,0,dxgi),native->bcKind);
+    compare(sample(s,0,0,dxgi),sample(f,0,0,dxgi),native->bcKind,"sRGB texture sampled through linear SRV");
   }
 }
 
@@ -285,6 +330,7 @@ int main() {
     assert(nearestSamplingPipeline);
     fprintf(stderr,"Testing production BC texture paths on %s\n",device.name.UTF8String);
     probeBC1UploadsAndReads();
+    probeBC1PartialUpdates();
     if (getenv("PG_BC_PROBE_ONLY")) {
       puts("PASS: known BC1 probe only; the full randomized texture suite was not run.");
       return 0;

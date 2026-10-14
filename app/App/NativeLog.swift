@@ -41,6 +41,13 @@ final class NativeLog {
         if needsSchedule {
             queue.asyncAfter(deadline: .now() + .milliseconds(50)) { [weak self] in self?.drain() }
         }
+        // A fatal engine trap can terminate the process before the next batch.
+        // Keep these rare diagnostics synchronous without slowing normal logs.
+        if line.hasPrefix("Native trap ") || line.hasPrefix("  native frame ") ||
+           line.hasPrefix("Native heap access fault:") || line.hasPrefix("Native boot stopped:") ||
+           line.hasPrefix("Engine stopped at unported host function:") {
+            flush()
+        }
     }
 
     func snapshot() -> (lines: [String], revision: UInt64) {
