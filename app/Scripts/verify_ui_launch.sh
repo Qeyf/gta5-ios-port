@@ -172,13 +172,16 @@ test -n "$device_type_id"
 simulator_id=$(xcrun simctl create "GtaV UI smoke $(uuidgen)" "$device_type_id" "$runtime_id")
 printf 'Runtime: %s\nDevice type: %s\n' "$runtime_id" "$device_type_id" >> "$output/toolchain.log"
 xcrun simctl boot "$simulator_id"
+echo "Booting the isolated iOS 27 simulator: $simulator_id"
 xcrun simctl bootstatus "$simulator_id" -b > "$output/boot.log" 2>&1
+echo 'Simulator boot completed; installing the native UI shell.'
 xcrun simctl install "$simulator_id" "$app_bundle"
 data_container=$(xcrun simctl get_app_container "$simulator_id" "$bundle_id" data)
 
 launch_and_check() {
   local name=$1 language=$2 launch_output app_pid attempt status
   shift 2
+  echo "Launching $name with language $language."
   launch_output=$(xcrun simctl launch --terminate-running-process "$simulator_id" \
     "$bundle_id" -AppleLanguages "($language)" "$@")
   printf '%s\n' "$launch_output" > "$output/$name-launch.log"
