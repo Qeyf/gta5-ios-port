@@ -26,6 +26,10 @@ jobs:
           cc -std=c11 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
             app/Tests/cheat_input.c -o "$RUNNER_TEMP/check-cheat-input"
           "$RUNNER_TEMP/check-cheat-input"
+      - name: Verify batched native log persistence
+        run: |
+          xcrun swiftc app/App/NativeLog.swift app/Tests/native_log.swift -o "$RUNNER_TEMP/check-native-log"
+          "$RUNNER_TEMP/check-native-log"
       - name: Compile all Swift UI against the iOS SDK
         run: |
           mkdir -p app/Build/UIVerification/objects app/Build/UIVerification/strings
