@@ -13,6 +13,7 @@ void frameReportsRecord(double,double,uint64_t,bool,const FrameWork &) {}
 }
 
 static id<MTLComputePipelineState> samplingPipeline;
+static id<MTLComputePipelineState> nearestSamplingPipeline;
 static uint32_t nextTextureId = 1;
 
 static void completeGPU() {
@@ -96,6 +97,56 @@ static void compare(id<MTLBuffer> a,id<MTLBuffer> b,int kind) {
       abort();
     }
   }
+}
+
+static id<MTLBuffer> probeBaseTexture(id<MTLTexture> source,id<MTLComputePipelineState> pipeline) {
+  id<MTLBuffer> out = [R->device newBufferWithLength:source.width*source.height*16 options:MTLResourceStorageModeShared];
+  assert(out);
+  memset(out.contents,0xcd,out.length);
+  endEncoders();
+  id<MTLComputeCommandEncoder> encoder = [commandBuffer() computeCommandEncoder];
+  [encoder setComputePipelineState:pipeline];
+  [encoder setTexture:source atIndex:0];
+  [encoder setBuffer:out offset:0 atIndex:0];
+  [encoder dispatchThreads:MTLSizeMake(source.width,source.height,1) threadsPerThreadgroup:MTLSizeMake(4,4,1)];
+  [encoder endEncoding];
+  return out;
+}
+
+static bool probeIsSolidRed(id<MTLBuffer> buffer) {
+  const float *values = (const float *)buffer.contents;
+  for (size_t i = 0; i < buffer.length/sizeof(float); i++) {
+    float expected = i%4 == 0 || i%4 == 3 ? 1 : 0;
+    if (!std::isfinite(values[i]) || std::abs(values[i]-expected) > 0.001f) return false;
+  }
+  return true;
+}
+
+static void probeBC1UploadsAndReads() {
+  bool correct = true;
+  const uint8_t solidRed[] = {0x00,0xf8,0x00,0x00,0x00,0x00,0x00,0x00};
+  for (bool padded : {false,true}) {
+    Texture *t = makeTexture(71,4,4,1,1,true);
+    uploadTextureBytes(t,0,0,0,0,0,4,4,1,padded ? 16 : 8,0,solidRed,sizeof solidRed);
+    completeGPU();
+    uint8_t actual[sizeof solidRed] = {};
+    [t->tex getBytes:actual bytesPerRow:8 bytesPerImage:0 fromRegion:MTLRegionMake2D(0,0,4,4) mipmapLevel:0 slice:0];
+    const auto &shadow = t->compressedShadow.at(0);
+    bool bytesMatch = shadow.size() == sizeof actual && !memcmp(actual,shadow.data(),sizeof actual);
+    // Bind the base texture directly: this probe has no array, mip or SRV view.
+    id<MTLBuffer> read = probeBaseTexture(t->tex,samplingPipeline);
+    id<MTLBuffer> sampled = probeBaseTexture(t->tex,nearestSamplingPipeline);
+    completeGPU();
+    const float *r = (const float *)read.contents, *s = (const float *)sampled.contents;
+    bool readCorrect = probeIsSolidRed(read), sampleCorrect = probeIsSolidRed(sampled);
+    fprintf(stderr,"BC1 probe %s: format=%lu storage=%lu type=%lu, raw blocks=%s [%02x %02x %02x %02x %02x %02x %02x %02x], read=(%.6g %.6g %.6g %.6g) %s, nearest sample=(%.6g %.6g %.6g %.6g) %s\n",
+      padded ? "GPU blit from padded source" : "CPU replace from tight source",
+      (unsigned long)t->tex.pixelFormat,(unsigned long)t->tex.storageMode,(unsigned long)t->tex.textureType,
+      bytesMatch ? "match" : "MISMATCH",actual[0],actual[1],actual[2],actual[3],actual[4],actual[5],actual[6],actual[7],
+      r[0],r[1],r[2],r[3],readCorrect ? "correct" : "INCORRECT",s[0],s[1],s[2],s[3],sampleCorrect ? "correct" : "INCORRECT");
+    correct &= bytesMatch && readCorrect && sampleCorrect;
+  }
+  assert(correct && "Known BC1 bytes must survive both uploads and read/sample correctly without texture views.");
 }
 
 static void checkReadback(Texture *t,uint32_t mip,uint32_t layer) {
@@ -225,12 +276,19 @@ int main() {
     R->memSize = 1<<20; R->mem = (uint8_t *)calloc(1,R->memSize);
     assert(R->queue && R->mem);
     NSError *error = nil;
-    NSString *shader = @"#include <metal_stdlib>\nusing namespace metal;\nkernel void readPixels(texture2d<float,access::read> image [[texture(0)]],device float4 *out [[buffer(0)]],uint2 p [[thread_position_in_grid]]) { if(p.x<image.get_width()&&p.y<image.get_height()) out[p.y*image.get_width()+p.x]=image.read(p); }";
+    NSString *shader = @"#include <metal_stdlib>\nusing namespace metal;\nkernel void readPixels(texture2d<float,access::read> image [[texture(0)]],device float4 *out [[buffer(0)]],uint2 p [[thread_position_in_grid]]) { if(p.x<image.get_width()&&p.y<image.get_height()) out[p.y*image.get_width()+p.x]=image.read(p); }\nkernel void samplePixels(texture2d<float,access::sample> image [[texture(0)]],device float4 *out [[buffer(0)]],uint2 p [[thread_position_in_grid]]) { constexpr sampler nearest(coord::normalized,filter::nearest,address::clamp_to_edge); if(p.x<image.get_width()&&p.y<image.get_height()) out[p.y*image.get_width()+p.x]=image.sample(nearest,(float2(p)+0.5f)/float2(image.get_width(),image.get_height()),level(0.0f)); }";
     id<MTLLibrary> library = [device newLibraryWithSource:shader options:nil error:&error];
     assert(library);
     samplingPipeline = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"readPixels"] error:&error];
     assert(samplingPipeline);
+    nearestSamplingPipeline = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"samplePixels"] error:&error];
+    assert(nearestSamplingPipeline);
     fprintf(stderr,"Testing production BC texture paths on %s\n",device.name.UTF8String);
+    probeBC1UploadsAndReads();
+    if (getenv("PG_BC_PROBE_ONLY")) {
+      puts("PASS: known BC1 probe only; the full randomized texture suite was not run.");
+      return 0;
+    }
     for (uint32_t dxgi : {71u,74u,77u,80u,83u,95u,98u}) verifyFormat(dxgi);
     Texture *unaligned = makeTexture(71,7,5,3,1,true);
     assert(!unaligned->hardwareBC && unaligned->format == MTLPixelFormatRGBA8Unorm);
