@@ -46,7 +46,9 @@ jobs:
         run: python3 app/Scripts/check_extracted_localizations.py app/Build/UIVerification/strings
       - name: Launch the real UIKit shell on an iOS 27 simulator
         timeout-minutes: 5
-        run: bash app/Scripts/verify_ui_launch.sh
+        run: |
+          bash app/Scripts/verify_ui_launch.sh
+          test -s app/Build/UIVerification/launch/verified.txt
       - name: Keep UI launch screenshots and diagnostics
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.2

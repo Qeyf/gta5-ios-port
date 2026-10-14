@@ -6,6 +6,7 @@ set -euo pipefail
 app_root=$(cd "$(dirname "$0")/.." && pwd)
 output="$app_root/Build/UIVerification/launch"
 mkdir -p "$output"
+rm -f "$output/verified.txt"
 
 if ! command -v xcrun >/dev/null || [ "$(uname -m)" != arm64 ]; then
   echo 'UI launch verification requires an Apple Silicon Mac with Xcode 27.' >&2
@@ -15,6 +16,7 @@ fi
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/gtav-ui-smoke.XXXXXX")
 simulator_id=''
 data_container=''
+verification_complete=false
 cleanup() {
   local status=$?
   trap - EXIT INT TERM
@@ -27,6 +29,10 @@ cleanup() {
     xcrun simctl delete "$simulator_id" >/dev/null 2>&1
   fi
   rm -rf "$scratch"
+  if [ "$status" -eq 0 ] && [ "$verification_complete" != true ]; then
+    echo 'UI launch verification did not complete all launch checks.' >&2
+    status=1
+  fi
   exit "$status"
 }
 trap cleanup EXIT
@@ -130,7 +136,9 @@ codesign --force --sign - "$app_bundle" >> "$output/build.log" 2>&1
 
 # Read installed inventory. Never launch or erase a pre-existing simulator.
 xcrun simctl list --json > "$output/simulators.json"
-IFS=$'\t' read -r runtime_id device_type_id < <(python3 - "$output/simulators.json" <<'PY'
+# macOS /bin/bash is 3.2: a heredoc inside process substitution can be
+# misparsed. Run Python directly so its errors also propagate through set -e.
+python3 - "$output/simulators.json" > "$scratch/selection.tsv" <<'PY'
 import json, pathlib, re, sys
 inventory = json.loads(pathlib.Path(sys.argv[1]).read_text())
 def version(text):
@@ -158,7 +166,7 @@ if not phones:
 phone = max(phones, key=lambda item: (version(item['name']), 'Pro' in item['name'], item['name']))
 print(runtime['identifier'] + '\t' + phone['identifier'])
 PY
-)
+IFS=$'\t' read -r runtime_id device_type_id < "$scratch/selection.tsv"
 test -n "$runtime_id"
 test -n "$device_type_id"
 simulator_id=$(xcrun simctl create "GtaV UI smoke $(uuidgen)" "$device_type_id" "$runtime_id")
@@ -208,3 +216,5 @@ launch_and_check en-home en
 launch_and_check tr-home tr
 launch_and_check en-settings en --open-settings
 launch_and_check tr-cheats tr --open-cheats
+printf 'All four iOS 27 UI launch checks completed.\n' > "$output/verified.txt"
+verification_complete=true
