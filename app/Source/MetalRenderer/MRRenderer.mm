@@ -529,9 +529,11 @@ static void uploadTextureBytes(Texture *t, uint32_t mip, uint32_t slice, uint32_
 		}
 		if (!storeCompressed(t, mip, slice, x, y, z, d, layout, data)) return;
 		if (t->hardwareBC) {
-			if (t->shared && !inFlight(t->lastUse) && layout.sourceRowPitch == layout.rowBytes) {
+			if (t->shared && !inFlight(t->lastUse) && x == 0 && y == 0 && w == mw && h == mh &&
+			    layout.sourceRowPitch == layout.rowBytes) {
 				// CPU writes are safe only after every GPU use has completed.
-				// Non-tight external strides use the bounded staging path below.
+				// Keep partial compressed updates on the ordered GPU path so
+				// neighboring blocks and previously sampled array views stay intact.
 				for (uint32_t layer = 0; layer < d; layer++)
 					[t->tex replaceRegion:MTLRegionMake2D(x,y,w,h) mipmapLevel:mip slice:slice+layer
 					             withBytes:data+layer*layout.sourceImagePitch bytesPerRow:layout.sourceRowPitch bytesPerImage:0];
