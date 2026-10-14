@@ -2129,7 +2129,7 @@ static void report() {
 	logf("[metal] memory: %llu MB allocated, %llu MB upload ring retained",
 	     (unsigned long long)(R->device.currentAllocatedSize / 1048576),
 	     (unsigned long long)(uploadBytes / 1048576));
-#if !TARGET_OS_SIMULATOR
+#if TARGET_OS_IOS && !TARGET_OS_SIMULATOR && !TARGET_OS_MACCATALYST
 	if (os_proc_available_memory() < 512ull * 1048576) uploadTrimGeneration.fetch_add(1, std::memory_order_relaxed);
 #endif
 	memset(R->commitReasons, 0, sizeof R->commitReasons); memset(R->skipReasons, 0, sizeof R->skipReasons);
