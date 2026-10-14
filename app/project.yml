@@ -66,6 +66,8 @@ targets:
     dependencies:
       - sdk: QuartzCore.framework
       - sdk: Metal.framework
+      - sdk: ImageIO.framework
+      - sdk: UniformTypeIdentifiers.framework
       - sdk: IOSurface.framework
       - sdk: UIKit.framework
       - sdk: MetalKit.framework

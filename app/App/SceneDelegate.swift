@@ -13,4 +13,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         window.makeKeyAndVisible()
     }
+
+    // UIKit removes a presenting view's window during a full-screen modal.
+    // The scene delegate retains stable ownership even while Cheats is open.
+    func sceneWillResignActive(_ scene: UIScene) {
+        (window?.rootViewController as? NativePortViewController)?.sceneDeactivated()
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        (window?.rootViewController as? NativePortViewController)?.sceneActivated()
+    }
 }

@@ -76,7 +76,8 @@ struct Texture : Object {
 	uint32_t dxgi = 0, bind = 0, dim = 2, width = 1, height = 1, depthOrLayers = 1, mips = 1, samples = 1;
 	bool isDepth = false, hasStencil = false, shared = false, floatNoFilter = false;
 	bool alphaView = false;		// A8 render target: stored as R8, sampled through a (0,0,0,R) swizzled view
-	int bcKind = 0;			// 1..7: block-compressed source decoded on the CPU (no BC on the GPU)
+	int bcKind = 0;			// 1..7: original block-compressed source (also retained for readbacks)
+	bool hardwareBC = false;		// eligible devices sample the original blocks; all others decode on the CPU
 	bool bcSrgb = false;
 	uint64_t lastUse = 0;		// command buffer serial that last referenced it
 	std::unordered_map<uint64_t, id<MTLTexture>> views;
@@ -149,7 +150,7 @@ struct FormatInfo {
 	int bc = 0;			// BC1..7 source
 	bool srgb = false, a8 = false;
 };
-FormatInfo mapFormat(uint32_t dxgi, uint32_t bind);
+FormatInfo mapFormat(uint32_t dxgi, uint32_t bind, bool hardwareBC = false);
 MTLPixelFormat viewFormat(uint32_t dxgi, MTLPixelFormat textureFormat);
 bool isDepthFormat(MTLPixelFormat f);
 bool hasStencil(MTLPixelFormat f);

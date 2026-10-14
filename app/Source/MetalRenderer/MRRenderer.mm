@@ -11,10 +11,12 @@
 #include "MetalRenderer.h"
 #include "MRFrameReports.h"
 #include "BCTextureDecoder.h"
+#include "NativeBCTextures.h"
 #include "NativeFrameRate.h"
 #include "NativeRenderLifecycle.h"
 #include "NativeFrameUploadCache.h"
-#import <UIKit/UIKit.h>
+#import <ImageIO/ImageIO.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <TargetConditionals.h>
 #include <pthread.h>
 #include <mutex>
@@ -136,7 +138,7 @@ struct Renderer {
 	id<MTLCommandQueue> queue;
 	CAMetalLayer *layer;
 	ObjectTable objs;
-	bool float32Filtering = false, borderColors = false;
+	bool float32Filtering = false, borderColors = false, bcTextures = false;
 
 	// command buffers
 	id<MTLCommandBuffer> cmd;
@@ -212,6 +214,7 @@ struct Renderer {
 	uint64_t draws = 0, skipped = 0, pendingSkips = 0, clamped = 0, presents = 0, commits = 0;
 	double statT = 0, busyMs = 0, lastCommitMs = 0, lastPresentMs = 0;
 	FrameWork work;
+	uint64_t bcNativeCreated = 0, bcFallbackCreated = 0, bcNativeUploadBytes = 0, bcDecodedBytes = 0;
 	uint64_t statDraws = 0, statPresents = 0, statSkips = 0, statPending = 0, statCommits = 0;
 	PGFrameRateWindow fpsWindow;
 	std::atomic<double> fps{0}, lastPresent{0};
@@ -425,11 +428,13 @@ static void createTexture(const uint32_t *p) {
 	uint32_t id = p[0], dim = p[1], w = std::max(1u, p[2]), h = std::max(1u, p[3]), d = std::max(1u, p[4]), mips = std::max(1u, p[5]);
 	uint32_t arraySize = std::max(1u, p[6]), dxgi = p[7], bind = p[8], samples = std::max(1u, p[9]);
 	FormatInfo m = mapFormat(dxgi, bind);
+	bool hardwareBC = pg_bc_native_eligible(R->bcTextures, m.bc, dim, w, h, mips, arraySize, samples, bind);
+	if (hardwareBC) m = mapFormat(dxgi, bind, true);
 	auto *t = new Texture(id);
 	t->format = m.format; t->dxgi = dxgi; t->bind = bind; t->dim = dim; t->width = w; t->height = dim == 1 ? 1 : h;
 	t->depthOrLayers = dim == 3 ? d : arraySize; t->mips = mips; t->samples = samples;
 	t->isDepth = isDepthFormat(m.format); t->hasStencil = hasStencil(m.format);
-	t->bcKind = m.bc; t->bcSrgb = m.srgb;
+	t->bcKind = m.bc; t->bcSrgb = m.srgb; t->hardwareBC = hardwareBC;
 	t->floatNoFilter = isFloat32(m.format) && !R->float32Filtering;
 	MTLTextureDescriptor *desc = [MTLTextureDescriptor new];
 	desc.pixelFormat = m.format;
@@ -453,10 +458,20 @@ static void createTexture(const uint32_t *p) {
 		desc.swizzle = MTLTextureSwizzleChannelsMake(MTLTextureSwizzleZero, MTLTextureSwizzleZero, MTLTextureSwizzleZero, MTLTextureSwizzleRed);
 	else if (m.a8) { t->alphaView = true; desc.usage |= MTLTextureUsagePixelFormatView; }
 	t->tex = [R->device newTextureWithDescriptor:desc];
+	if (!t->tex && hardwareBC) {
+		// Allocation can still fail. Keep the established decoder as the fallback.
+		FormatInfo fallback = mapFormat(dxgi, bind);
+		t->hardwareBC = false; t->format = fallback.format;
+		desc.pixelFormat = fallback.format;
+		desc.usage = MTLTextureUsageShaderRead | (fallback.alt != MTLPixelFormatInvalid ? MTLTextureUsagePixelFormatView : 0);
+		t->tex = [R->device newTextureWithDescriptor:desc];
+		logOnce("bcfallback", "Metal renderer: native BC allocation unavailable; using the CPU decoder for this texture.");
+	}
 #if MR_TRACE
 	if (m.a8 && (bind & (BIND_RT | BIND_UAV))) logOnce("a8rt" + std::to_string(w) + "x" + std::to_string(h), "Metal renderer [trace]: A8 render target %u %ux%u bind %#x", id, w, h, bind);
 #endif
 	if (!t->tex) logOnce("tex" + std::to_string(dxgi) + "x" + std::to_string(bind), "Metal renderer: texture %ux%u dxgi %u bind %#x could not be created", w, h, dxgi, bind);
+	else if (t->bcKind) { if (t->hardwareBC) R->bcNativeCreated++; else R->bcFallbackCreated++; }
 	R->objs.set(id, t);
 }
 
@@ -467,22 +482,26 @@ static void mipExtent(Texture *t, uint32_t mip, uint32_t &w, uint32_t &h, uint32
 static uint32_t bcBlockBytes(int kind) { return kind == 1 || kind == 4 ? 8 : 16; }
 static uint32_t decodedBytes(int kind) { return kind == 4 ? 1 : kind == 5 ? 2 : kind == 6 ? 8 : 4; }
 
-static void storeCompressed(Texture *t, uint32_t mip, uint32_t slice, uint32_t x, uint32_t y, uint32_t z, uint32_t w, uint32_t h, uint32_t d,
-                            uint32_t bpr, uint32_t rpi, const uint8_t *data, size_t size) {
+static bool storeCompressed(Texture *t, uint32_t mip, uint32_t slice, uint32_t x, uint32_t y, uint32_t z, uint32_t d,
+                            const PGBCUploadLayout &layout, const uint8_t *data) {
 	uint32_t mw, mh, md; mipExtent(t, mip, mw, mh, md);
-	uint32_t bb = bcBlockBytes(t->bcKind), pitch = (mw + 3) / 4 * bb, rows = (mh + 3) / 4, count = (w + 3) / 4 * bb, uploadRows = (h + 3) / 4;
-	size_t sourceSlice = (size_t)bpr * (rpi ? rpi : uploadRows);
+	PGBCUploadLayout target;
+	if (!pg_bc_upload_layout(t->bcKind, mw, mh, 1, 0, 0, SIZE_MAX, &target)) return false;
+	size_t column = (size_t)(x/4)*bcBlockBytes(t->bcKind), row0 = y/4;
+	if (column > target.rowBytes || layout.rowBytes > target.rowBytes-column ||
+	    row0 > target.rows || layout.rows > target.rows-row0) return false;
 	bool three = t->dim == 3;
 	for (uint32_t layer = 0; layer < d; layer++) {
 		uint64_t key = ((uint64_t)mip << 32) | (three ? z + layer : slice + layer);
 		auto &shadow = t->compressedShadow[key];
-		if (shadow.empty()) shadow.resize((size_t)pitch * rows);
-		for (uint32_t row = 0; row < uploadRows; row++) {
-			size_t from = layer * sourceSlice + (size_t)row * bpr, to = (size_t)(y / 4 + row) * pitch + (x / 4) * bb;
-			if (from + count > size || to + count > shadow.size()) break;
-			memcpy(shadow.data() + to, data + from, count);
+		if (shadow.empty()) shadow.resize(target.imageBytes);
+		for (size_t row = 0; row < layout.rows; row++) {
+			size_t from = layer*layout.sourceImagePitch+row*layout.sourceRowPitch;
+			size_t to = (row0+row)*target.rowBytes+column;
+			memcpy(shadow.data()+to, data+from, layout.rowBytes);
 		}
 	}
+	return true;
 }
 
 static void uploadTextureInner(const uint32_t *p);
@@ -492,22 +511,49 @@ static void uploadTexture(const uint32_t *p) {
 	R->work.uploads += nowMs() - t0;
 	R->work.uploadBytes += p[11];
 }
-static void uploadTextureInner(const uint32_t *p) {
-	Texture *t = texture(p[0]);
+static void uploadTextureBytes(Texture *t, uint32_t mip, uint32_t slice, uint32_t x, uint32_t y, uint32_t z,
+                               uint32_t w, uint32_t h, uint32_t d, uint32_t bpr, uint32_t rpi, const uint8_t *data, size_t size) {
 	if (!t || !t->tex) return;
-	uint32_t mip = p[1], slice = p[2], x = p[3], y = p[4], z = p[5], w = p[6], h = p[7], d = std::max(1u, p[8]);
-	uint32_t bpr = p[9], rpi = p[10], size = p[11];
-	const uint8_t *data = (const uint8_t *)(p + 12);
-	if (mip >= t->mips) return;
+	if (mip >= t->mips || mip >= 32) return;
 	void *decoded = nullptr;
 	if (t->bcKind) {
 		uint32_t mw, mh, md; mipExtent(t, mip, mw, mh, md);
 		w = std::min(w, mw - std::min(mw, x)); h = std::min(h, mh - std::min(mh, y));
 		if (!w || !h) return;
-		storeCompressed(t, mip, slice, x, y, z, w, h, d, bpr, rpi, data, size);
+		if (!d || (t->dim == 3 ? z >= md || d > md-z : slice >= t->depthOrLayers || d > t->depthOrLayers-slice)) return;
+		PGBCUploadLayout layout;
+		if (!pg_bc_upload_layout(t->bcKind, w, h, d, bpr, rpi, size, &layout) ||
+		    (t->hardwareBC && !pg_bc_region_valid(mw, mh, x, y, w, h))) {
+			logOnce("bcupload", "Metal renderer: invalid BC upload geometry or source bounds; update skipped.");
+			return;
+		}
+		if (!storeCompressed(t, mip, slice, x, y, z, d, layout, data)) return;
+		if (t->hardwareBC) {
+			if (t->shared && !inFlight(t->lastUse) && layout.sourceRowPitch == layout.rowBytes) {
+				// CPU writes are safe only after every GPU use has completed.
+				// Non-tight external strides use the bounded staging path below.
+				for (uint32_t layer = 0; layer < d; layer++)
+					[t->tex replaceRegion:MTLRegionMake2D(x,y,w,h) mipmapLevel:mip slice:slice+layer
+					             withBytes:data+layer*layout.sourceImagePitch bytesPerRow:layout.sourceRowPitch bytesPerImage:0];
+			} else {
+				// Copy only real block rows. Pixel-height strides would expand the
+				// payload fourfold and read beyond tiny mip levels or padded arrays.
+				Alloc a = frameAlloc(layout.totalBytes, 16);
+				if (!a.ptr || !pg_bc_pack_rows(&layout, data, size, a.ptr, layout.totalBytes)) return;
+				id<MTLBlitCommandEncoder> encoder = blitEncoder();
+				for (uint32_t layer = 0; layer < d; layer++)
+					[encoder copyFromBuffer:a.buf sourceOffset:a.off+layer*layout.imageBytes sourceBytesPerRow:layout.rowBytes sourceBytesPerImage:0
+					             sourceSize:MTLSizeMake(w,h,1) toTexture:t->tex destinationSlice:slice+layer destinationLevel:mip destinationOrigin:MTLOriginMake(x,y,0)];
+				t->lastUse = R->serial;
+			}
+			t->proxyDirty = true;
+			R->bcNativeUploadBytes += layout.totalBytes;
+			return;
+		}
 		size_t outSize = 0;
 		decoded = PGDecodeBC(t->bcKind, w, h, d, bpr, rpi, data, size, &outSize);
 		if (!decoded) { logOnce("bcfail", "Metal renderer: BC decode failed"); return; }
+		R->bcDecodedBytes += outSize;
 		data = (const uint8_t *)decoded; bpr = w * decodedBytes(t->bcKind); rpi = h; size = (uint32_t)outSize;
 	}
 	uint32_t imageBytes = bpr * (rpi ? rpi : h);
@@ -527,6 +573,10 @@ static void uploadTextureInner(const uint32_t *p) {
 	}
 	if (decoded) free(decoded);
 	t->proxyDirty = true;
+}
+static void uploadTextureInner(const uint32_t *p) {
+	uploadTextureBytes(texture(p[0]),p[1],p[2],p[3],p[4],p[5],p[6],p[7],std::max(1u,p[8]),p[9],p[10],
+	                   (const uint8_t *)(p+12),p[11]);
 }
 
 // ---- buffers ------------------------------------------------------------------------------------------------------------
@@ -1446,6 +1496,45 @@ static void dispatch(uint32_t x, uint32_t y, uint32_t z) {
 }
 
 // ---- copies -------------------------------------------------------------------------------------------------------------
+static bool copyCompressedRegion(Texture *s, Texture *d, uint32_t sMip, uint32_t sLayer, uint32_t sx, uint32_t sy, uint32_t sz,
+                                 uint32_t dMip, uint32_t dLayer, uint32_t dx, uint32_t dy, uint32_t dz, uint32_t w, uint32_t h, uint32_t depth) {
+	if (!s->bcKind || s->bcKind != d->bcKind || s->dim != d->dim || s->samples != 1 || d->samples != 1 || sMip >= 32 || dMip >= 32) return false;
+	uint32_t sw, sh, sd, dw, dh, dd; mipExtent(s,sMip,sw,sh,sd); mipExtent(d,dMip,dw,dh,dd);
+	if (!pg_bc_region_valid(sw,sh,sx,sy,w,h) || !pg_bc_region_valid(dw,dh,dx,dy,w,h)) return false;
+	bool three = s->dim == 3;
+	depth = three ? depth : 1;
+	if (!depth || (three ? sz >= sd || depth > sd-sz || dz >= dd || depth > dd-dz : sLayer >= s->depthOrLayers || dLayer >= d->depthOrLayers)) return false;
+	PGBCUploadLayout patch, source;
+	if (!pg_bc_upload_layout(s->bcKind,w,h,depth,0,0,SIZE_MAX,&patch) ||
+	    !pg_bc_upload_layout(s->bcKind,sw,sh,1,0,0,SIZE_MAX,&source)) return false;
+	// Original blocks are authoritative for BC readbacks. Snapshot them before
+	// writing, including self-overlapping copies, and let the destination's normal
+	// upload path choose GPU blocks or CPU decoding. A cross-format Metal blit
+	// between compressed and decoded textures would reinterpret incompatible bytes.
+	std::vector<uint8_t> bytes(patch.totalBytes);
+	for (uint32_t z = 0; z < depth; z++) {
+		auto it = s->compressedShadow.find(((uint64_t)sMip<<32) | (three ? sz+z : sLayer));
+		if (it == s->compressedShadow.end() || it->second.size() < source.imageBytes) return false;
+		for (size_t row = 0; row < patch.rows; row++) {
+			size_t from = (sy/4+row)*source.rowBytes+(size_t)(sx/4)*bcBlockBytes(s->bcKind);
+			if (from > it->second.size() || patch.rowBytes > it->second.size()-from) return false;
+			memcpy(bytes.data()+z*patch.imageBytes+row*patch.rowBytes,it->second.data()+from,patch.rowBytes);
+		}
+	}
+	if (s != d && s->format == d->format) {
+		// Preserve the direct GPU copy for compatible resources. Only mixed
+		// hardware/decoded formats and self copies need a destination upload.
+		if (!storeCompressed(d,dMip,dLayer,dx,dy,dz,depth,patch,bytes.data())) return false;
+		[blitEncoder() copyFromTexture:s->tex sourceSlice:three ? 0 : sLayer sourceLevel:sMip sourceOrigin:MTLOriginMake(sx,sy,three ? sz : 0)
+		                    sourceSize:MTLSizeMake(w,h,depth) toTexture:d->tex destinationSlice:three ? 0 : dLayer destinationLevel:dMip destinationOrigin:MTLOriginMake(dx,dy,three ? dz : 0)];
+		s->lastUse = d->lastUse = R->serial;
+		d->proxyDirty = true;
+		return true;
+	}
+	uploadTextureBytes(d,dMip,dLayer,dx,dy,dz,w,h,depth,(uint32_t)patch.rowBytes,(uint32_t)patch.rows,bytes.data(),bytes.size());
+	return true;
+}
+
 static void copyRegion(const uint32_t *p) {
 	uint32_t dstId = p[0], dstSub = p[1], dx = p[2], dy = p[3], dz = p[4], srcId = p[5], srcSub = p[6], hasBox = p[7];
 	uint32_t l = p[8], t = p[9], f = p[10], r = p[11], b = p[12], bk = p[13];
@@ -1468,25 +1557,15 @@ static void copyRegion(const uint32_t *p) {
 	uint32_t mw, mh, md; mipExtent(s, sMip, mw, mh, md);
 	uint32_t w = hasBox ? r - l : mw, h = hasBox ? b - t : mh, dep = hasBox ? bk - f : md;
 	uint32_t sx = hasBox ? l : 0, sy = hasBox ? t : 0, sz = hasBox ? f : 0;
-	if (s->bcKind && d->bcKind && !s->compressedShadow.empty()) {
-		uint32_t dw, dh, dd; mipExtent(d, dMip, dw, dh, dd);
-		uint32_t bb = bcBlockBytes(s->bcKind), sp = (mw + 3) / 4 * bb, dp = (dw + 3) / 4 * bb, rows = (h + 3) / 4, bytes = (w + 3) / 4 * bb;
-		for (uint32_t zz = 0; zz < (s->dim == 3 ? dep : 1); zz++) {
-			auto src = s->compressedShadow.find(((uint64_t)sMip << 32) | (s->dim == 3 ? sz + zz : sLayer));
-			if (src == s->compressedShadow.end()) continue;
-			auto &dst = d->compressedShadow[((uint64_t)dMip << 32) | (d->dim == 3 ? dz + zz : dLayer)];
-			if (dst.empty()) dst.resize((size_t)dp * ((dh + 3) / 4));
-			for (uint32_t row = 0; row < rows; row++) {
-				size_t from = (size_t)(sy / 4 + row) * sp + (sx / 4) * bb, to = (size_t)(dy / 4 + row) * dp + (dx / 4) * bb;
-				if (from + bytes > src->second.size() || to + bytes > dst.size()) break;
-				memcpy(dst.data() + to, src->second.data() + from, bytes);
-			}
-		}
-	}
 	uint32_t dw, dh, dd; mipExtent(d, dMip, dw, dh, dd);
 	w = std::min(w, std::min(mw - std::min(mw, sx), dw - std::min(dw, dx)));
 	h = std::min(h, std::min(mh - std::min(mh, sy), dh - std::min(dh, dy)));
 	if (!w || !h) return;
+	if (s->bcKind || d->bcKind) {
+		if (!copyCompressedRegion(s,d,sMip,sLayer,sx,sy,sz,dMip,dLayer,dx,dy,dz,w,h,dep))
+			logOnce("bccopy", "Metal renderer: BC copy missing source blocks or using incompatible geometry; copy skipped.");
+		return;
+	}
 	bool three = s->dim == 3;
 	if (s->format == d->format) {
 		[blitEncoder() copyFromTexture:s->tex sourceSlice:three ? 0 : sLayer sourceLevel:sMip sourceOrigin:MTLOriginMake(sx, sy, three ? sz : 0)
@@ -1514,7 +1593,16 @@ static void copyResource(uint32_t dstId, uint32_t srcId) {
 	if (so->kind != OTexture || dobj->kind != OTexture) return;
 	Texture *s = (Texture *)so, *d = (Texture *)dobj;
 	if (!s->tex || !d->tex) return;
-	if (s->bcKind && d->bcKind) d->compressedShadow = s->compressedShadow;
+	if (s->bcKind || d->bcKind) {
+		if (s == d) return;
+		uint32_t mips = std::min(s->mips,d->mips), slices = s->dim == 3 ? 1 : std::min(s->depthOrLayers,d->depthOrLayers);
+		for (uint32_t mip = 0; mip < mips && mip < 32; mip++) for (uint32_t slice = 0; slice < slices; slice++) {
+			uint32_t w,h,depth; mipExtent(s,mip,w,h,depth);
+			if (!copyCompressedRegion(s,d,mip,slice,0,0,0,mip,slice,0,0,0,w,h,depth))
+				logOnce("bcresourcecopy", "Metal renderer: BC resource copy missing source blocks or using incompatible geometry.");
+		}
+		return;
+	}
 	if (s->format != d->format || s->samples != d->samples) { logOnce("copyres", "Metal renderer: CopyResource between different formats"); return; }
 	uint32_t mips = std::min(s->mips, d->mips);
 	uint32_t slices = s->dim == 3 ? 1 : std::min(s->depthOrLayers, d->depthOrLayers);
@@ -1633,7 +1721,7 @@ static void readback(const uint32_t *p) {
 	uint32_t w = hasBox ? r - l : mw, h = hasBox ? b - t : mh, d = hasBox ? bk - f : md;
 	uint32_t x0 = hasBox ? l : 0, y0 = hasBox ? t : 0, z0 = hasBox ? f : 0;
 	bool three = s->dim == 3;
-	if (s->bcKind) {		// the original blocks (the GPU holds a decoded copy)
+	if (s->bcKind) {		// original blocks, whether the GPU samples BC directly or a decoded copy
 		uint32_t bb = bcBlockBytes(s->bcKind), rows = (h + 3) / 4, pitch = (mw + 3) / 4 * bb, rowBytes = (w + 3) / 4 * bb;
 		for (uint32_t z = 0; z < (three ? d : 1); z++) {
 			auto it = s->compressedShadow.find(((uint64_t)mip << 32) | (three ? z0 + z : layer));
@@ -1674,13 +1762,20 @@ static void savePNG(id<MTLBuffer> buf, uint32_t w, uint32_t h, uint32_t bpr, std
 	CGColorSpaceRef color = CGColorSpaceCreateDeviceRGB();
 	CGContextRef bitmap = CGBitmapContextCreate(buf.contents, w, h, 8, bpr, color, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
 	CGImageRef image = CGBitmapContextCreateImage(bitmap);
-	NSData *png = UIImagePNGRepresentation([UIImage imageWithCGImage:image]);
+	NSMutableData *png = [NSMutableData data];
+	CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)png, (__bridge CFStringRef)UTTypePNG.identifier, 1, nullptr);
+	bool encoded = false;
+	if (destination) {
+		CGImageDestinationAddImage(destination, image, nullptr);
+		encoded = CGImageDestinationFinalize(destination);
+		CFRelease(destination);
+	}
 	NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject stringByAppendingPathComponent:@"NativeFrames"];
 	[NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:nil error:nil];
 	NSString *file = [[folder stringByAppendingPathComponent:[NSString stringWithUTF8String:name.c_str()].lastPathComponent] stringByAppendingPathExtension:@"png"];
-	[png writeToFile:file atomically:YES];
+	bool saved = encoded && [png writeToFile:file atomically:YES];
 	CGImageRelease(image); CGContextRelease(bitmap); CGColorSpaceRelease(color);
-	logf("Native rendered frame saved: %s", name.c_str());
+	logf(saved ? "Native rendered frame saved: %s" : "Native rendered frame could not be saved: %s", name.c_str());
 }
 
 static void capture(Texture *t, const std::string &name, id<MTLRenderPipelineState> pipe, id<MTLTexture> second) {
@@ -2022,6 +2117,10 @@ static void report() {
 	std::string skips;
 	for (int i = 0; i < 5; i++) if (R->skipReasons[i]) { char b[64]; snprintf(b, sizeof b, "%s%s %llu", skips.empty() ? "" : ", ", skipNames[i], (unsigned long long)R->skipReasons[i]); skips += b; }
 	logf("[metal] command buffers per frame: %s; skipped draws: %s", reasons.c_str(), skips.empty() ? "none" : skips.c_str());
+	if (R->bcNativeCreated || R->bcFallbackCreated)
+		logf("[metal] BC totals: %llu native textures created, %llu CPU fallback textures created, %.1f MB native blocks uploaded, %.1f MB CPU decoded pixels",
+		     (unsigned long long)R->bcNativeCreated,(unsigned long long)R->bcFallbackCreated,
+		     R->bcNativeUploadBytes/1048576.0,R->bcDecodedBytes/1048576.0);
 	uint64_t uploadBytes = 0;
 	for (const auto &frame : R->frames) {
 		uploadBytes += frame.chunks.size() * FrameRing::CHUNK;
@@ -2110,6 +2209,7 @@ static bool setup() {
 	R->completion = dispatch_semaphore_create(0);
 	R->float32Filtering = R->device.supports32BitFloatFiltering;
 	R->borderColors = [R->device supportsFamily:MTLGPUFamilyApple7];
+	R->bcTextures = R->device.supportsBCTextureCompression;
 	if (!loadShaderLibrary(R->device)) return false;
 	R->zeroBuffer = [R->device newBufferWithLength:65536 options:MTLResourceStorageModeShared];
 	memset(R->zeroBuffer.contents, 0, 65536);
@@ -2146,7 +2246,7 @@ static bool setup() {
 	R->dssCache[0xdeb7ull] = [R->device newDepthStencilStateWithDescriptor:always];
 	if (!R->blitPipe) { logf("Metal renderer: present pipeline failed: %s", error.localizedDescription.UTF8String); return false; }
 	frameReportsInstall(R->device);
-	logf("Metal renderer: %s, 32-bit float filtering %s, border colours %s.", R->device.name.UTF8String, R->float32Filtering ? "yes" : "no (nearest fallback)", R->borderColors ? "yes" : "no");
+	logf("Metal renderer: %s, 32-bit float filtering %s, border colours %s, BC textures %s.", R->device.name.UTF8String, R->float32Filtering ? "yes" : "no (nearest fallback)", R->borderColors ? "yes" : "no", R->bcTextures ? "native GPU blocks for eligible textures" : "CPU decoder fallback");
 	return true;
 }
 

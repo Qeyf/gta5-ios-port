@@ -264,6 +264,9 @@ jobs:
             --xcode-version "$(xcodebuild -version | tr '\n' ' ')" \
             --sdk-version "$(xcrun --sdk iphoneos --show-sdk-version)" \
             --signing adhoc --github-output "$GITHUB_OUTPUT"
+          if [ -f docs/release-changes.md ]; then
+            cat docs/release-changes.md >> release/release-notes.md
+          fi
           cat release/release-notes.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Keep the IPA and Release metadata artifact

@@ -206,7 +206,6 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         // A game folder moved into Files › On My iPhone › GtaV Mobile is found without any picking.
         lookForGameFiles()
         NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIScene.didActivateNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(sceneActivated), name: UIScene.didActivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(installChanged), name: .gameInstallChanged, object: nil)
         displayLink = CADisplayLink(target: self, selector: #selector(pollController))
         // ProMotion screens only run above 60 Hz when the app asks: "Unlocked" asks for up to 120.
@@ -217,7 +216,6 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         displayLink?.add(to: .main, forMode: .common)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidDisconnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidConnect, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(sceneDeactivated), name: UIScene.willDeactivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(leftApp), name: UIScene.didEnterBackgroundNotification, object: nil)
         if let recovery = GameSettings.shared.recoverFromFailedBoot() {
             appendLog("Previous launch on \(recovery.failed.title) did not finish; lowered to \(recovery.fallback.title)\(recovery.resetHeight.map { ", resolution \($0)p back to Auto" } ?? "").")
@@ -822,8 +820,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         PGUpdateVirtualPad(PGPadState())
     }
 
-    @objc private func sceneDeactivated(_ notification: Notification) {
-        guard let scene = notification.object as? UIWindowScene, scene === view.window?.windowScene else { return }
+    func sceneDeactivated() {
         metalView.isPaused = true
         releaseTouchControls()
         PGSetGraphicsActive(false)
@@ -832,8 +829,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         nativeLog.flush()
     }
 
-    @objc private func sceneActivated(_ notification: Notification) {
-        guard let scene = notification.object as? UIWindowScene, scene === view.window?.windowScene else { return }
+    func sceneActivated() {
         PGSetGraphicsActive(true)
         appendLog("Scene active: Metal submissions resumed.")
         metalView.isPaused = engineStarted

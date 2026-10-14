@@ -4,6 +4,12 @@ The user-supplied `GTA5Port.ipa` (1.3.1, build 7) contains a native console/game
 
 The integration uses the existing engine input block and virtual controller. No reference executable, additional game code, dynamic library, private Apple API or game script-native invocation is added. UIKit presents the interface; the native engine host sends the game's own input.
 
+The pinned engine publishes input at `0x64748c`, aligned to four bytes. Version
+1.3.4 corrects an eight-byte alignment check that rejected all requests before
+input started. Tests now exercise the actual address and reject only genuinely
+misaligned or out-of-bounds input. Rejections include the block address, game
+state and pause state in the diagnostic log.
+
 - **Console:** focus keyboard input, open the in-game console with virtual key 192 and the backtick character, send uppercase ASCII through the existing 64-entry UTF-16 ring, then press Return. Reference delays are preserved: 120/80/300 ms to open, 60/40 ms per character, then 100/80/400 ms to submit.
 - **Gamepad:** neutral input for 100 ms, each button held for 90 ms and released for 60 ms, then 400 ms to finish. Triggers include their analog values.
 - **Auto:** use one of the 29 supported reference gamepad mappings, otherwise console. The reference's `SNOW` entry duplicated its weather sequence; this app retains the real `SNOWDAY` code and uses console for it. The limousine mapping excludes a trailing zero padding entry.
