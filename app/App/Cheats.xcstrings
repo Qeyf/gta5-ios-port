@@ -1,155 +1,19 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Invincibility": {
+    "Activation method": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invincibility"
+            "value": "Activation method"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ölümsüzlük"
-          }
-        }
-      }
-    },
-    "Invincibility for five minutes.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invincibility for five minutes."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beş dakika boyunca hasar almazsınız."
-          }
-        }
-      }
-    },
-    "Full health and armor": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full health and armor"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Can ve zırhı doldur"
-          }
-        }
-      }
-    },
-    "Restore your health and armor.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore your health and armor."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Canınızı ve zırhınızı tamamen doldurur."
-          }
-        }
-      }
-    },
-    "Weapons and ammunition": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weapons and ammunition"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Silah ve mühimmat"
-          }
-        }
-      }
-    },
-    "Receive a selection of weapons and ammunition.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Receive a selection of weapons and ammunition."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Belirli silahları ve mühimmatı verir."
-          }
-        }
-      }
-    },
-    "Lower wanted level": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lower wanted level"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aranma seviyesini düşür"
-          }
-        }
-      }
-    },
-    "Remove one wanted star per use.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove one wanted star per use."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Her kullanımda bir aranma yıldızını kaldırır."
-          }
-        }
-      }
-    },
-    "Raise wanted level": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Raise wanted level"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aranma seviyesini artır"
+            "value": "Giriş yöntemi"
           }
         }
       }
@@ -171,189 +35,53 @@
         }
       }
     },
-    "Recharge special ability": {
+    "Another cheat input is still being sent. Wait a moment and try again.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recharge special ability"
+            "value": "Another cheat input is still being sent. Wait a moment and try again."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Özel yeteneği doldur"
+            "value": "Başka bir hile kodu hâlâ gönderiliyor. Biraz bekleyip tekrar dene."
           }
         }
       }
     },
-    "Refill the character's special ability meter.": {
+    "Apply to game": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refill the character's special ability meter."
+            "value": "Apply to game"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Karakterin özel yetenek göstergesini doldurur."
+            "value": "Oyuna uygula"
           }
         }
       }
     },
-    "Fast running": {
+    "Auto": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fast running"
+            "value": "Auto"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hızlı koşma"
-          }
-        }
-      }
-    },
-    "Run faster on foot.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Run faster on foot."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yaya olarak daha hızlı koşmanızı sağlar."
-          }
-        }
-      }
-    },
-    "Fast swimming": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fast swimming"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hızlı yüzme"
-          }
-        }
-      }
-    },
-    "Swim faster in the water.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swim faster in the water."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suda daha hızlı yüzmenizi sağlar."
-          }
-        }
-      }
-    },
-    "Super jump": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Super jump"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Süper zıplama"
-          }
-        }
-      }
-    },
-    "Jump higher; hold the jump button for more height.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jump higher; hold the jump button for more height."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daha yükseğe zıplarsınız; daha fazla yükseklik için zıplama düğmesini basılı tutun."
-          }
-        }
-      }
-    },
-    "Parachute": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parachute"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paraşüt"
-          }
-        }
-      }
-    },
-    "Equip a parachute.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Equip a parachute."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Karaktere paraşüt verir."
-          }
-        }
-      }
-    },
-    "Explosive ammunition": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explosive ammunition"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Patlayıcı mermiler"
+            "value": "Otomatik"
           }
         }
       }
@@ -375,57 +103,6 @@
         }
       }
     },
-    "Explosive melee attacks": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explosive melee attacks"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Patlayıcı yakın dövüş"
-          }
-        }
-      }
-    },
-    "Melee strikes cause explosions.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Melee strikes cause explosions."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yakın dövüş vuruşları patlamaya neden olur."
-          }
-        }
-      }
-    },
-    "Flaming ammunition": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Flaming ammunition"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alevli mermiler"
-          }
-        }
-      }
-    },
     "Bullets set targets on fire.": {
       "extractionState": "manual",
       "localizations": {
@@ -443,36 +120,19 @@
         }
       }
     },
-    "Slow-motion aiming": {
+    "Cancel": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Slow-motion aiming"
+            "value": "Cancel"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ağır çekimde nişan alma"
-          }
-        }
-      }
-    },
-    "Cycle through slow-motion aiming levels.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cycle through slow-motion aiming levels."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ağır çekimde nişan alma seviyeleri arasında geçiş yapar."
+            "value": "İptal"
           }
         }
       }
@@ -494,329 +154,6 @@
         }
       }
     },
-    "Cycle through the weather conditions.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cycle through the weather conditions."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hava koşulları arasında geçiş yapar."
-          }
-        }
-      }
-    },
-    "Slippery vehicles": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Slippery vehicles"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kayan araçlar"
-          }
-        }
-      }
-    },
-    "Reduce vehicle traction.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reduce vehicle traction."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Araçların yol tutuşunu azaltır."
-          }
-        }
-      }
-    },
-    "Moon gravity": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moon gravity"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ay yer çekimi"
-          }
-        }
-      }
-    },
-    "Reduce gravity in the game world.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reduce gravity in the game world."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oyun dünyasındaki yer çekimini azaltır."
-          }
-        }
-      }
-    },
-    "Slow motion": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Slow motion"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ağır çekim"
-          }
-        }
-      }
-    },
-    "Cycle through slow-motion gameplay levels.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cycle through slow-motion gameplay levels."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oyunun ağır çekim seviyeleri arasında geçiş yapar."
-          }
-        }
-      }
-    },
-    "Spawn Buzzard helicopter": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn Buzzard helicopter"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buzzard helikopteri getir"
-          }
-        }
-      }
-    },
-    "Spawn a Buzzard attack helicopter where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a Buzzard attack helicopter where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir Buzzard saldırı helikopteri getirir."
-          }
-        }
-      }
-    },
-    "Spawn Comet": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn Comet"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comet getir"
-          }
-        }
-      }
-    },
-    "Spawn a Comet sports car where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a Comet sports car where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir Comet spor otomobili getirir."
-          }
-        }
-      }
-    },
-    "Spawn Rapid GT": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn Rapid GT"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rapid GT getir"
-          }
-        }
-      }
-    },
-    "Spawn a Rapid GT sports car where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a Rapid GT sports car where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir Rapid GT spor otomobili getirir."
-          }
-        }
-      }
-    },
-    "Spawn Sanchez": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn Sanchez"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sanchez getir"
-          }
-        }
-      }
-    },
-    "Spawn a Sanchez dirt bike where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a Sanchez dirt bike where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir Sanchez arazi motosikleti getirir."
-          }
-        }
-      }
-    },
-    "Spawn PCJ-600": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn PCJ-600"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PCJ-600 getir"
-          }
-        }
-      }
-    },
-    "Spawn a PCJ-600 motorcycle where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a PCJ-600 motorcycle where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir PCJ-600 motosiklet getirir."
-          }
-        }
-      }
-    },
-    "Spawn BMX": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn BMX"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BMX getir"
-          }
-        }
-      }
-    },
-    "Spawn a BMX bicycle where space allows.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spawn a BMX bicycle where space allows."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeterli alan varsa bir BMX bisiklet getirir."
-          }
-        }
-      }
-    },
     "Cheat codes": {
       "extractionState": "manual",
       "localizations": {
@@ -834,53 +171,70 @@
         }
       }
     },
-    "Search names or codes": {
+    "Cheat input cancelled.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search names or codes"
+            "value": "Cheat input cancelled."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ad veya kod ara"
+            "value": "Hile kodunun gönderimi iptal edildi."
           }
         }
       }
     },
-    "How to use": {
+    "Cheat input failed. Return to the game and try again.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "How to use"
+            "value": "Cheat input failed. Return to the game and try again."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nasıl kullanılır?"
+            "value": "Hile kodu gönderilemedi. Oyuna dönüp tekrar dene."
           }
         }
       }
     },
-    "Story mode codes": {
+    "Cheat input sent: %@\nCheck the game's confirmation message.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Story mode codes"
+            "value": "Cheat input sent: %@\nCheck the game's confirmation message."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hikâye modu kodları"
+            "value": "Hile kodu gönderildi: %@\nOyunun onay mesajını kontrol et."
+          }
+        }
+      }
+    },
+    "Cheats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheats"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hileler"
           }
         }
       }
@@ -902,70 +256,36 @@
         }
       }
     },
-    "Names and instructions follow the app language. Codes stay unchanged.": {
+    "Close the game's pause menu and wait until you can control the character. Auto sends a known gamepad sequence, or uses the console for other codes. Check the game's own message for the result.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Names and instructions follow the app language. Codes stay unchanged."
+            "value": "Close the game's pause menu and wait until you can control the character. Auto sends a known gamepad sequence, or uses the console for other codes. Check the game's own message for the result."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adlar ve açıklamalar uygulama diline göre gösterilir. Kodlar aynı kalır."
+            "value": "Oyunun duraklatma menüsünü kapat ve karakteri kontrol edebilene kadar bekle. Otomatik seçenek, bilinen gamepad tuş dizisini gönderir; diğer kodları konsola yazar. Sonucu oyunun kendi mesajından kontrol et."
           }
         }
       }
     },
-    "This is a reference, not an activation button. Enter the phone number on the character's in-game phone, or enter the PC code with a physical keyboard if this game build supports the cheat console. Copying a code does not activate it.": {
+    "Console": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This is a reference, not an activation button. Enter the phone number on the character's in-game phone, or enter the PC code with a physical keyboard if this game build supports the cheat console. Copying a code does not activate it."
+            "value": "Console"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu bir rehberdir. Hileyi kullanmak için numarayı karakterin oyun içindeki telefonunda tuşlayın veya bu oyun sürümü hile konsolunu destekliyorsa PC kodunu fiziksel klavyeyle girin. Kodu kopyalamak hileyi etkinleştirmez."
-          }
-        }
-      }
-    },
-    "Show code and copy options": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show code and copy options"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kodu ve kopyalama seçeneklerini göster"
-          }
-        }
-      }
-    },
-    "%@\n\nPC code: %@\nIn-game phone: %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@\n\nPC code: %@\nIn-game phone: %@"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@\n\nPC kodu: %@\nOyun içi telefon: %@"
+            "value": "Konsol"
           }
         }
       }
@@ -1004,6 +324,74 @@
         }
       }
     },
+    "Custom code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom code"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel kod"
+          }
+        }
+      }
+    },
+    "Cycle through slow-motion aiming levels.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle through slow-motion aiming levels."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağır çekimde nişan alma seviyeleri arasında geçiş yapar."
+          }
+        }
+      }
+    },
+    "Cycle through slow-motion gameplay levels.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle through slow-motion gameplay levels."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunun ağır çekim seviyeleri arasında geçiş yapar."
+          }
+        }
+      }
+    },
+    "Cycle through the weather conditions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle through the weather conditions."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hava koşulları arasında geçiş yapar."
+          }
+        }
+      }
+    },
     "Done": {
       "extractionState": "manual",
       "localizations": {
@@ -1017,6 +405,1281 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitti"
+          }
+        }
+      }
+    },
+    "Drunk mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drunk mode"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarhoş modu"
+          }
+        }
+      }
+    },
+    "Equip a parachute.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equip a parachute."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karaktere paraşüt verir."
+          }
+        }
+      }
+    },
+    "Explosive ammunition": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explosive ammunition"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patlayıcı mermiler"
+          }
+        }
+      }
+    },
+    "Explosive melee attacks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explosive melee attacks"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patlayıcı yakın dövüş"
+          }
+        }
+      }
+    },
+    "Fall from the sky without a parachute.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fall from the sky without a parachute."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gökyüzünden paraşütsüz düş."
+          }
+        }
+      }
+    },
+    "Fast running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast running"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı koşma"
+          }
+        }
+      }
+    },
+    "Fast swimming": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast swimming"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı yüzme"
+          }
+        }
+      }
+    },
+    "Flaming ammunition": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flaming ammunition"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alevli mermiler"
+          }
+        }
+      }
+    },
+    "Full health and armor": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full health and armor"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can ve zırhı doldur"
+          }
+        }
+      }
+    },
+    "Gamepad": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gamepad"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gamepad"
+          }
+        }
+      }
+    },
+    "How to use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to use"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nasıl kullanılır?"
+          }
+        }
+      }
+    },
+    "In-game phone: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In-game phone: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun içi telefon: %@"
+          }
+        }
+      }
+    },
+    "Invincibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invincibility"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ölümsüzlük"
+          }
+        }
+      }
+    },
+    "Invincibility for five minutes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invincibility for five minutes."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beş dakika boyunca hasar almazsınız."
+          }
+        }
+      }
+    },
+    "Jump higher; hold the jump button for more height.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump higher; hold the jump button for more height."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha yükseğe zıplarsınız; daha fazla yükseklik için zıplama düğmesini basılı tutun."
+          }
+        }
+      }
+    },
+    "Lower wanted level": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower wanted level"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aranma seviyesini düşür"
+          }
+        }
+      }
+    },
+    "Make the character move as if drunk.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the character move as if drunk."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karakterin sarhoş gibi hareket etmesini sağla."
+          }
+        }
+      }
+    },
+    "Melee strikes cause explosions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melee strikes cause explosions."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yakın dövüş vuruşları patlamaya neden olur."
+          }
+        }
+      }
+    },
+    "Moon gravity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moon gravity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ay yer çekimi"
+          }
+        }
+      }
+    },
+    "Names and instructions follow the app language. Codes stay unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Names and instructions follow the app language. Codes stay unchanged."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adlar ve açıklamalar uygulama diline göre gösterilir. Kodlar aynı kalır."
+          }
+        }
+      }
+    },
+    "OK": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamam"
+          }
+        }
+      }
+    },
+    "PC code: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC code: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC kodu: %@"
+          }
+        }
+      }
+    },
+    "Parachute": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parachute"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paraşüt"
+          }
+        }
+      }
+    },
+    "Raise wanted level": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raise wanted level"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aranma seviyesini artır"
+          }
+        }
+      }
+    },
+    "Receive a selection of weapons and ammunition.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receive a selection of weapons and ammunition."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belirli silahları ve mühimmatı verir."
+          }
+        }
+      }
+    },
+    "Recharge special ability": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge special ability"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Özel yeteneği doldur"
+          }
+        }
+      }
+    },
+    "Reduce gravity in the game world.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reduce gravity in the game world."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyun dünyasındaki yer çekimini azaltır."
+          }
+        }
+      }
+    },
+    "Reduce vehicle traction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reduce vehicle traction."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Araçların yol tutuşunu azaltır."
+          }
+        }
+      }
+    },
+    "Refill the character's special ability meter.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refill the character's special ability meter."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karakterin özel yetenek göstergesini doldurur."
+          }
+        }
+      }
+    },
+    "Remove one wanted star per use.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove one wanted star per use."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her kullanımda bir aranma yıldızını kaldırır."
+          }
+        }
+      }
+    },
+    "Requires the vehicle to be unlocked in your game progress.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires the vehicle to be unlocked in your game progress."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce oyun ilerlemenle bu aracın kilidini açmış olman gerekir."
+          }
+        }
+      }
+    },
+    "Restore your health and armor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore your health and armor."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canınızı ve zırhınızı tamamen doldurur."
+          }
+        }
+      }
+    },
+    "Run faster on foot.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run faster on foot."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaya olarak daha hızlı koşmanızı sağlar."
+          }
+        }
+      }
+    },
+    "Search names or codes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search names or codes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ad veya kod ara"
+          }
+        }
+      }
+    },
+    "Send an A–Z cheat code through the in-game console.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send an A–Z cheat code through the in-game console."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z harflerinden oluşan bir hile kodunu oyun içi konsola gönder."
+          }
+        }
+      }
+    },
+    "Send through console": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send through console"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konsoldan gönder"
+          }
+        }
+      }
+    },
+    "Sending cheat input: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending cheat input: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hile kodu gönderiliyor: %@"
+          }
+        }
+      }
+    },
+    "Show activation and copy options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show activation and copy options"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama ve kopyalama seçeneklerini göster"
+          }
+        }
+      }
+    },
+    "Skyfall": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skyfall"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gökyüzünden düşüş"
+          }
+        }
+      }
+    },
+    "Slippery vehicles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slippery vehicles"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayan araçlar"
+          }
+        }
+      }
+    },
+    "Slow motion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow motion"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağır çekim"
+          }
+        }
+      }
+    },
+    "Slow-motion aiming": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow-motion aiming"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağır çekimde nişan alma"
+          }
+        }
+      }
+    },
+    "Spawn BMX": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn BMX"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BMX getir"
+          }
+        }
+      }
+    },
+    "Spawn Buzzard helicopter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Buzzard helicopter"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buzzard helikopteri getir"
+          }
+        }
+      }
+    },
+    "Spawn Comet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Comet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comet getir"
+          }
+        }
+      }
+    },
+    "Spawn Dodo seaplane": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Dodo seaplane"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodo deniz uçağı oluştur"
+          }
+        }
+      }
+    },
+    "Spawn Duke O'Death": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Duke O'Death"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duke O'Death oluştur"
+          }
+        }
+      }
+    },
+    "Spawn Kraken submarine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Kraken submarine"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kraken denizaltısı oluştur"
+          }
+        }
+      }
+    },
+    "Spawn PCJ-600": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn PCJ-600"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PCJ-600 getir"
+          }
+        }
+      }
+    },
+    "Spawn Rapid GT": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Rapid GT"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapid GT getir"
+          }
+        }
+      }
+    },
+    "Spawn Sanchez": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn Sanchez"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sanchez getir"
+          }
+        }
+      }
+    },
+    "Spawn a BMX bicycle where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a BMX bicycle where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir BMX bisiklet getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Buzzard attack helicopter where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Buzzard attack helicopter where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir Buzzard saldırı helikopteri getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Comet sports car where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Comet sports car where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir Comet spor otomobili getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Duster aircraft where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Duster aircraft where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa Duster ilaçlama uçağı oluştur."
+          }
+        }
+      }
+    },
+    "Spawn a PCJ-600 motorcycle where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a PCJ-600 motorcycle where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir PCJ-600 motosiklet getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Rapid GT sports car where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Rapid GT sports car where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir Rapid GT spor otomobili getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Sanchez dirt bike where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Sanchez dirt bike where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa bir Sanchez arazi motosikleti getirir."
+          }
+        }
+      }
+    },
+    "Spawn a Trashmaster garbage truck where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a Trashmaster garbage truck where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa Trashmaster çöp kamyonu oluştur."
+          }
+        }
+      }
+    },
+    "Spawn a stretch limousine where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a stretch limousine where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa uzun limuzin oluştur."
+          }
+        }
+      }
+    },
+    "Spawn a stunt plane where space allows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn a stunt plane where space allows."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeterli alan varsa akrobasi uçağı oluştur."
+          }
+        }
+      }
+    },
+    "Spawn crop duster": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn crop duster"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlaçlama uçağı oluştur"
+          }
+        }
+      }
+    },
+    "Spawn garbage truck": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn garbage truck"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çöp kamyonu oluştur"
+          }
+        }
+      }
+    },
+    "Spawn limousine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn limousine"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limuzin oluştur"
+          }
+        }
+      }
+    },
+    "Spawn stunt plane": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spawn stunt plane"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akrobasi uçağı oluştur"
+          }
+        }
+      }
+    },
+    "Start the game before applying a cheat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game before applying a cheat."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hile uygulamadan önce oyunu başlat."
+          }
+        }
+      }
+    },
+    "Start the game before applying a cheat. You can browse and copy codes here while it loads.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the game before applying a cheat. You can browse and copy codes here while it loads."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hile uygulamadan önce oyunu başlat. Oyun yüklenirken burada kodlara göz atabilir ve kopyalayabilirsin."
+          }
+        }
+      }
+    },
+    "Story mode codes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Story mode codes"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hikâye modu kodları"
+          }
+        }
+      }
+    },
+    "Super jump": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Super jump"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süper zıplama"
+          }
+        }
+      }
+    },
+    "Swim faster in the water.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim faster in the water."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suda daha hızlı yüzmenizi sağlar."
+          }
+        }
+      }
+    },
+    "The cheat input could not start. Return to the game and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cheat input could not start. Return to the game and try again."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hile kodunun gönderimi başlatılamadı. Oyuna dönüp tekrar dene."
+          }
+        }
+      }
+    },
+    "This code uses the console. Select Auto or Console.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This code uses the console. Select Auto or Console."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kod konsoldan girilir. Otomatik veya Konsol seçeneğini kullan."
+          }
+        }
+      }
+    },
+    "Use 1–32 letters A–Z. Spaces, numbers and punctuation are not accepted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use 1–32 letters A–Z. Spaces, numbers and punctuation are not accepted."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z arasındaki harflerden oluşan 1–32 karakterlik bir kod gir. Boşluk, sayı ve noktalama işaretleri kabul edilmez."
+          }
+        }
+      }
+    },
+    "Wait until the game has loaded, close its pause menu and phone, and return to controlling the character.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait until the game has loaded, close its pause menu and phone, and return to controlling the character."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunun yüklenmesini bekle, duraklatma menüsünü ve telefonu kapat, ardından karakteri kontrol etmeye dön."
+          }
+        }
+      }
+    },
+    "Weapons and ammunition": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weapons and ammunition"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silah ve mühimmat"
           }
         }
       }

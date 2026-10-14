@@ -9,6 +9,7 @@ final class HomeView: UIView {
     let playButton = Theme.primaryButton(String(localized: "Play", table: "Main"), symbol: "play.fill")
     let settingsButton = Theme.glassButton(String(localized: "Settings", table: "Main"), symbol: "gearshape.fill")
     let layoutButton = Theme.glassButton(String(localized: "Controls layout", table: "Main"), symbol: "hand.tap.fill")
+    let cheatsButton = Theme.glassButton(String(localized: "Cheats", table: "Cheats"), symbol: "wand.and.stars")
     let preloadLabel = UILabel()
     let controllerLabel = UILabel()
     /// Taps on the game files card.
@@ -73,7 +74,7 @@ final class HomeView: UIView {
         modeDetail.adjustsFontSizeToFitWidth = true
         modeDetail.minimumScaleFactor = 0.8
 
-        let secondary = UIStackView(arrangedSubviews: [layoutButton, settingsButton])
+        let secondary = UIStackView(arrangedSubviews: [layoutButton, cheatsButton, settingsButton])
         secondary.spacing = 10
         secondary.translatesAutoresizingMaskIntoConstraints = false
         for label in [preloadLabel, controllerLabel] {

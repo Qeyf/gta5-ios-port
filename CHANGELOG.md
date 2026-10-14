@@ -1,3 +1,10 @@
+# Qeyf fork — v1.3.3
+
+- Fix immediate SDK 27 startup termination by adopting Apple's single-window UIKit scene lifecycle and scene notifications.
+- Integrate real console/gamepad cheat input recovered from the supplied reference IPA: 33 bilingual codes, Auto/Console/Gamepad selection, custom console entry, home/settings/touch entry points and input-delivery status.
+- Reserve input ownership before starting a cheat, prevent concurrent input from erasing its sequence, and cancel/release held input when the scene deactivates.
+- Validate the packaged scene manifest before publishing. CI tests bounded character delivery, pad input and cancellation, and launches the full Swift UI on an iOS 27 simulator in both languages without loading the game engine.
+
 # Qeyf fork — v1.3.2
 
 - CI explicitly uses stable Xcode 27 / iOS 27 while retaining iOS 17 deployment support. Release IPA filenames are ASCII-safe and match the packaged metadata and SHA256SUMS.

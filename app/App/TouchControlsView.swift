@@ -34,7 +34,8 @@ enum ControlStyle {
         "switch_character": "person.2.fill", "special_ability": "bolt.circle.fill", "interact": "hand.point.right.fill",
         "detonate": "burst.fill", "zoom_in": "plus.magnifyingglass", "zoom_out": "minus.magnifyingglass",
         "weapon_prev": "chevron.left", "weapon_next": "chevron.right", "throttle_up": "chevron.up.2",
-        "throttle_down": "chevron.down.2", "yaw_left": "rotate.left.fill", "yaw_right": "rotate.right.fill"]
+        "throttle_down": "chevron.down.2", "yaw_left": "rotate.left.fill", "yaw_right": "rotate.right.fill",
+        "cheats": "wand.and.stars"]
 }
 
 /// One on-screen control: a glyph in a circle (or a rounded pedal), no caption.
@@ -212,6 +213,7 @@ final class TouchControlsView: UIView {
     /// The control selected in the layout editor (drawn with a highlight).
     weak var highlighted: ControlButton? { didSet { updateHighlight() } }
     var openSettings: (() -> Void)?
+    var openCheats: (() -> Void)?
     /// A line for the log when the game state behind the situational buttons changes.
     var hintsChanged: ((String) -> Void)?
     private(set) var context = ControlContext.onFoot
@@ -299,6 +301,7 @@ final class TouchControlsView: UIView {
     private let phone = ControlButton("phone", icon: "phone", label: String(localized: "Phone", table: "Main"))
     private let pause = ControlButton("pause", icon: "pause", label: String(localized: "Pause menu", table: "Main"))
     private let settings = ControlButton("settings", icon: "settings", label: String(localized: "Settings", table: "Main"))
+    private let cheats = ControlButton("cheats", icon: "cheats", label: String(localized: "Cheats", table: "Cheats"))
     private let lights = ControlButton("lights", icon: "lights", label: String(localized: "Headlights", table: "Main"))
     private let radio = ControlButton("radio", icon: "radio", label: String(localized: "Radio", table: "Main"))
     // Menu and phone dock
@@ -314,7 +317,7 @@ final class TouchControlsView: UIView {
     private var allButtons: [ControlButton] {
         [fire, aim, leftFire, jump, enter, weapons, reload, cover, crouch, switcher, special, interact, detonate, zoomIn, zoomOut,
          weaponPrev, weaponNext, gas, brake, handbrake, driveBy, horn, lookBack,
-         vehicleWeapon, dive, surface, airFire, gear, throttleUp, throttleDown, yawLeft, yawRight, camera, phone, pause, settings, lights, radio,
+         vehicleWeapon, dive, surface, airFire, gear, throttleUp, throttleDown, yawLeft, yawRight, camera, phone, pause, settings, cheats, lights, radio,
          up, down, left, right, accept, back, tabLeft, tabRight]
     }
     private var visible: [ControlButton] = []
@@ -379,11 +382,11 @@ final class TouchControlsView: UIView {
         if changed { updateVisibility() }
     }
     private func baseVisible() -> [ControlButton] {
-        let utility: [ControlButton] = context.driving ? [radio, lights, camera, phone, pause, settings] : [camera, phone, pause, settings]
-        if context == .menu { return [pause, settings, up, down, left, right, accept, back, tabLeft, tabRight] }
-        if phoneDock { return [camera, phone, pause, settings, up, down, left, right, accept, back] }
+        let utility: [ControlButton] = context.driving ? [radio, lights, camera, phone, pause, settings, cheats] : [camera, phone, pause, settings, cheats]
+        if context == .menu { return [pause, settings, cheats, up, down, left, right, accept, back, tabLeft, tabRight] }
+        if phoneDock { return [camera, phone, pause, settings, cheats, up, down, left, right, accept, back] }
         // A prompt (Mission failed, warning screens) waits for Accept/Back; play controls do nothing then.
-        if promptActive && !editing { return [camera, pause, settings, accept, back] }
+        if promptActive && !editing { return [camera, pause, settings, cheats, accept, back] }
         switch context {
         case .onFoot:
             return aimActive ? utility + [fire, aim, enter, weapons, reload, cover, leftFire]
@@ -393,7 +396,7 @@ final class TouchControlsView: UIView {
         case .bike:
             return utility + [gas, brake, handbrake, enter, driveBy, horn, lookBack]
         case .bicycle:
-            return [camera, phone, pause, settings, radio, gas, brake, handbrake, enter, lookBack]
+            return [camera, phone, pause, settings, cheats, radio, gas, brake, handbrake, enter, lookBack]
         case .sub:
             return utility + [gas, brake, enter, dive, surface, lookBack]
         // Aircraft: radio and next weapon are the same pad input, so one button does both.
@@ -480,7 +483,7 @@ final class TouchControlsView: UIView {
         moveStick.baseDiameter = 120 * scale; moveStick.travel = 48 * scale
 
         // Utility bar, top centre: rare actions in the hard-to-reach zone.
-        let order = [radio, lights, camera, phone, pause, settings]
+        let order = [radio, lights, camera, phone, pause, settings, cheats]
         let bar = order.filter { visible.contains($0) }
         for (i, button) in bar.enumerated() {
             let offset = (CGFloat(i) - CGFloat(bar.count - 1) / 2) * 54 * scale / safe.width
@@ -670,6 +673,8 @@ final class TouchControlsView: UIView {
             updateVisibility()
         case settings:
             DispatchQueue.main.async { self.openSettings?() }
+        case cheats:
+            DispatchQueue.main.async { self.openCheats?() }
         case up, down, left, right, accept, back:
             lastDockInput = now
         default:

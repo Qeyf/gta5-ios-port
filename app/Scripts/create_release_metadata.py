@@ -67,6 +67,24 @@ def toolchain_value(value, flag):
     return value
 
 
+def validate_scene_manifest(info):
+    # SDK 27 terminates UIKit apps at launch when scene adoption is missing.
+    # Validate the packaged values, after Xcode expands PRODUCT_MODULE_NAME.
+    manifest = info.get("UIApplicationSceneManifest")
+    if not isinstance(manifest, dict) or manifest.get("UIApplicationSupportsMultipleScenes") is not False:
+        raise ValidationError("UIApplicationSceneManifest must declare the game's single window scene")
+    configurations = manifest.get("UISceneConfigurations")
+    scenes = configurations.get("UIWindowSceneSessionRoleApplication") if isinstance(configurations, dict) else None
+    if not isinstance(scenes, list) or len(scenes) != 1 or not isinstance(scenes[0], dict):
+        raise ValidationError("UIApplicationSceneManifest must contain one application window configuration")
+    scene = scenes[0]
+    if scene.get("UISceneClassName") != "UIWindowScene":
+        raise ValidationError("UIApplicationSceneManifest must use UIWindowScene")
+    delegate = required_string(scene, "UISceneDelegateClassName")
+    if not delegate.endswith(".SceneDelegate"):
+        raise ValidationError("UIApplicationSceneManifest must use the app's SceneDelegate")
+
+
 def archive_members(archive):
     members = {}
     folded = set()
@@ -144,6 +162,7 @@ def inspect_ipa(ipa):
                 member = members.get(executable)
                 if member is None or member.is_dir() or member.file_size == 0:
                     raise ValidationError("CFBundleExecutable is missing or empty in the IPA")
+                validate_scene_manifest(info)
                 corrupt = archive.testzip()
                 if corrupt is not None:
                     raise ValidationError("ZIP integrity validation failed")
@@ -184,7 +203,7 @@ def release_notes(metadata):
         ("Kaynak commit / Source commit", commit),
         ("İş akışı / Workflow", f'[Run {metadata["workflow"]["run_id"]}]({metadata["workflow"]["run_url"]})'),
         ("UTC", metadata["created_at_utc"]),
-        ("Doğrulama / Validation", "Geçti / Passed — archive, metadata, executable presence, SHA-256"),
+        ("Doğrulama / Validation", "Geçti / Passed — archive, metadata, scene manifest, executable presence, SHA-256"),
         ("İmzalama / Signing", "adhoc — yeniden imzalama gerekir / re-signing required"),
     ]
     if toolchain["xcode_version"]:
@@ -233,7 +252,7 @@ def create_release_metadata(ipa, output, commit, run_id, run_url, *, signing="ad
         "validation": {
             "status": "passed",
             "scope": "archive_metadata_and_checksum",
-            "checks": ["zip_integrity", "single_payload_app", "bundle_identity", "version_build", "minimum_os", "advertised_languages", "executable_presence", "sha256"],
+            "checks": ["zip_integrity", "single_payload_app", "bundle_identity", "version_build", "minimum_os", "advertised_languages", "scene_manifest", "executable_presence", "sha256"],
             "native_engine_run": False,
             "device_tested": False,
         },

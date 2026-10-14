@@ -15,6 +15,14 @@ SCRIPT = Path(__file__).resolve().parents[1] / "Scripts" / "create_release_metad
 APP = "Payload/GtaV Mobile.app/"
 COMMIT = "a" * 40
 RUN_URL = "https://github.com/qeyf/gtavmobile/actions/runs/123"
+SCENE_MANIFEST = {
+    "UIApplicationSupportsMultipleScenes": False,
+    "UISceneConfigurations": {"UIWindowSceneSessionRoleApplication": [{
+        "UISceneClassName": "UIWindowScene",
+        "UISceneDelegateClassName": "GtaV_Mobile.SceneDelegate",
+        "UISceneConfigurationName": "Game",
+    }]},
+}
 
 
 class ReleaseMetadataTests(unittest.TestCase):
@@ -37,6 +45,7 @@ class ReleaseMetadataTests(unittest.TestCase):
             "MinimumOSVersion": "17.0",
             "CFBundleLocalizations": ["tr", "en"],
             "CFBundlePackageType": "APPL",
+            "UIApplicationSceneManifest": SCENE_MANIFEST,
             # Unrelated build settings must not be copied into public metadata.
             "PGDefaultAssetServer": "http://private-server.example/token-secret",
         }
@@ -111,6 +120,18 @@ class ReleaseMetadataTests(unittest.TestCase):
                 self.package({"CFBundleShortVersionString": version})
                 self.assert_rejected("CFBundleShortVersionString")
 
+    def test_ipa_without_scene_lifecycle_is_rejected_before_publication(self):
+        self.package(omit=("UIApplicationSceneManifest",))
+        self.assert_rejected("UIApplicationSceneManifest")
+
+    def test_unusable_scene_configuration_is_rejected(self):
+        for manifest in ({}, {"UIApplicationSupportsMultipleScenes": False, "UISceneConfigurations": {}},
+                         {"UIApplicationSupportsMultipleScenes": False, "UISceneConfigurations": {
+                             "UIWindowSceneSessionRoleApplication": [{"UISceneClassName": "UIScene"}]}}):
+            with self.subTest(manifest=manifest):
+                self.package({"UIApplicationSceneManifest": manifest})
+                self.assert_rejected("UIApplicationSceneManifest")
+
     def test_release_builds_require_one_to_three_numeric_components(self):
         for build in ("", "1.2.3.4", "9.1b1", "9.-1", "$(CURRENT_PROJECT_VERSION)", 8):
             with self.subTest(build=build):
@@ -173,6 +194,7 @@ class ReleaseMetadataTests(unittest.TestCase):
             "CFBundleDisplayName": "GtaV Mobile", "CFBundleIdentifier": "io.github.qeyf.gtavmobile",
             "CFBundleShortVersionString": "3.12.7", "CFBundleVersion": "42.2",
             "CFBundleExecutable": "PlayGTA5Native", "MinimumOSVersion": "17.0", "CFBundleLocalizations": ["en", "tr"],
+            "UIApplicationSceneManifest": SCENE_MANIFEST,
         }
         with zipfile.ZipFile(self.ipa, "w", compression=zipfile.ZIP_STORED) as archive:
             archive.writestr(APP + "Info.plist", plistlib.dumps(info))

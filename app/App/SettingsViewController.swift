@@ -13,6 +13,7 @@ final class SettingsViewController: UITableViewController {
     var editLayout: (() -> Void)?
     var targetingChanged: (() -> Void)?
     var gameModeChanged: (() -> Void)?
+    var applyCheat: CheatApplyHandler?
 
     private enum Section: Int, CaseIterable { case mode, graphics, controls, gyro, files, cheats, language, device }
     private let preloader = AssetPreloader.shared
@@ -365,7 +366,9 @@ final class SettingsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         if indexPath.section == Section.cheats.rawValue {
-            navigationController?.pushViewController(CheatsViewController(), animated: true)
+            let cheats = CheatsViewController(engineRunning: engineRunning)
+            cheats.onApply = applyCheat
+            navigationController?.pushViewController(cheats, animated: true)
             return
         }
         if indexPath.section == Section.language.rawValue {

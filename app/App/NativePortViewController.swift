@@ -34,6 +34,8 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private let touchControls = TouchControlsView(frame: .zero)
     private let gyro = GyroInput()
     private var engineStarted = false
+    private var pendingCheatCode: String?
+    private var cheatBanner: UILabel?
     private var bootedPreset = GameSettings.shared.graphicsPreset
     private var bootedMode: GameMode?
     private var stableTimer: Timer?
@@ -112,6 +114,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         output.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         output.layer.cornerRadius = 12
         home.settingsButton.addAction(UIAction { [weak self] _ in self?.showSettings() }, for: .touchUpInside)
+        home.cheatsButton.addAction(UIAction { [weak self] _ in self?.showCheats() }, for: .touchUpInside)
         home.layoutButton.addAction(UIAction { [weak self] _ in self?.showLayoutEditor() }, for: .touchUpInside)
         home.onFiles = { [weak self] in self?.showGameFiles() }
         home.onMap = { [weak self] index in
@@ -156,6 +159,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         touchControls.isHidden = true
         touchControls.inputChanged = { [weak self] in self?.pollController() }
         touchControls.openSettings = { [weak self] in self?.showSettings() }
+        touchControls.openCheats = { [weak self] in self?.showCheats() }
         touchControls.hintsChanged = { [weak self] line in self?.appendLog(line) }
         KeyboardMouse.shared.start()
         KeyboardMouse.shared.changed = { [weak self] in
@@ -204,7 +208,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         GameFolder.log = { [weak self] line in self?.appendLog(line) }
         // A game folder moved into Files › On My iPhone › GtaV Mobile is found without any picking.
         lookForGameFiles()
-        NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIScene.didActivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(installChanged), name: .gameInstallChanged, object: nil)
         displayLink = CADisplayLink(target: self, selector: #selector(pollController))
         // ProMotion screens only run above 60 Hz when the app asks: "Unlocked" asks for up to 120.
@@ -215,8 +219,8 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         displayLink?.add(to: .main, forMode: .common)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidDisconnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidConnect, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(releaseTouchControls), name: UIApplication.willResignActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(leftApp), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(releaseTouchControls), name: UIScene.willDeactivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(leftApp), name: UIScene.didEnterBackgroundNotification, object: nil)
         if let recovery = GameSettings.shared.recoverFromFailedBoot() {
             appendLog("Previous launch on \(recovery.failed.title) did not finish; lowered to \(recovery.fallback.title)\(recovery.resetHeight.map { ", resolution \($0)p back to Auto" } ?? "").")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { self.explainRecovery(recovery) }
@@ -244,6 +248,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
         if ProcessInfo.processInfo.arguments.contains("--open-settings") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self.showSettings() }
+        }
+        if ProcessInfo.processInfo.arguments.contains("--open-cheats") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self.showCheats() }
         }
         if ProcessInfo.processInfo.arguments.contains("--boot-engine") {
             DispatchQueue.main.async { self.startEngine() }
@@ -710,9 +717,80 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         controller.controlsChanged = { [weak self] in self?.touchControls.updateVisibility() }
         controller.editLayout = { [weak self] in self?.showLayoutEditor() }
         controller.targetingChanged = { PGSetTargetingMode(Int32(GameSettings.shared.targetingMode)) }
+        controller.applyCheat = { [weak self] code, buttons, mode in
+            self?.dismiss(animated: true) { self?.applyCheat(code, buttons: buttons, mode: mode) }
+        }
         let navigation = UINavigationController(rootViewController: controller)
         Theme.styleNavigation(navigation)
         present(navigation, animated: true)
+    }
+
+    private func showCheats() {
+        guard presentedViewController == nil else { return }
+        touchControls.reset()
+        let controller = CheatsViewController(engineRunning: engineStarted)
+        controller.onApply = { [weak self] code, buttons, mode in
+            self?.dismiss(animated: true) { self?.applyCheat(code, buttons: buttons, mode: mode) }
+        }
+        controller.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: String(localized: "Done", table: "Cheats"), primaryAction: UIAction { [weak controller] _ in
+                controller?.dismiss(animated: true)
+            })
+        let navigation = UINavigationController(rootViewController: controller)
+        Theme.styleNavigation(navigation)
+        navigation.modalPresentationStyle = .fullScreen
+        present(navigation, animated: true)
+    }
+
+    private func applyCheat(_ code: String, buttons: [UInt16], mode: CheatInputMode) {
+        let title = String(localized: "Cheat codes", table: "Cheats")
+        guard engineStarted, PGGameStatus() == 0, !PGPauseMenuActive() else {
+            showWhenFree(title: title, message: String(localized: "Wait until the game has loaded, close its pause menu and phone, and return to controlling the character.", table: "Cheats"))
+            return
+        }
+        guard !PGIsCheatInProgress() else {
+            showWhenFree(title: title, message: String(localized: "Another cheat input is still being sent. Wait a moment and try again.", table: "Cheats"))
+            return
+        }
+        touchControls.reset(publish: false)
+        KeyboardMouse.shared.releaseAll()
+        let useGamepad = mode == .gamepad || (mode == .automatic && !buttons.isEmpty)
+        let sent = useGamepad
+            ? buttons.withUnsafeBufferPointer { PGApplyCheatGamepad($0.baseAddress, UInt32($0.count)) }
+            : code.withCString { PGApplyCheatConsole($0) }
+        guard sent else {
+            showWhenFree(title: title, message: String(localized: "The cheat input could not start. Return to the game and try again.", table: "Cheats"))
+            return
+        }
+        pendingCheatCode = code
+        showCheatBanner(String(localized: "Sending cheat input: \(code)", table: "Cheats"))
+    }
+
+    private func showCheatBanner(_ text: String) {
+        cheatBanner?.removeFromSuperview()
+        let label = UILabel()
+        label.text = text
+        label.textColor = .white
+        label.font = .preferredFont(forTextStyle: .callout)
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.85)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+            label.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.75),
+            label.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        cheatBanner = label
+        UIAccessibility.post(notification: .announcement, argument: text)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self, weak label] in
+            label?.removeFromSuperview()
+            if self?.cheatBanner === label { self?.cheatBanner = nil }
+        }
     }
     /// The engine follows back-buffer size changes while running.
     private func applyLiveResolution() {
@@ -723,6 +801,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         appendLog("Graphics: live resize to \(width)×\(height)")
     }
     @objc private func releaseTouchControls() {
+        PGCancelCheat()
         touchControls.reset(publish: false)
         gyro.setRunning(false, orientation: .landscapeRight)
         lastControllerPoll = nil
@@ -749,12 +828,26 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
     }
     @objc private func pollController() {
-        guard UIApplication.shared.applicationState == .active else {
+        guard view.window?.windowScene?.activationState == .foregroundActive else {
             touchControls.reset(publish: false)
             lastControllerPoll = nil
             PGUpdateVirtualPad(PGPadState())
             return
         }
+        if let code = pendingCheatCode, !PGIsCheatInProgress() {
+            pendingCheatCode = nil
+            switch PGCheatResult() {
+            case 2:
+                showCheatBanner(String(localized: "Cheat input sent: \(code)\nCheck the game's confirmation message.", table: "Cheats"))
+            case 3:
+                showCheatBanner(String(localized: "Cheat input cancelled.", table: "Cheats"))
+            default:
+                showCheatBanner(String(localized: "Cheat input failed. Return to the game and try again.", table: "Cheats"))
+            }
+        }
+        // The injector owns input until its sequence finishes. Hardware/touch
+        // polling must not erase its pressed keys or virtual-pad sample.
+        guard !PGIsCheatInProgress() else { lastControllerPoll = nil; return }
         let now = CACurrentMediaTime()
         if now - lastFPSLabelUpdate >= 0.25 {
             let fps = PGRenderedFramesPerSecond()

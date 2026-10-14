@@ -62,6 +62,18 @@ void PGMouseInput(int32_t dx, int32_t dy, int32_t buttons);
 void PGMouseWheel(int32_t notches);
 // The window has focus / the pointer is captured for looking around.
 void PGSetMouseFocus(bool focused, bool locked);
+// Real game input, requested while a controllable player exists and the game's
+// pause menu is closed. Console codes must contain 1...32 ASCII capital letters.
+// Pad sequences contain 1...32 single face/shoulder/trigger/D-pad button bits.
+// true reserves input ownership before asynchronously sending the sequence.
+bool PGApplyCheatConsole(const char *code);
+bool PGApplyCheatGamepad(const uint16_t *buttons, unsigned count);
+bool PGIsCheatInProgress(void);
+// Cancellation is asynchronous; ownership ends after input has been released.
+void PGCancelCheat(void);
+// 0 idle, 1 sending, 2 sent to game input, 3 cancelled, 4 failed.
+// A delivered sequence does not confirm that the game accepted the cheat.
+int32_t PGCheatResult(void);
 bool PGDebugReadMemory(uint64_t address, void *out, uint64_t length);
 // Virtual controller fed into the engine's own pad 0 (see
 // Scripts/prepare_virtual_pad.py). Buttons use the engine's pad bits:

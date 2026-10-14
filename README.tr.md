@@ -4,7 +4,7 @@
 
 Bu depo, [kevinerikjs/gta5-ios-port](https://github.com/kevinerikjs/gta5-ios-port)
 projesinin Qeyf hesabındaki forkudur. Kaynak v1.3.1 sürümüne dayanır; bu fork
-1.3.2 sürümünü kullanır. Uygulama adı **GtaV Mobile**, çıktı dosyası
+1.3.3 sürümünü kullanır. Uygulama adı **GtaV Mobile**, çıktı dosyası
 **`GtaV Mobile.ipa`** olur. Yerleşik ARM64 motoru, Metal görüntüleyicisi ve
 mevcut kontrol sistemi korunur.
 
@@ -23,20 +23,26 @@ kataloglarından bağımsızdır.
 
 ## Hile kodları
 
-**Ayarlar › Hile kodları** altında 24 Hikâye modu hilesinin adlarını,
-etkilerini, PC kodlarını ve oyun içi telefon numaralarını görebilirsiniz.
-Arama ve kopyalama seçenekleri de iki dili destekler. Kodları çevirmek onları
-geçersiz kılacağından kodlar ve numaralar aynı kalır.
+Ana ekrandaki ve oyun içi kontrol çubuğundaki **Hileler** düğmesi ile
+**Ayarlar › Hile kodları** altında 33 hile bulunur. **Oyuna uygula**, kodu
+oyunun gerçek konsoluna veya sanal gamepad tuş dizisi olarak gönderir.
+**Otomatik** seçenek, bilinen gamepad dizisini kullanır; diğer kodları konsola
+yazar. **Konsol** ve **Gamepad** yöntemlerini elle de seçebilirsiniz. Özel kod
+girişi A–Z harflerini kabul eder ve konsolu kullanır.
 
-Bu bölüm bir rehberdir: kopyalamak hileyi etkinleştirmez. Desteklendiğinde
-karakterin oyun içindeki telefonunu veya fiziksel klavyeyle hile konsolunu
-kullanın. Bazı hileler görev sırasında kullanılamayabilir. Hileler başarımları
+Önce oyunu başlatın, duraklatma menüsünü ve telefonu kapatın, karakteri kontrol
+edebilir duruma gelin. Uygulama girişin gönderildiğini bildirir; hilenin kabul
+edildiğini oyunun kendi mesajından kontrol edin. Adlar, açıklamalar, arama,
+uygulama ve kopyalama seçenekleri iki dili destekler. Kodlar ve numaralar
+çevrilmez. [Giriş mekanizması](docs/cheat-inputs.md) kaynakta belgelenmiştir.
+
+Bazı hileler görev sırasında kullanılamayabilir. Hileler başarımları
 geçici olarak kapatır; bir kaydı yeniden yüklemek veya oyunu yeniden başlatmak
 hileleri sıfırlar.
 
 ## IPA derleme ve kurulum
 
-CI, Apple Silicon `xcode-27` makinesinde kararlı Xcode 27 ve iOS 27 SDK kullanır; en düşük iOS sürümü 17 olarak kalır. Mac çıktısı `GtaV Mobile.ipa`, GitHub Release dosyası **`GtaV-Mobile.ipa`** olur. Böylece indirilen dosya adı metadata ve SHA256SUMS ile birebir eşleşir.
+CI, Apple Silicon `xcode-27` makinesinde kararlı Xcode 27 ve iOS 27 SDK kullanır; en düşük iOS sürümü 17 olarak kalır. Uygulama, SDK 27'nin açılışta zorunlu tuttuğu Apple `UIWindowSceneDelegate` yaşam döngüsünü kullanır. Mac çıktısı `GtaV Mobile.ipa`, GitHub Release dosyası **`GtaV-Mobile.ipa`** olur. Böylece indirilen dosya adı metadata ve SHA256SUMS ile birebir eşleşir.
 
 Tam derleme için kendi oyun kopyanızın şu dosyaları gerekir:
 
@@ -63,9 +69,10 @@ Her başarılı derleme otomatik olarak yeni bir Release yayımlar: **GtaV-Mobil
 **release-metadata.json**, **SHA256SUMS** ve Türkçe/İngilizce sürüm notları.
 Notlarda IPA'nın gerçek sürümü, build kodu, kaynak commit, iş akışı bağlantısı,
 iOS gereksinimi, diller, dosya boyutu, SHA-256 ve Xcode/SDK bilgisi bulunur.
-Önceki Release'ler korunur. `app/project.yml` sürüm `1.3.2` ve taban build `8`
-değerlerini tutar: ilk iş akışı çalışması `9.1`, tekrarı `9.2`, ikinci çalışma
-`10.1` olur. Etiket örneği: `v1.3.2-build.9.1`.
+Eksik veya kullanılamayan sahne tanımına sahip IPA'nın yayımı engellenir.
+Önceki Release'ler korunur. `app/project.yml` sürüm `1.3.3` ve taban build `8`
+değerlerini tutar: dördüncü iş akışı çalışması `12.1`, tekrarı `12.2` olur.
+Etiket örneği: `v1.3.3-build.12.1`.
 
 Apple Silicon Mac üzerinde:
 
@@ -87,7 +94,10 @@ dosyaları otomatik bulur; Hikâye modu veya Serbest mod seçip **Oyna**'ya doku
 
 **Verify GtaV Mobile UI and translations** GitHub Actions işi, oyun dosyaları
 olmadan tüm Swift uygulama kodunu iOS SDK ile ve tüm çeviri kataloglarını
-Apple araçlarıyla derler. Derleyicinin çıkardığı metin anahtarlarını
+Apple araçlarıyla derler. Hile giriş dizilerini ve iptal sırasında tuşların
+bırakılmasını test eder. Gerçek uygulama arayüzünü iOS 27 simülatöründe iki dilde
+açar; bu kontrolde yalnızca oyun motoruna bakan işlevler test karşılıklarıyla
+değiştirilir, oyun çalıştırılmaz. Derleyicinin çıkardığı metin anahtarlarını
 kataloglarla karşılaştırır. Bu kontrol tam oyun motoru/IPA derlemesinin
 ve gerçek cihaz testinin yerine geçmez.
 

@@ -4,6 +4,7 @@
 #include "NativeEngineConfiguration.h"
 #include "NativeControllerLook.h"
 #include "NativeTouchContext.h"
+#include "NativeCheatInput.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,16 @@ static void *logContext;
 static char *manifestPath;
 static char missingImport[256];
 static _Atomic uint64_t inputBlock;
+static _Atomic int32_t cheatState;
+static pthread_mutex_t inputMutex = PTHREAD_MUTEX_INITIALIZER;
+// Input producers serialize with cheat ownership. A hardware/UI event that
+// arrives during a sequence must not overwrite an injected key or pad edge.
+static bool pg_begin_user_input(void) {
+  pthread_mutex_lock(&inputMutex);
+  if (pg_cheat_busy(&cheatState)) { pthread_mutex_unlock(&inputMutex); return false; }
+  return true;
+}
+static void pg_end_user_input(void) { pthread_mutex_unlock(&inputMutex); }
 static int configuredWidth=960,configuredHeight=540,configuredFrameLimit=2;
 // Start mode for the engine's loading-screen choice (WasmInputBlock.startMode):
 // 1 Story Mode, 2 Sandbox Mode on the GTA V map. Read by f569 (game_36.c).
@@ -381,10 +392,11 @@ PGControlHints PGReadControlHints(uint32_t touchContext){
 // 24488864 once a session runs), and neither has a controller binding here, so their value stays 0.
 // An ioValue's value is float[0] * float[1] (ioValue::GetUnboundNorm f10519); [1] is written.
 void PGSetRadioWheelDirection(float x, float y, bool active) {
+  if (!pg_begin_user_input()) return;
   static bool wasActive;
-  if (!active && !wasActive) return;
+  if (!active && !wasActive) { pg_end_user_input(); return; }
   wasActive = active;
-  if (!atomic_load(&inputBlock)) return;
+  if (!atomic_load(&inputBlock)) { pg_end_user_input(); return; }
   const uint64_t controls[] = {24660320, 24488864};
   const float values[] = {active ? -y : 0, active ? x : 0}; // UD: up is negative, as on the pad
   for (int c = 0; c < 2; c++) for (int a = 0; a < 2; a++) {
@@ -392,6 +404,7 @@ void PGSetRadioWheelDirection(float x, float y, bool active) {
     float *value = pg_pointer(&env, at + 4, 4);
     *value = fmaxf(-1, fminf(1, values[a]));
   }
+  pg_end_user_input();
 }
 // Keyboard and mouse. The input block holds 256 key bytes (0x80 = down) followed by int32 words:
 // 0 x, 1 y, 2 dx, 3 dy, 4 wheel, 5 buttons, 6 focus, 7 locked; 44/45 hold the back-buffer size.
@@ -400,16 +413,21 @@ static _Atomic uint8_t *pg_input_keys(void) {
   return block ? pg_pointer(&env, block, 444) : NULL;
 }
 void PGSetKey(uint8_t virtualKey, bool down) {
+  if (!pg_begin_user_input()) return;
   _Atomic uint8_t *keys = pg_input_keys();
   if (keys) atomic_store(keys + virtualKey, down ? 0x80 : 0);
+  pg_end_user_input();
 }
 void PGReleaseAllKeys(void) {
+  if (!pg_begin_user_input()) return;
   _Atomic uint8_t *keys = pg_input_keys();
   if (keys) for (int i = 0; i < 256; i++) atomic_store(keys + i, 0);
+  pg_end_user_input();
 }
 void PGMouseInput(int32_t dx, int32_t dy, int32_t buttons) {
+  if (!pg_begin_user_input()) return;
   _Atomic uint8_t *keys = pg_input_keys();
-  if (!keys) return;
+  if (!keys) { pg_end_user_input(); return; }
   _Atomic int32_t *words = (_Atomic int32_t *)((uint8_t *)(void *)keys + 256);
   int32_t width = atomic_load(words + 44), height = atomic_load(words + 45);
   if (width < 320 || height < 180) { width = 960; height = 540; }
@@ -419,17 +437,22 @@ void PGMouseInput(int32_t dx, int32_t dy, int32_t buttons) {
   if (dx) atomic_fetch_add(words + 2, dx);
   if (dy) atomic_fetch_add(words + 3, dy);
   atomic_store(words + 5, buttons);
+  pg_end_user_input();
 }
 void PGMouseWheel(int32_t notches) {
+  if (!pg_begin_user_input()) return;
   _Atomic uint8_t *keys = pg_input_keys();
   if (keys && notches) atomic_fetch_add((_Atomic int32_t *)((uint8_t *)(void *)keys + 256) + 4, notches);
+  pg_end_user_input();
 }
 void PGSetMouseFocus(bool focused, bool locked) {
+  if (!pg_begin_user_input()) return;
   _Atomic uint8_t *keys = pg_input_keys();
-  if (!keys) return;
+  if (!keys) { pg_end_user_input(); return; }
   _Atomic int32_t *words = (_Atomic int32_t *)((uint8_t *)(void *)keys + 256);
   atomic_store(words + 6, focused ? 1 : 0);
   atomic_store(words + 7, locked ? 1 : 0);
+  pg_end_user_input();
 }
 // Debug: copies [address, address+length) of engine memory (for finding state flags).
 bool PGDebugReadMemory(uint64_t address,void *out,uint64_t length){
@@ -441,8 +464,9 @@ uint32_t PGCurrentTouchContext(void){
  return pg_touch_context((const uint8_t *)(void *)env.memory.data,env.memory.size);
 }
 void PGUpdateController(PGControllerState state, double elapsedSeconds) {
+  if (!pg_begin_user_input()) return;
   uint64_t block = atomic_load(&inputBlock);
-  if (!block) return;
+  if (!block) { pg_end_user_input(); return; }
   _Atomic uint8_t *keys = pg_pointer(&env, block, 444);
   const int codes[] = {0x20,0x11,0x52,0x46,0x51,0x45,0x1b,0x26,0x28,0x25,0x27};
   for (int i = 0; i < 11; i++) atomic_store(keys + codes[i], state.buttons & (1u << i) ? 0x80 : 0);
@@ -486,6 +510,7 @@ void PGUpdateController(PGControllerState state, double elapsedSeconds) {
   atomic_fetch_add(words + 2, dx);
   atomic_fetch_add(words + 3, dy);
   atomic_store(words + 5, (state.rightTrigger > .1f ? 1 : 0) | (state.leftTrigger > .1f ? 2 : 0));
+  pg_end_user_input();
 }
 
 
@@ -503,12 +528,142 @@ static uint8_t pg_pad_trigger(float value) {
   return isfinite(value) ? (uint8_t)lroundf(fmaxf(0, fminf(1, value)) * 255) : 0;
 }
 void PGUpdateVirtualPad(PGPadState state) {
+  if (!pg_begin_user_input()) return;
   uint64_t packed = (state.buttons & 0xffff) |
     (uint64_t)pg_pad_axis(state.leftX, false) << 16 | (uint64_t)pg_pad_axis(state.leftY, true) << 24 |
     (uint64_t)pg_pad_axis(state.rightX, false) << 32 | (uint64_t)pg_pad_axis(state.rightY, true) << 40 |
     (uint64_t)pg_pad_trigger(state.leftTrigger) << 48 | (uint64_t)pg_pad_trigger(state.rightTrigger) << 56;
   atomic_store(&virtualPad, packed);
   atomic_store(&virtualPadActive, true);
+  pg_end_user_input();
+}
+
+bool PGIsCheatInProgress(void) { return pg_cheat_busy(&cheatState); }
+int32_t PGCheatResult(void) { return pg_cheat_result(&cheatState); }
+void PGCancelCheat(void) {
+  pthread_mutex_lock(&inputMutex);
+  pg_cheat_cancel(&cheatState);
+  pthread_mutex_unlock(&inputMutex);
+}
+
+typedef struct { PGCheatSequence sequence; uint64_t block; } PGCheatJob;
+static bool pg_cheat_host_ready(void) {
+  return pg_cheat_input_bounds((const uint8_t *)(void *)env.memory.data, env.memory.size, atomic_load(&inputBlock)) &&
+    env.memory.size >= 24627140 && PGGameStatus() == 0 && !PGPauseMenuActive();
+}
+// Called with inputMutex held. Never use a trapping engine-memory accessor in
+// the input worker: an unavailable/changed input block is a failed request.
+static void pg_cheat_cleanup(void) {
+  uint8_t *memory = (uint8_t *)(void *)env.memory.data;
+  uint64_t size = env.memory.size, block = atomic_load(&inputBlock);
+  bool valid = pg_cheat_release_input(memory, size, block, &virtualPad);
+  atomic_store(&virtualPadActive, true);
+  if (valid && atomic_load(&cheatState) == 5) {
+    atomic_store((_Atomic int32_t *)(memory+block+280), 0);
+    atomic_store((_Atomic int32_t *)(memory+block+284), 0);
+  }
+  // Release the radio wheel's extra axes as well as keyboard/mouse/pad input.
+  const uint64_t controls[] = {24660320, 24488864};
+  for (unsigned c = 0; c < 2; c++) for (unsigned a = 0; a < 2; a++) {
+    uint64_t at = controls[c]+33708+72ull*(332+a);
+    if (memory && at <= size && size-at >= 4)
+      atomic_store((_Atomic float *)(memory+at), 0);
+  }
+}
+static bool pg_cheat_wait(uint32_t milliseconds) {
+  double until = timeMS(CLOCK_MONOTONIC)+milliseconds;
+  while (atomic_load(&cheatState) != 5) {
+    double remaining = until-timeMS(CLOCK_MONOTONIC);
+    if (remaining <= 0) return true;
+    struct timespec pause = {0, (long)(fmin(remaining, 5.0)*1000000)};
+    nanosleep(&pause, NULL);
+  }
+  return false;
+}
+static void *pg_cheat_input_thread(void *context) {
+  PGCheatJob *job = context;
+  bool delivered = true;
+  pthread_mutex_lock(&inputMutex);
+  if (atomic_load(&cheatState) == 5 || !pg_cheat_host_ready() || atomic_load(&inputBlock) != job->block) {
+    delivered = false;
+  } else {
+    pg_cheat_cleanup();
+    uint8_t *memory = (uint8_t *)(void *)env.memory.data;
+    uint8_t *input = memory+job->block;
+    atomic_store(&virtualPadActive, !job->sequence.console);
+    if (job->sequence.console) {
+      atomic_store((_Atomic int32_t *)(input+280), 1);
+      atomic_store((_Atomic int32_t *)(input+284), 1);
+    }
+    atomic_store((_Atomic int32_t *)(memory+24627136), job->sequence.console ? -4 : 0);
+  }
+  pthread_mutex_unlock(&inputMutex);
+  for (unsigned i = 0; delivered && i < job->sequence.count; i++) {
+    const PGCheatStep *step = &job->sequence.steps[i];
+    pthread_mutex_lock(&inputMutex);
+    uint8_t *memory = (uint8_t *)(void *)env.memory.data;
+    uint64_t size = env.memory.size;
+    if (atomic_load(&cheatState) == 5 || atomic_load(&inputBlock) != job->block ||
+        !pg_cheat_input_bounds(memory, size, job->block)) {
+      delivered = false;
+    } else if (step->kind == PG_CHEAT_KEY) {
+      delivered = pg_cheat_key_step(memory, size, job->block, step);
+    } else if (step->kind == PG_CHEAT_PAD) {
+      atomic_store(&virtualPad, pg_cheat_pad_sample(step->buttons));
+      atomic_store(&virtualPadActive, true);
+    }
+    pthread_mutex_unlock(&inputMutex);
+    if (delivered) delivered = pg_cheat_wait(step->delayMS);
+  }
+  pthread_mutex_lock(&inputMutex);
+  pg_cheat_cleanup();
+  pg_cheat_finish(&cheatState, delivered ? 2 : 4);
+  int32_t result = PGCheatResult();
+  pthread_mutex_unlock(&inputMutex);
+  free(job);
+  pg_log(result == 2 ? "Cheat sequence sent to game input." : result == 3 ? "Cheat input cancelled; held input released." : "Cheat input failed; held input released.");
+  return NULL;
+}
+static bool pg_cheat_submit(const PGCheatSequence *sequence) {
+  pthread_mutex_lock(&inputMutex);
+  if (pg_cheat_busy(&cheatState)) { pthread_mutex_unlock(&inputMutex); return false; }
+  if (!pg_cheat_host_ready()) { atomic_store(&cheatState, 4); pthread_mutex_unlock(&inputMutex); return false; }
+  // Ownership is acquired before allocating or launching the detached worker.
+  pg_cheat_claim(&cheatState);
+  PGCheatJob *job = malloc(sizeof *job);
+  int error = job ? 0 : -1;
+  if (job) {
+    job->sequence = *sequence;
+    job->block = atomic_load(&inputBlock);
+    pthread_attr_t attributes;
+    error = pthread_attr_init(&attributes);
+    if (!error) {
+      error = pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+      if (!error) { pthread_t thread; error = pthread_create(&thread, &attributes, pg_cheat_input_thread, job); }
+      pthread_attr_destroy(&attributes);
+    }
+  }
+  if (error) {
+    free(job);
+    pg_cheat_cleanup();
+    pg_cheat_finish(&cheatState, 4);
+  }
+  pthread_mutex_unlock(&inputMutex);
+  return error == 0;
+}
+static bool pg_cheat_reject(void) {
+  pthread_mutex_lock(&inputMutex);
+  if (!pg_cheat_busy(&cheatState)) atomic_store(&cheatState, 4);
+  pthread_mutex_unlock(&inputMutex);
+  return false;
+}
+bool PGApplyCheatConsole(const char *code) {
+  PGCheatSequence sequence;
+  return pg_cheat_console_sequence(&sequence, code) ? pg_cheat_submit(&sequence) : pg_cheat_reject();
+}
+bool PGApplyCheatGamepad(const uint16_t *buttons, unsigned count) {
+  PGCheatSequence sequence;
+  return pg_cheat_gamepad_sequence(&sequence, buttons, count) ? pg_cheat_submit(&sequence) : pg_cheat_reject();
 }
 // SET_PLAYER_TARGETING_MODE (f58997): store menu preference 3, then apply it
 // to the local player. Requested by the host, run here on the engine's own

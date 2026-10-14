@@ -9,7 +9,7 @@ settings:
     # builds an unsigned IPA that AltStore/SideStore signs with your Apple ID).
     DEVELOPMENT_TEAM: ""
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.3.2"
+    MARKETING_VERSION: "1.3.3"
     CURRENT_PROJECT_VERSION: "8"
     SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
@@ -101,6 +101,13 @@ targets:
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Game
+                UISceneClassName: UIWindowScene
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).SceneDelegate"
         UILaunchScreen: {}
         UIRequiresFullScreen: true
         # Lets the game present above 60 FPS on ProMotion iPhones when the frame rate is unlocked.
