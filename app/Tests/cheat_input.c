@@ -2,6 +2,7 @@
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 
@@ -9,7 +10,31 @@
 #include "NativeCheatInput.h"
 
 static _Alignas(8) uint8_t memory[512];
-static const uint64_t block = 32;
+// The pinned engine publishes 0x64748c: four-byte aligned, but not eight.
+static const uint64_t block = 36;
+
+static void pinned_engine_input_block_accepts_key_text_and_cleanup(void) {
+  const uint64_t publishedBlock = UINT64_C(0x64748c);
+  const size_t size = (size_t)publishedBlock + 444;
+  uint8_t *publishedMemory = calloc(1, size+4);
+  assert(publishedMemory);
+  assert(pg_cheat_input_bounds(publishedMemory, size, publishedBlock));
+  assert(!pg_cheat_input_bounds(publishedMemory, size-1, publishedBlock));
+  for (unsigned i = 1; i < 4; i++)
+    assert(!pg_cheat_input_bounds(publishedMemory, size+4, publishedBlock+i));
+
+  PGCheatSequence sequence;
+  assert(pg_cheat_console_sequence(&sequence, "A"));
+  assert(pg_cheat_key_step(publishedMemory, size, publishedBlock, &sequence.steps[3]));
+  assert(publishedMemory[publishedBlock+'A'] == 0x80);
+  assert(atomic_load((_Atomic uint32_t *)(publishedMemory+publishedBlock+288)) == 1);
+  assert(atomic_load((_Atomic uint16_t *)(publishedMemory+publishedBlock+296)) == 'A');
+  _Atomic uint64_t pad = pg_cheat_pad_sample(2);
+  assert(pg_cheat_release_input(publishedMemory, size, publishedBlock, &pad));
+  assert(publishedMemory[publishedBlock+'A'] == 0);
+  assert(atomic_load(&pad) == PG_CHEAT_NEUTRAL_PAD);
+  free(publishedMemory);
+}
 
 static void console_delivers_text_and_key_edges(void) {
   PGCheatSequence sequence;
@@ -168,6 +193,7 @@ static void concurrent_requests_have_one_owner(void) {
 #endif
 
 int main(void) {
+  pinned_engine_input_block_accepts_key_text_and_cleanup();
   console_delivers_text_and_key_edges();
   full_or_malformed_ring_never_overwrites_or_holds_a_key();
   ring_wrap_uses_the_next_free_slot();

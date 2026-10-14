@@ -587,6 +587,7 @@ final class SettingsViewController: UITableViewController {
         present(nav, animated: true)
     }
     private func shareLogs(from cell: UITableViewCell?) {
+        NativeLog.shared.flush()
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let logs = ["native-port.log", "native-port-previous.log"].map { documents.appendingPathComponent($0) }
             .filter { FileManager.default.fileExists(atPath: $0.path) }

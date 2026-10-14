@@ -78,6 +78,8 @@ int32_t PGCheatResult(void) { return 0; }
 void PGCaptureNativeFrame(const char *name) { (void)name; }
 double PGRenderedFramesPerSecond(void) { return 0; }
 void PGAttachMetalLayer(void *layer) { (void)layer; }
+void PGSetGraphicsActive(bool active) { (void)active; }
+void PGTrimGraphicsMemory(void) {}
 void PGStartGraphics(void *memory, uint64_t memorySize, uint64_t ring,
                      uint64_t ringSize, uint64_t debug) {
   (void)memory; (void)memorySize; (void)ring; (void)ringSize; (void)debug;

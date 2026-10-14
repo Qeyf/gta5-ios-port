@@ -99,7 +99,9 @@ static inline uint64_t pg_cheat_pad_sample(uint16_t buttons) {
 }
 
 static inline bool pg_cheat_input_bounds(const uint8_t *memory, uint64_t size, uint64_t block) {
-  return memory && block && !(block & 7) && block <= size && size-block >= 444;
+  // The published block is 0x64748c. Its widest atomic fields are uint32_t,
+  // so four-byte alignment is required; eight-byte alignment rejects it.
+  return memory && block && !(block & 3) && block <= size && size-block >= 444;
 }
 
 static inline bool pg_cheat_key_step(uint8_t *memory, uint64_t size, uint64_t block, const PGCheatStep *step) {

@@ -30,6 +30,13 @@ jobs:
         run: |
           xcrun swiftc app/App/NativeLog.swift app/Tests/native_log.swift -o "$RUNNER_TEMP/check-native-log"
           "$RUNNER_TEMP/check-native-log"
+      - name: Verify Metal suspension and completed upload cache reclamation
+        run: |
+          for test in render_lifecycle frame_upload_cache; do
+            c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
+              "app/Tests/$test.cpp" -o "$RUNNER_TEMP/check-$test"
+            "$RUNNER_TEMP/check-$test"
+          done
       - name: Compile all Swift UI against the iOS SDK
         run: |
           mkdir -p app/Build/UIVerification/objects app/Build/UIVerification/strings

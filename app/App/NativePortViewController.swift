@@ -9,12 +9,20 @@ private func engineLog(_ message: UnsafePointer<CChar>?, _ context: UnsafeMutabl
     guard let message, let context else { return }
     let line = String(cString: message)
     let controller = Unmanaged<NativePortViewController>.fromOpaque(context).takeUnretainedValue()
-    DispatchQueue.main.async { controller.appendLog(line) }
+    NativeLog.shared.append(line)
+    if isEngineUIEvent(line) { DispatchQueue.main.async { controller.handleLogEvent(line) } }
+}
+
+private func isEngineUIEvent(_ line: String) -> Bool {
+    line.hasPrefix("ASSET_WARM_PROGRESS ") || line == "ASSET_WARM_COMPLETE" || line == "WORLD_READY" ||
+        line.contains("\"label\":\"First frame\"") || line.hasPrefix("Native boot stopped:") ||
+        line == "iOS could not reserve the engine memory."
 }
 
 final class NativePortViewController: UIViewController, MTKViewDelegate {
     private var metalView: MTKView!
     private var queue: MTLCommandQueue?
+    private var lastShellCommand: MTLCommandBuffer?
     private let output = UITextView()
     private let fpsLabel = UILabel()
     private var lastFPSLabelUpdate: CFTimeInterval = 0
@@ -28,9 +36,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private var audioSource: AVAudioSourceNode?
     private var displayLink: CADisplayLink?
     private var lastControllerPoll: CFTimeInterval?
-    private var lines: [String] = []
-    private var metrics: [String: String] = [:]
-    private var logFile: URL?
+    private let nativeLog = NativeLog.shared
+    private var logRefreshTimer: Timer?
+    private var logRevision: UInt64 = 0
     private let touchControls = TouchControlsView(frame: .zero)
     private let gyro = GyroInput()
     private var engineStarted = false
@@ -190,18 +198,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             home.topAnchor.constraint(equalTo: view.topAnchor),
             home.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        logFile = directory.appendingPathComponent("native-port.log")
-        // Keep the previous run's log: after a crash it is the one worth sharing (Settings, Share log).
-        // Only a run that started the game replaces it, so opening the app a few times after a crash
-        // (without playing) doesn't push the crash out.
-        let previous = directory.appendingPathComponent("native-port-previous.log")
-        let lastRunPlayed = ((try? FileManager.default.attributesOfItem(atPath: logFile!.path)[.size] as? NSNumber)?.intValue ?? 0) > 16_384
-        if lastRunPlayed || !FileManager.default.fileExists(atPath: previous.path) {
-            try? FileManager.default.removeItem(at: previous)
-            try? FileManager.default.moveItem(at: logFile!, to: previous)
-        }
-        try? Data().write(to: logFile!)
+        logRefreshTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in self?.refreshLogView() }
         appendLog("GtaV Mobile \(Theme.appVersion) on iOS \(UIDevice.current.systemVersion)")
         appendLog("Native UIKit + Metal host. Engine compiled into the app; no WebView or JIT.")
         appendLog("Metal device: \(device?.name ?? "unavailable")")
@@ -209,6 +206,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         // A game folder moved into Files › On My iPhone › GtaV Mobile is found without any picking.
         lookForGameFiles()
         NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIScene.didActivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(sceneActivated), name: UIScene.didActivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(installChanged), name: .gameInstallChanged, object: nil)
         displayLink = CADisplayLink(target: self, selector: #selector(pollController))
         // ProMotion screens only run above 60 Hz when the app asks: "Unlocked" asks for up to 120.
@@ -219,7 +217,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         displayLink?.add(to: .main, forMode: .common)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidDisconnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidConnect, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(releaseTouchControls), name: UIScene.willDeactivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(sceneDeactivated), name: UIScene.willDeactivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(leftApp), name: UIScene.didEnterBackgroundNotification, object: nil)
         if let recovery = GameSettings.shared.recoverFromFailedBoot() {
             appendLog("Previous launch on \(recovery.failed.title) did not finish; lowered to \(recovery.fallback.title)\(recovery.resetHeight.map { ", resolution \($0)p back to Auto" } ?? "").")
@@ -264,9 +262,23 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     }
 
     func appendLog(_ line: String) {
-        // Lines also come from background work (checking the game files); the log view is UI.
-        guard Thread.isMainThread else { DispatchQueue.main.async { self.appendLog(line) }; return }
-        NSLog("[native-port] %@", line)
+        nativeLog.append(line)
+        // Ordinary engine diagnostics never enqueue work on the input/UI thread.
+        guard isEngineUIEvent(line) else { return }
+        if Thread.isMainThread { handleLogEvent(line) }
+        else { DispatchQueue.main.async { [weak self] in self?.handleLogEvent(line) } }
+    }
+
+    private func refreshLogView() {
+        guard diagnosticsOverlay?.isHidden != true else { return }
+        let snapshot = nativeLog.snapshot()
+        guard snapshot.revision != logRevision else { return }
+        logRevision = snapshot.revision
+        output.text = snapshot.lines.joined(separator: "\n")
+        if !output.text.isEmpty { output.scrollRangeToVisible(NSRange(location: output.text.utf16.count - 1, length: 1)) }
+    }
+
+    fileprivate func handleLogEvent(_ line: String) {
         if line.hasPrefix("ASSET_WARM_PROGRESS ") {
             let parts = line.split(separator: " ")
             if parts.count >= 3 {
@@ -313,22 +325,6 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
             metalView.isPaused = true
         }
-        if let logFile, let data = (line + "\n").data(using: .utf8),
-           let handle = try? FileHandle(forWritingTo: logFile) {
-            defer { try? handle.close() }
-            do { try handle.seekToEnd(); try handle.write(contentsOf: data) } catch {}
-        }
-        for key in ["[wgpu] fps:", "[wgpu] draw costs", "Native frame costs:", "Phone memory:", "WORLD_READY"] where line.hasPrefix(key) {
-            metrics[key] = line
-            if let data = try? JSONSerialization.data(withJSONObject: metrics, options: [.prettyPrinted, .sortedKeys]), let logFile {
-                try? data.write(to: logFile.deletingLastPathComponent().appendingPathComponent("native-metrics.json"), options: .atomic)
-            }
-        }
-        lines.append(line)
-        if lines.count > 500 { lines.removeFirst(lines.count - 500) }
-        guard diagnosticsOverlay?.isHidden != true else { return }
-        output.text = lines.joined(separator: "\n")
-        if !output.text.isEmpty { output.scrollRangeToVisible(NSRange(location: output.text.utf16.count - 1, length: 1)) }
     }
 
     /// The launch screen asks for a mode once; after that it remembers it.
@@ -663,6 +659,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: String(localized: "OK", table: "Main"), style: .cancel))
         alert.addAction(UIAlertAction(title: String(localized: "Share log", table: "Main"), style: .default) { _ in
+            self.nativeLog.flush()
             let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             let logs = ["native-port-previous.log", "native-port.log"].map { documents.appendingPathComponent($0) }
                 .filter { FileManager.default.fileExists(atPath: $0.path) }
@@ -684,8 +681,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count) }
         } == KERN_SUCCESS
         let used = ok ? Int(vm.phys_footprint / 1_048_576) : -1
-        let available = Int(os_proc_available_memory() / 1_048_576)
-        let free = available > 0 ? available : max(0, GameSettings.shared.tier.memoryLimitMB - used)
+        let free = Int(os_proc_available_memory() / 1_048_576)
         var reads = [UInt64](repeating: 0, count: 6)
         reads.withUnsafeMutableBufferPointer { PGAssetHealth($0.baseAddress) }
         let now = [PGMemoryBudgetClamps()] + reads
@@ -694,9 +690,22 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let avgMS = d[1] > 0 ? Double(d[6]) / Double(d[1]) / 1000 : 0
         appendLog(String(format: "Health: memory %d MB used, %d MB free · guard held back streaming %llu× · reads %llu (%.1f MB, avg %.1f ms, slow %llu, errors %llu) · %.0f FPS",
                          used, free, d[0], d[1], Double(d[2]) / 1_048_576, avgMS, d[5], d[3], PGRenderedFramesPerSecond()))
+        let thermal: String
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: thermal = "nominal"
+        case .fair: thermal = "fair"
+        case .serious: thermal = "serious"
+        case .critical: thermal = "critical"
+        @unknown default: thermal = "unknown"
+        }
+        let metalMB = (metalView.device?.currentAllocatedSize ?? 0) / 1_048_576
+        appendLog("Resources: Metal \(metalMB) MB · unified memory \(metalView.device?.hasUnifiedMemory == true) · thermal \(thermal) · low power \(ProcessInfo.processInfo.isLowPowerModeEnabled)")
     }
 
-    @objc private func leftApp() { if stableTimer?.isValid != false { GameSettings.shared.markBootInterrupted() } }
+    @objc private func leftApp() {
+        nativeLog.flush()
+        if stableTimer?.isValid != false { GameSettings.shared.markBootInterrupted() }
+    }
 
     /// The touch-controls layout editor (pre-game, or from Settings).
     private func showLayoutEditor() {
@@ -744,6 +753,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
 
     private func applyCheat(_ code: String, buttons: [UInt16], mode: CheatInputMode) {
         let title = String(localized: "Cheat codes", table: "Cheats")
+        appendLog("Cheat requested: \(code), mode \(mode.rawValue), engine \(engineStarted), status \(PGGameStatus()), pause \(PGPauseMenuActive())")
         guard engineStarted, PGGameStatus() == 0, !PGPauseMenuActive() else {
             showWhenFree(title: title, message: String(localized: "Wait until the game has loaded, close its pause menu and phone, and return to controlling the character.", table: "Cheats"))
             return
@@ -810,6 +820,30 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         #endif
         KeyboardMouse.shared.releaseAll()
         PGUpdateVirtualPad(PGPadState())
+    }
+
+    @objc private func sceneDeactivated(_ notification: Notification) {
+        guard let scene = notification.object as? UIWindowScene, scene === view.window?.windowScene else { return }
+        metalView.isPaused = true
+        releaseTouchControls()
+        PGSetGraphicsActive(false)
+        lastShellCommand?.waitUntilScheduled()
+        appendLog("Scene inactive: Metal submissions suspended and queued work scheduled.")
+        nativeLog.flush()
+    }
+
+    @objc private func sceneActivated(_ notification: Notification) {
+        guard let scene = notification.object as? UIWindowScene, scene === view.window?.windowScene else { return }
+        PGSetGraphicsActive(true)
+        appendLog("Scene active: Metal submissions resumed.")
+        metalView.isPaused = engineStarted
+        lastControllerPoll = nil
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        PGTrimGraphicsMemory()
+        appendLog("Memory warning: reclaiming completed, unused Metal upload buffers.")
     }
     private var injectedKey = false, releasedKey = false, injectedMouse = false
     private func injectTestInput(sinceWorld: Double) {
@@ -991,10 +1025,12 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
     func draw(in view: MTKView) {
-        guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
+        guard view.window?.windowScene?.activationState == .foregroundActive,
+              let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
               let command = queue?.makeCommandBuffer(), let encoder = command.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         encoder.endEncoding()
         command.present(drawable)
         command.commit()
+        lastShellCommand = command
     }
 }

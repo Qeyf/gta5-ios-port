@@ -47,8 +47,8 @@ void pg_record_memory_fault(unsigned long long address,unsigned long long bytes,
 }
 
 void pg_log(const char *message) {
-  fprintf(stderr, "[native-port] %s\n", message);
   if (logCallback) logCallback(message, logContext);
+  else fprintf(stderr, "[native-port] %s\n", message);
 }
 
 void pg_missing_import(const char *name) {
@@ -256,7 +256,10 @@ void w2c_env_wasm_input_publish_js(struct w2c_env *host, u64 block) {
   atomic_store((_Atomic int32_t *)(base + 440), startMode);
   pg_log(startMode==1?"Start mode: Story Mode (continues the newest save, or a new game from the Prologue).":startMode==3?"Start mode: Sandbox Mode on the test level (env_test).":"Start mode: Sandbox Mode on the GTA V map.");
   atomic_store(&inputBlock, block);
-  pg_log("Native controller bridge attached to the game's input block.");
+  char inputLog[160];
+  snprintf(inputLog, sizeof inputLog, "Native controller bridge attached: input block 0x%llx, memory %llu bytes.",
+           (unsigned long long)block, (unsigned long long)env.memory.size);
+  pg_log(inputLog);
 }
 void w2c_env_wasm_audio_publish_js(struct w2c_env *host, u64 ring, u32 capacity) {
   if (!capacity || (capacity & (capacity - 1))) wasm_rt_trap(WASM_RT_TRAP_OOB);
@@ -551,6 +554,13 @@ static bool pg_cheat_host_ready(void) {
   return pg_cheat_input_bounds((const uint8_t *)(void *)env.memory.data, env.memory.size, atomic_load(&inputBlock)) &&
     env.memory.size >= 24627140 && PGGameStatus() == 0 && !PGPauseMenuActive();
 }
+static void pg_cheat_log_state(const char *reason) {
+  char line[256];
+  snprintf(line, sizeof line, "Cheat input %s: block 0x%llx, memory %llu, status %u, pause %d.", reason,
+           (unsigned long long)atomic_load(&inputBlock), (unsigned long long)env.memory.size,
+           PGGameStatus(), PGPauseMenuActive());
+  pg_log(line);
+}
 // Called with inputMutex held. Never use a trapping engine-memory accessor in
 // the input worker: an unavailable/changed input block is a failed request.
 static void pg_cheat_cleanup(void) {
@@ -626,8 +636,17 @@ static void *pg_cheat_input_thread(void *context) {
 }
 static bool pg_cheat_submit(const PGCheatSequence *sequence) {
   pthread_mutex_lock(&inputMutex);
-  if (pg_cheat_busy(&cheatState)) { pthread_mutex_unlock(&inputMutex); return false; }
-  if (!pg_cheat_host_ready()) { atomic_store(&cheatState, 4); pthread_mutex_unlock(&inputMutex); return false; }
+  if (pg_cheat_busy(&cheatState)) {
+    pthread_mutex_unlock(&inputMutex);
+    pg_cheat_log_state("rejected (another sequence owns input)");
+    return false;
+  }
+  if (!pg_cheat_host_ready()) {
+    atomic_store(&cheatState, 4);
+    pthread_mutex_unlock(&inputMutex);
+    pg_cheat_log_state("rejected (host not ready)");
+    return false;
+  }
   // Ownership is acquired before allocating or launching the detached worker.
   pg_cheat_claim(&cheatState);
   PGCheatJob *job = malloc(sizeof *job);
@@ -649,12 +668,18 @@ static bool pg_cheat_submit(const PGCheatSequence *sequence) {
     pg_cheat_finish(&cheatState, 4);
   }
   pthread_mutex_unlock(&inputMutex);
+  if (error) {
+    char line[128];
+    snprintf(line, sizeof line, "Cheat input worker could not start: error %d.", error);
+    pg_log(line);
+  } else pg_cheat_log_state(sequence->console ? "started (console)" : "started (gamepad)");
   return error == 0;
 }
 static bool pg_cheat_reject(void) {
   pthread_mutex_lock(&inputMutex);
   if (!pg_cheat_busy(&cheatState)) atomic_store(&cheatState, 4);
   pthread_mutex_unlock(&inputMutex);
+  pg_cheat_log_state("rejected (invalid code or button sequence)");
   return false;
 }
 bool PGApplyCheatConsole(const char *code) {

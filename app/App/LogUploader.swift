@@ -8,6 +8,7 @@ enum LogUploader {
     private static let perLog = 1_800_000
 
     static func send(note: String, done: @escaping ((String, String)) -> Void) {
+        NativeLog.shared.flush()
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         var body = Data()
         for (title, name) in [("PREVIOUS RUN", "native-port-previous.log"), ("THIS RUN", "native-port.log")] {

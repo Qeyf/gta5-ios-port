@@ -7,6 +7,10 @@ extern "C" {
 // Native Metal renderer (Source/MetalRenderer): executes the game's graphics command ring directly on Metal.
 bool PGMetalRendererAvailable(void);
 void PGMetalRendererAttachLayer(void *layer);
+// Call on scene deactivation before entering the background, and activation.
+void PGMetalRendererSetAppActive(bool active);
+// Thread-safe request; completed frame upload slots are trimmed by the renderer.
+void PGMetalRendererTrimMemory(void);
 void PGStartMetalRenderer(void *memory, uint64_t memorySize, uint64_t ring, uint64_t ringSize);
 double PGMetalRendererFPS(void);
 void PGMetalRendererCapture(const char *name);

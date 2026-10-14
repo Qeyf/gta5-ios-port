@@ -28,11 +28,13 @@ struct NativeLogTests {
         next.append("shell only")
         next.flush()
         let previous = folder.appendingPathComponent("native-port-previous.log")
-        precondition(try String(contentsOf: previous, encoding: .utf8) == contents)
+        let saved = try String(contentsOf: previous, encoding: .utf8)
+        precondition(saved == contents)
         let third = NativeLog(directory: folder)
         third.append("another shell launch")
         third.flush()
-        precondition(try String(contentsOf: previous, encoding: .utf8) == contents)
+        let retained = try String(contentsOf: previous, encoding: .utf8)
+        precondition(retained == contents)
         print("PASS: concurrent log bursts, ordered flush, bounded UI tail, metrics and played-run rotation")
     }
 }

@@ -12,6 +12,8 @@
 #include "MRFrameReports.h"
 #include "BCTextureDecoder.h"
 #include "NativeFrameRate.h"
+#include "NativeRenderLifecycle.h"
+#include "NativeFrameUploadCache.h"
 #import <UIKit/UIKit.h>
 #include <TargetConditionals.h>
 #include <pthread.h>
@@ -21,6 +23,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdarg>
+#include <os/proc.h>
 
 namespace mr {
 
@@ -82,7 +85,13 @@ struct FrameRing {
 	size_t chunk = 0;
 	NSUInteger off = 0;
 	uint64_t lastSerial = 0;
-	void reset() { chunk = 0; off = 0; big.clear(); }
+	uint64_t trimmedGeneration = 0;
+	void reset(uint64_t completedSerial, uint64_t trimGeneration) {
+		if (trimmedGeneration != trimGeneration &&
+		    pg_trim_completed_upload_chunks(chunks, off ? chunk + 1 : 0, lastSerial, completedSerial))
+			trimmedGeneration = trimGeneration;
+		chunk = 0; off = 0; big.clear();
+	}
 };
 
 struct Alloc { id<MTLBuffer> buf; NSUInteger off; uint8_t *ptr; };
@@ -214,6 +223,14 @@ struct Renderer {
 };
 
 static Renderer *R;
+// The app may deactivate before the engine creates its renderer. Keep this
+// state independent of R and retain the last submitted buffer for the
+// scheduling fence required before iOS moves the app into the background.
+static PGRenderLifecycle renderLifecycle;
+static id<MTLCommandBuffer> lastSubmitted;
+// UIKit memory warnings request a trim; the renderer performs it only after
+// each upload slot's GPU work completes. No resources mutate on the UI thread.
+static std::atomic<uint64_t> uploadTrimGeneration{0};
 
 // ---- debug trace (simulator only, env PG_MR_TRACE=<seconds after the world is shown>) ---------------------------------
 // Writes every command of one frame (draws with their shaders, targets, states and textures; clears, copies) to
@@ -290,7 +307,10 @@ static void commit(CommitReason reason, id<CAMetalDrawable> drawable = nil) {
 		dispatch_semaphore_signal(r->completion);
 	}];
 	double c0 = nowMs();
-	[cb commit];
+	renderLifecycle.performWhileActive([&] {
+		[cb commit];
+		lastSubmitted = cb;
+	});
 	R->work.submit += nowMs() - c0;
 	R->cmd = nil;
 	R->lastCommitMs = nowMs();
@@ -1696,6 +1716,9 @@ static void present(uint32_t texId) {
 		if (!name.empty()) capture(t, name);
 		CGSize size = CGSizeMake(t->width, t->height);
 		if (!CGSizeEqualToSize(R->layer.drawableSize, size)) R->layer.drawableSize = size;
+		// Do not hold the lifecycle mutex while waiting for a drawable. If
+		// deactivation races this acquisition, commit() still waits for resume.
+		renderLifecycle.waitUntilActive();
 		drawable = [R->layer nextDrawable];
 		if (drawable) {
 			MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -1755,7 +1778,7 @@ static void present(uint32_t texId) {
 	double w0 = nowMs();
 	if (next.lastSerial) waitSerial(next.lastSerial);
 	R->work.gpuWait += nowMs() - w0;
-	next.reset();
+	next.reset(R->completed.load(std::memory_order_relaxed), uploadTrimGeneration.load(std::memory_order_relaxed));
 	double tn = nowMs();
 	if (R->lastPresentMs) frameReportsRecord(tn, tn - R->lastPresentMs, d, R->worldSent, R->work);
 	R->lastPresentMs = tn;
@@ -1999,6 +2022,17 @@ static void report() {
 	std::string skips;
 	for (int i = 0; i < 5; i++) if (R->skipReasons[i]) { char b[64]; snprintf(b, sizeof b, "%s%s %llu", skips.empty() ? "" : ", ", skipNames[i], (unsigned long long)R->skipReasons[i]); skips += b; }
 	logf("[metal] command buffers per frame: %s; skipped draws: %s", reasons.c_str(), skips.empty() ? "none" : skips.c_str());
+	uint64_t uploadBytes = 0;
+	for (const auto &frame : R->frames) {
+		uploadBytes += frame.chunks.size() * FrameRing::CHUNK;
+		for (id<MTLBuffer> buffer : frame.big) uploadBytes += buffer.length;
+	}
+	logf("[metal] memory: %llu MB allocated, %llu MB upload ring retained",
+	     (unsigned long long)(R->device.currentAllocatedSize / 1048576),
+	     (unsigned long long)(uploadBytes / 1048576));
+#if !TARGET_OS_SIMULATOR
+	if (os_proc_available_memory() < 512ull * 1048576) uploadTrimGeneration.fetch_add(1, std::memory_order_relaxed);
+#endif
 	memset(R->commitReasons, 0, sizeof R->commitReasons); memset(R->skipReasons, 0, sizeof R->skipReasons);
 	R->statT = now; R->statDraws = R->draws; R->statPresents = R->presents; R->statSkips = R->skipped; R->statPending = R->pendingSkips; R->statCommits = R->commits; R->busyMs = 0;
 }
@@ -2010,6 +2044,7 @@ static void loop() {
 	hdr[2].store(1);
 	uint32_t executed = 0, sinceYield = 0;
 	for (;;) {
+		renderLifecycle.waitUntilActive();
 		@autoreleasepool {
 			uint32_t head = hdr[0].load(std::memory_order_acquire);
 			if (head == tail) {
@@ -2027,6 +2062,9 @@ static void loop() {
 			}
 			double t0 = nowMs();
 			while (tail != head) {
+				// Preserve commands and their fence/query completions while iOS
+				// suspends GPU access instead of consuming and dropping them.
+				renderLifecycle.waitUntilActive();
 				const uint32_t *base = (const uint32_t *)(R->mem + R->ring + tail);
 				uint32_t op = base[0], n = base[1];
 				if (op == WRAP) { tail = RING_DATA; continue; }
@@ -2133,6 +2171,21 @@ using namespace mr;
 static CAMetalLayer *pendingLayer;
 
 extern "C" void PGMetalRendererAttachLayer(void *layer) { pendingLayer = (__bridge CAMetalLayer *)layer; }
+
+extern "C" void PGMetalRendererSetAppActive(bool active) {
+	id<MTLCommandBuffer> submitted = nil;
+	renderLifecycle.setActive(active, [&] {
+		if (!active) submitted = lastSubmitted;
+	});
+	// Scheduling, rather than GPU completion, is the boundary iOS requires.
+	// No renderer or completion callback needs this thread or the lifecycle
+	// mutex to finish, so this cannot deadlock with an inactive submission.
+	if (submitted) [submitted waitUntilScheduled];
+}
+
+extern "C" void PGMetalRendererTrimMemory(void) {
+	uploadTrimGeneration.fetch_add(1, std::memory_order_relaxed);
+}
 
 extern "C" bool PGMetalRendererAvailable(void) {
 #if TARGET_OS_SIMULATOR
