@@ -61,8 +61,11 @@ A Linux-only synthetic workload uses mismatch/zero-timeout and empty notify
 
 This demonstrates reduced contention, with a small absolute lookup cost in the
 single-worker case. It is not an iPhone benchmark or an FPS multiplier. Actual
-Apple wait/notify, partial wakes, timeouts, traps and65 simultaneous addresses
+Apple wait/notify, partial wakes, timeouts, traps and65 backing addresses
 (more than the queue count, including wait64) are gated before IPA publication.
+Enqueue overlap in that stress test depends on scheduling; it is not proof that
+all65 waiters occupy queues simultaneously. The forced-preemption isolation
+regression provides the deterministic independent-address progress check.
 The independent-address preemption regression also runs20times in source CI.
 
 ## Device acceptance

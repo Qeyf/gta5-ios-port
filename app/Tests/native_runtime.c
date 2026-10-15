@@ -13,7 +13,7 @@ struct w2c_env { wasm_rt_shared_memory_t memory; };
 wasm_rt_shared_memory_t *w2c_env_memory(struct w2c_env *e) { return &e->memory; }
 static struct w2c_env env;
 static _Atomic int finished;
-enum { ADDRESS_GROUPS=65 }; // More addresses than queues: collisions are covered.
+enum { ADDRESS_GROUPS=65 }; // More backing addresses than wait queues.
 static _Atomic int groupFinished[ADDRESS_GROUPS];
 static int recordedTrap;
 void pg_record_trap(int code){recordedTrap=code;}
@@ -74,7 +74,9 @@ int main(void) {
   for (int i = 0; i < 3; i++) pthread_join(threads[i], NULL);
   assert(atomic_load(&finished) == 3);
   // Shared-address identity and exact-count notifications must survive queue
-  // sharding. 65 simultaneous addresses guarantee hash collisions; mixed
+  // sharding. These 65 addresses include hash collisions (enqueue overlap is
+  // scheduler-dependent, so this is not a deterministic collision barrier).
+  // Mixed
   // wait32/wait64 also verifies that notify matches the address, not the width.
   pthread_t groups[ADDRESS_GROUPS];
   for(unsigned i=0;i<ADDRESS_GROUPS;i++){
