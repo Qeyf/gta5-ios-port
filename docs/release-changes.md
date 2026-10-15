@@ -1,3 +1,21 @@
+## 1.3.7 — Değişiklikler / Changes
+
+**Türkçe**
+
+- Karakter hazır olduğu hâlde dokunmatik kontrolleri sürekli gizleyen yükleme denetimi düzeltildi. Bazı Serbest Mod açılışlarında açık kalan “ilk yükleme” işareti yerine motorun gerçek etkin yükleme ekranı durumu kullanılır. İlk yükleme, ara sahne ve karakterin bulunmadığı durumlar için denetimler korunur.
+- Motor, render ve ses iş parçacıklarının farklı bellek adreslerinde beklerken tek bir kilitte sıraya girmesi azaltıldı. Adrese göre ayrılmış bekleme kuyrukları, aynı adres için bildirim sayısını ve zaman aşımı davranışını korur.
+- Günlükler dokunmatik kontrollerin hangi koşul nedeniyle gizlendiğini yalnızca durum değiştiğinde kaydeder. Böylece yükleme, bağlı oyun kumandası ve klavye/fare tercihi ayırt edilebilir.
+- Arayüz testi artık gerçek yükleme denetimini ve Serbest Mod'da kalıcı olabilen işareti birlikte sınar. Yerel motor testleri farklı ve çakışan adreslerde 32/64 bit beklemeleri de kapsar.
+
+**English**
+
+- Correct the loading check that could keep touch controls hidden after the player was ready. Use the engine's active loading-screen context instead of the initial-loading marker, which can remain set after Sandbox startup. Initial loading, cutscene and missing-player protections remain.
+- Reduce contention between unrelated engine, renderer and audio waits by separating wait queues by backing address. Exact notification counts and timeout behavior for the same address are retained.
+- Log touch visibility causes only on transitions, distinguishing loading, connected controllers and keyboard/mouse preferences.
+- UIKit tests now exercise the production loading snapshot with the persistent Sandbox marker; native runtime checks cover independent and colliding addresses with both 32-bit and 64-bit waits.
+
+The supplied 1.3.6 device log requests 120 Hz correctly and records world windows at 81.6 and 63.8 FPS. The wait-queue optimization has a targeted concurrency regression and a host microbenchmark, not a measured iPhone FPS uplift. Sustained 120 FPS still requires device verification. Game Mode, ProMotion support, bounded CPU concurrency and device-local game files remain enabled.
+
 ## 1.3.6 — Değişiklikler / Changes
 
 **Türkçe**

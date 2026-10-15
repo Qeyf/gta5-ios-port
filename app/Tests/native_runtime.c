@@ -13,6 +13,8 @@ struct w2c_env { wasm_rt_shared_memory_t memory; };
 wasm_rt_shared_memory_t *w2c_env_memory(struct w2c_env *e) { return &e->memory; }
 static struct w2c_env env;
 static _Atomic int finished;
+enum { ADDRESS_GROUPS=65 }; // More addresses than queues: collisions are covered.
+static _Atomic int groupFinished[ADDRESS_GROUPS];
 static int recordedTrap;
 void pg_record_trap(int code){recordedTrap=code;}
 
@@ -26,6 +28,16 @@ static void *waiter(void *unused) {
   wasm2c_probe_free(&probe);
   wasm_rt_free_thread();
   return NULL;
+}
+static void *addressWaiter(void *argument) {
+  unsigned index=(unsigned)(uintptr_t)argument;
+  wasm_rt_init_thread();
+  w2c_probe probe;wasm2c_probe_instantiate(&probe,&env);
+  uint64_t address=64+index*8;
+  uint32_t result=index&1 ? w2c_probe_wait64(&probe,address,7,(u64)-1)
+                          : w2c_probe_wait32(&probe,address,7,(u64)-1);
+  assert(result==0);atomic_fetch_add(&groupFinished[index],1);
+  wasm2c_probe_free(&probe);wasm_rt_free_thread();return NULL;
 }
 
 int main(void) {
@@ -61,6 +73,22 @@ int main(void) {
   assert(last == 1);
   for (int i = 0; i < 3; i++) pthread_join(threads[i], NULL);
   assert(atomic_load(&finished) == 3);
+  // Shared-address identity and exact-count notifications must survive queue
+  // sharding. 65 simultaneous addresses guarantee hash collisions; mixed
+  // wait32/wait64 also verifies that notify matches the address, not the width.
+  pthread_t groups[ADDRESS_GROUPS];
+  for(unsigned i=0;i<ADDRESS_GROUPS;i++){
+    atomic_store((_Atomic uint64_t *)(void *)(env.memory.data+64+i*8),7);
+    assert(!pthread_create(&groups[i],NULL,addressWaiter,(void*)(uintptr_t)i));
+  }
+  assert(w2c_probe_notify(&probe,65528,UINT32_MAX)==0);
+  for(int i=ADDRESS_GROUPS-1;i>=0;i--){
+    assert(w2c_probe_notify(&probe,64+i*8,0)==0);
+    while(!w2c_probe_notify(&probe,64+i*8,1))pauseBriefly();
+    pthread_join(groups[i],NULL);
+    assert(atomic_load(&groupFinished[i])==1);
+    for(int j=0;j<i;j++)assert(atomic_load(&groupFinished[j])==0);
+  }
   wasm_rt_trap_t trap = wasm_rt_impl_try();
   if (!trap) { w2c_probe_readVector(&probe, 65528); assert(!"OOB SIMD must trap"); }
   assert(trap == WASM_RT_TRAP_OOB);
@@ -72,5 +100,5 @@ int main(void) {
   wasm2c_probe_free(&probe);
   wasm_rt_free_memory_shared(&env.memory);
   wasm_rt_free();
-  puts("PASS: converted memory64 wait/notify, timeout, partial wake, shared SIMD, and traps");
+  puts("PASS: converted memory64 wait/notify, timeout, partial wake, 65 independent/colliding addresses with wait32/wait64, shared SIMD, and traps");
 }

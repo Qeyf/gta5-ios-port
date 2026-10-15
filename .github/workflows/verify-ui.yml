@@ -33,6 +33,19 @@ jobs:
               "app/Tests/$test.c" -o "$RUNNER_TEMP/check-$test"
             "$RUNNER_TEMP/check-$test"
           done
+      - name: Verify native wait-queue isolation on Apple Silicon
+        run: |
+          archive=wabt-1.0.42-macos-arm64.tar.gz
+          base=https://github.com/WebAssembly/wabt/releases/download/1.0.42
+          curl -fLsS "$base/$archive" -o "$RUNNER_TEMP/futex-wabt.tar.gz"
+          expected=$(curl -fLsS "$base/$archive.sha256" | awk '{print $1}')
+          actual=$(shasum -a 256 "$RUNNER_TEMP/futex-wabt.tar.gz" | awk '{print $1}')
+          test "$actual" = "$expected"
+          mkdir -p "$RUNNER_TEMP/futex-wabt"
+          tar -xzf "$RUNNER_TEMP/futex-wabt.tar.gz" -C "$RUNNER_TEMP/futex-wabt" --strip-components=1
+          xcrun clang -std=c11 -O2 -pthread -Iapp/Source -I"$RUNNER_TEMP/futex-wabt/include" \
+            app/Tests/futex_isolation.c -o "$RUNNER_TEMP/check-futex-isolation"
+          for iteration in {1..20}; do "$RUNNER_TEMP/check-futex-isolation"; done
       - name: Verify batched native log persistence
         run: |
           xcrun swiftc app/App/NativeLog.swift app/Tests/native_log.swift -o "$RUNNER_TEMP/check-native-log"

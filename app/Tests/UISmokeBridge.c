@@ -7,6 +7,7 @@
 #include "EngineHost.h"
 #include "NativeAssetPreload.h"
 #include "NativeGraphics.h"
+#include "NativeTouchContext.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,9 +15,18 @@
 static uint8_t probeKeys[256];
 static int32_t probeButtons,probeDX,probeDY,probeWheel;
 static uint32_t probeStatus=16;
-static bool probeLoading=true,probeRuntime;
+static bool probeRuntime;
+static uint8_t *probeLoadingMemory;
+static const size_t probeLoadingSize=19473640;
 static int probeFrameLimit=-1;
-void PGUISmokeRuntimeState(uint32_t status,bool loading){probeStatus=status;probeLoading=loading;probeRuntime=true;}
+void PGUISmokeRuntimeState(uint32_t status,bool loading){
+  if(!probeLoadingMemory){probeLoadingMemory=calloc(1,probeLoadingSize);if(!probeLoadingMemory)abort();}
+  probeStatus=status;probeRuntime=true;
+  // Exercise the production snapshot, including Sandbox's persistent initial
+  // marker. A standalone mocked loading Bool missed this shipping regression.
+  probeLoadingMemory[6972816]=1;
+  atomic_store((_Atomic uint32_t *)(probeLoadingMemory+19473636),loading?4:0);
+}
 int32_t PGUISmokeFrameLimit(void){return probeFrameLimit;}
 int32_t PGUISmokeMouseButtons(void){return probeButtons;}
 int32_t PGUISmokeMouseDX(void){return probeDX;}
@@ -48,7 +58,7 @@ void PGUpdateController(PGControllerState state, double elapsed) {
 }
 uint32_t PGCurrentTouchContext(void) { return 0; }
 uint32_t PGGameStatus(void) { return probeStatus; }
-bool PGLoadingScreenActive(void) { return probeLoading; }
+bool PGLoadingScreenActive(void) { return pg_loading_screen_active(probeLoadingMemory,probeLoadingSize); }
 PGControlHints PGReadControlHints(uint32_t context) {
   (void)context;
   PGControlHints hints = {0};

@@ -5,8 +5,9 @@
 #include <errno.h>
 #include <time.h>
 
-// One queue shared by all instances of a module's imported shared memory.
-// Per-waiter condition variables let notify wake exactly the requested count.
+// Instances sharing the same backing address use the same wait queue.
+// Unrelated engine/render/audio addresses need not serialize on one mutex.
+// Per-waiter condition variables preserve exact-count notification semantics.
 typedef struct Waiter {
   const void *address;
   bool notified;
@@ -14,8 +15,22 @@ typedef struct Waiter {
   struct Waiter *next;
 } Waiter;
 
-static pthread_mutex_t queueLock = PTHREAD_MUTEX_INITIALIZER;
-static Waiter *waiters;
+typedef struct WaitQueue {
+  _Alignas(128) pthread_mutex_t lock;
+  Waiter *waiters;
+} WaitQueue;
+enum { WAIT_QUEUE_COUNT = 64 };
+static WaitQueue queues[WAIT_QUEUE_COUNT];
+static pthread_once_t queuesOnce = PTHREAD_ONCE_INIT;
+static void initializeQueues(void) {
+  for(unsigned i=0;i<WAIT_QUEUE_COUNT;i++)pthread_mutex_init(&queues[i].lock,NULL);
+}
+static WaitQueue *queueFor(const void *address) {
+  pthread_once(&queuesOnce,initializeQueues);
+  uintptr_t key=(uintptr_t)address>>2;
+  key^=key>>9;key^=key>>17;
+  return &queues[key & (WAIT_QUEUE_COUNT-1)];
+}
 
 static void *checkedAddress(wasm_rt_shared_memory_t *memory, uint64_t offset,
                             uint32_t width) {
@@ -28,21 +43,22 @@ static void *checkedAddress(wasm_rt_shared_memory_t *memory, uint64_t offset,
 static uint32_t waitFor(wasm_rt_shared_memory_t *memory, uint64_t offset,
                         uint64_t expected, uint64_t timeoutBits, uint32_t width) {
   void *address = checkedAddress(memory, offset, width);
-  pthread_mutex_lock(&queueLock);
+  WaitQueue *queue=queueFor(address);
+  pthread_mutex_lock(&queue->lock);
   uint64_t value = width == 4 ? atomic_load((_Atomic uint32_t *)address)
                               : atomic_load((_Atomic uint64_t *)address);
   if (value != expected) {
-    pthread_mutex_unlock(&queueLock);
+    pthread_mutex_unlock(&queue->lock);
     return 1;
   }
   int64_t timeout = (int64_t)timeoutBits;
   if (!timeout) {
-    pthread_mutex_unlock(&queueLock);
+    pthread_mutex_unlock(&queue->lock);
     return 2;
   }
-  Waiter waiter = {.address = address, .notified = false, .next = waiters};
+  Waiter waiter = {.address = address, .notified = false, .next = queue->waiters};
   pthread_cond_init(&waiter.condition, NULL);
-  waiters = &waiter;
+  queue->waiters = &waiter;
   struct timespec deadline;
   if (timeout > 0) {
     clock_gettime(CLOCK_MONOTONIC, &deadline);
@@ -56,7 +72,7 @@ static uint32_t waitFor(wasm_rt_shared_memory_t *memory, uint64_t offset,
   int result = 0;
   while (!waiter.notified && !result) {
     if (timeout < 0) {
-      result = pthread_cond_wait(&waiter.condition, &queueLock);
+      result = pthread_cond_wait(&waiter.condition, &queue->lock);
     } else {
       // Apple's relative wait uses monotonic time, so wall-clock changes cannot
       // extend or shorten an engine sleep. Recalculate after a spurious wakeup.
@@ -66,14 +82,14 @@ static uint32_t waitFor(wasm_rt_shared_memory_t *memory, uint64_t offset,
       remaining.tv_nsec = deadline.tv_nsec - now.tv_nsec;
       if (remaining.tv_nsec < 0) { remaining.tv_sec--; remaining.tv_nsec += 1000000000; }
       if (remaining.tv_sec < 0) result = ETIMEDOUT;
-      else result = pthread_cond_timedwait_relative_np(&waiter.condition, &queueLock, &remaining);
+      else result = pthread_cond_timedwait_relative_np(&waiter.condition, &queue->lock, &remaining);
     }
   }
-  Waiter **link = &waiters;
+  Waiter **link = &queue->waiters;
   while (*link != &waiter) link = &(*link)->next;
   *link = waiter.next;
   bool notified = waiter.notified;
-  pthread_mutex_unlock(&queueLock);
+  pthread_mutex_unlock(&queue->lock);
   pthread_cond_destroy(&waiter.condition);
   return notified ? 0 : 2;
 }
@@ -86,15 +102,16 @@ uint32_t pg_atomic_wait64(wasm_rt_shared_memory_t *m, uint64_t a, uint64_t v,
 uint32_t pg_atomic_notify(wasm_rt_shared_memory_t *m, uint64_t offset,
                            uint32_t count) {
   void *address = checkedAddress(m, offset, 4);
+  WaitQueue *queue=queueFor(address);
   uint32_t total = 0;
-  pthread_mutex_lock(&queueLock);
-  for (Waiter *w = waiters; w && total < count; w = w->next) {
+  pthread_mutex_lock(&queue->lock);
+  for (Waiter *w = queue->waiters; w && total < count; w = w->next) {
     if (w->address == address && !w->notified) {
       w->notified = true;
       pthread_cond_signal(&w->condition);
       total++;
     }
   }
-  pthread_mutex_unlock(&queueLock);
+  pthread_mutex_unlock(&queue->lock);
   return total;
 }

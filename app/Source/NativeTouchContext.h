@@ -15,12 +15,14 @@ static inline bool pg_context_u32(const uint8_t *memory,uint64_t size,uint64_t a
  *value=atomic_load_explicit((const _Atomic uint32_t *)(memory+address),memory_order_relaxed);return true;
 }
 
-// Pinned CLoadingScreens::AreActive / initial-loading script native. Shutdown
-// clears these after the loading renderer exits; pipeline compilation is separate.
+// Pinned CLoadingScreens::AreActive (f34946). The separate initial-loading
+// marker is NOT a lifecycle gate: Shutdown(f34944) clears it only for contexts
+// 6/8/9/10, while all shutdown routes clear this active context. In particular,
+// a Sandbox player can be playable while the initial-loading marker stays set.
 static inline bool pg_loading_screen_active(const uint8_t *memory,uint64_t size){
  uint32_t context;
- if(!pg_context_u32(memory,size,19473636,&context) || size<=6972816)return true;
- return context!=0 || atomic_load_explicit((const _Atomic uint8_t *)(memory+6972816),memory_order_relaxed)!=0;
+ if(!pg_context_u32(memory,size,19473636,&context))return true;
+ return context!=0;
 }
 static inline uint32_t pg_touch_context(const uint8_t *memory,uint64_t size){
  uint64_t info,ped,vehicle,check;uint32_t kind;

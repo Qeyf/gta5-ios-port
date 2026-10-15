@@ -57,6 +57,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private var tiltSmoothed: Double = 0
     private var motionOrientation: UIInterfaceOrientation?
     private var touchControlsAvailable = false
+    private var lastTouchVisibility: UInt32?
     private var gameplayReadiness = GameplayReadiness()
     private var lastTouchInputTrace = ""
     private var movementProofStarted = false
@@ -958,7 +959,8 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let previewing = ProcessInfo.processInfo.arguments.contains("--touch-controls-preview")
         var pauseMenu = PGPauseMenuActive()
         let hadEnteredGameplay = gameplayReadiness.enteredGameplay
-        let controlsReady = gameplayReadiness.allowsControls(engineStarted: engineStarted, loading: PGLoadingScreenActive(), status: gameStatus, paused: pauseMenu, preview: previewing)
+        let loading = PGLoadingScreenActive()
+        let controlsReady = gameplayReadiness.allowsControls(engineStarted: engineStarted, loading: loading, status: gameStatus, paused: pauseMenu, preview: previewing)
         if !hadEnteredGameplay && gameplayReadiness.enteredGameplay {
             PGSetTargetingMode(Int32(GameSettings.shared.targetingMode))
             appendLog("Gameplay controls ready: loading screens inactive, local player controllable; pipeline quiescence not required.")
@@ -967,6 +969,13 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         touchControlsAvailable = controlsReady
         let touchActive = touchControlsAvailable && (previewing || !((hasController || pcControls) && GameSettings.shared.hideTouchWithController))
         touchControls.isHidden = !touchActive
+        // Record transitions only; a report must explain a hidden layout even
+        // when a controller or a persistent loading state is the cause.
+        let visibility: UInt32 = (touchActive ? 1 : 0) | (loading ? 2 : 0) | (hasController ? 4 : 0) | (pcControls ? 8 : 0) | (GameSettings.shared.hideTouchWithController ? 16 : 0) | (controlsReady ? 32 : 0)
+        if lastTouchVisibility != visibility {
+            lastTouchVisibility = visibility
+            appendLog("Touch visibility: \(touchActive ? "shown" : "hidden"), loading=\(loading), ready=\(controlsReady), controller=\(hasController), keyboardMouse=\(pcControls), hideWithController=\(GameSettings.shared.hideTouchWithController).")
+        }
         var vehicle = touchActive ? PGCurrentTouchContext() : 0
         // Debug: --preview-context <vehicle type + 1 | menu> to review a layout.
         let arguments = ProcessInfo.processInfo.arguments

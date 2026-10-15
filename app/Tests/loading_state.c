@@ -17,7 +17,15 @@ int main(void) {
   assert(atomic_load((_Atomic uint32_t *)(memory+19473636)) == 2);
   atomic_store((_Atomic uint32_t *)(memory+19473636), 0);
   memory[6972816] = 1;
+  // CLoadingScreens::Shutdown clears the active context on every route, but
+  // clears the initial-loading marker only for contexts 6/8/9/10. Sandbox can
+  // therefore have a playable player and this marker still set. Match
+  // CLoadingScreens::AreActive, not the separate initial-loading script native.
+  assert(!pg_loading_screen_active(memory, size));
+  atomic_store((_Atomic uint32_t *)(memory+19473636), 4);
   assert(pg_loading_screen_active(memory, size));
+  atomic_store((_Atomic uint32_t *)(memory+19473636), 0);
+  assert(!pg_loading_screen_active(memory, size));
   memory[6972816] = 0;
   assert(!pg_loading_screen_active(memory, size));
   free(memory);

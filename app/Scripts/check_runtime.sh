@@ -11,3 +11,6 @@ xcrun clang -std=c11 -O1 -DWASM_RT_USE_MMAP=0 -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 
   Tools/wabt-1.0.42/share/wabt/wasm2c/wasm-rt-mem-impl.c \
   Tools/wabt-1.0.42/share/wabt/wasm2c/wasm-rt-exceptions-impl.c -o Build/Probe/check
 Build/Probe/check
+xcrun clang -std=c11 -O2 -pthread -I Tools/wabt-1.0.42/include -I Source \
+  Tests/futex_isolation.c -o Build/Probe/check-isolation
+Build/Probe/check-isolation
