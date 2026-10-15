@@ -62,6 +62,14 @@ enum RuntimeRegressionChecks {
 
     private static func verifyReportSubmission(done: @escaping ([String]) -> Void) {
         DiagnosticsMock.reset()
+        LogUploader.testConfiguration = nil
+        LogUploader.send(note: "Missing test transport must fail closed") { _ in
+            guard DiagnosticsMock.requests == 0 else { done(["Unconfigured smoke build reached transport"]); return }
+            verifyReportSubmissionWithMock(done: done)
+        }
+    }
+
+    private static func verifyReportSubmissionWithMock(done: @escaping ([String]) -> Void) {
         LogUploader.testConfiguration = {
             let configuration = URLSessionConfiguration.ephemeral
             configuration.protocolClasses = [DiagnosticsMock.self]

@@ -43,11 +43,14 @@ enum LogUploader {
             request.setValue(device.addingPercentEncoding(withAllowedCharacters: .alphanumerics), forHTTPHeaderField: "X-Device")
             request.setValue(version, forHTTPHeaderField: "X-App-Version")
             request.setValue(noteHeader, forHTTPHeaderField: "X-Note")
-            let configuration = URLSessionConfiguration.ephemeral
             #if PG_UI_SMOKE_TEST
-            let sessionConfiguration = testConfiguration?() ?? configuration
+            // A missing test double must never fall through to real email.
+            guard let sessionConfiguration = testConfiguration?() else {
+                finish(String(localized: "Couldn't send the log", table: "Files"), String(localized: "Try again later, or use Share log instead.", table: "Files"))
+                return
+            }
             #else
-            let sessionConfiguration = configuration
+            let sessionConfiguration = URLSessionConfiguration.ephemeral
             #endif
             sessionConfiguration.urlCache = nil
             sessionConfiguration.httpCookieStorage = nil
