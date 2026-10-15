@@ -1,6 +1,7 @@
 // Compiled only by verify_ui_launch.sh, never linked into a shipping IPA.
 import UIKit
 import QuartzCore
+import GameController
 
 enum RuntimeRegressionChecks {
     static var scenario: String? {
@@ -12,6 +13,10 @@ enum RuntimeRegressionChecks {
         guard let scenario else { return }
         GameSettings.shared.frameRateCap = scenario == "unlocked" ? 60 : 0
         GameSettings.shared.gameMode = .sandbox
+        // The runner may expose a controller/keyboard. This scenario tests
+        // gameplay availability, independently of the player's hardware policy.
+        GameSettings.shared.hideTouchWithController = false
+        GameSettings.shared.keyboardMouse = false
         PGUISmokeRuntimeState(0, true)
     }
     static func schedule(on root: UIViewController) {
@@ -22,7 +27,9 @@ enum RuntimeRegressionChecks {
                 child.label.map { ($0, child.value) }
             })
             var failures: [String] = []
-            func check(_ condition: Bool, _ name: String) { if !condition { failures.append(name) } }
+            func check(_ condition: Bool, _ name: String) {
+                if !condition { failures.append(name + " [controllers=\(GCController.controllers().count), hideWithController=\(GameSettings.shared.hideTouchWithController), keyboardMouse=\(GameSettings.shared.keyboardMouse)]") }
+            }
             let touch = fields["touchControls"] as! UIView
             let output = fields["output"] as! UITextView
             let display = fields["displayLink"] as! CADisplayLink?
