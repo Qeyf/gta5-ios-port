@@ -2,10 +2,20 @@
 import http.server
 import pathlib
 import re
+import socketserver
 import sys
 import urllib.parse
 
 root = pathlib.Path(sys.argv[1]).resolve()
+
+
+class LoopbackServer(http.server.ThreadingHTTPServer):
+    def server_bind(self):
+        # HTTPServer normally resolves its bound address with getfqdn(). The
+        # loopback-only fixture needs no DNS and must not stall on a CI resolver.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -37,6 +47,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server = LoopbackServer(("127.0.0.1", 0), Handler)
     pathlib.Path(sys.argv[2]).write_text(str(server.server_address[1]))
     server.serve_forever()

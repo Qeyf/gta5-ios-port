@@ -32,7 +32,11 @@ xcrun clang -std=c11 -O2 -fobjc-arc -fblocks -I Source -I "$scratch/headers" \
   Tests/asset_pipeline.m -framework Foundation -o "$scratch/asset-pipeline"
 python3 Tests/asset_range_server.py "$scratch" "$scratch/port" &
 server_pid=$!
-for attempt in {1..100}; do [ -s "$scratch/port" ] && break; sleep 0.05; done
+for attempt in {1..300}; do
+  [ -s "$scratch/port" ] && break
+  kill -0 "$server_pid" 2>/dev/null || { echo 'Loopback asset fixture exited before becoming ready.' >&2; exit 1; }
+  sleep 0.1
+done
 test -s "$scratch/port"
 port=$(cat "$scratch/port")
 PG_LOCAL_MIRROR="$scratch" PG_ASSET_TEST_SERVER="http://127.0.0.1:$port" "$scratch/asset-pipeline"
