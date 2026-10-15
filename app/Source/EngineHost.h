@@ -38,6 +38,7 @@ void PGUpdateController(PGControllerState state, double elapsedSeconds);
 uint32_t PGCurrentTouchContext(void);
 // Game state for the touch layout: 1 control off, 2 phone out, 4 cutscene, 8 warning screen, 16 no player.
 uint32_t PGGameStatus(void);
+bool PGLoadingScreenActive(void);
 // What the touch controls need to know to show a button only when it applies (all memory reads).
 typedef struct {
   bool specialShown;   // the character has a usable special ability here

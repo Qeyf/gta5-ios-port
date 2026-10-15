@@ -41,7 +41,7 @@ static inline void pg_cheat_finish(_Atomic int32_t *state, int32_t result) {
   } while (!atomic_compare_exchange_weak(state, &value, value == 5 ? 3 : result));
 }
 
-typedef enum { PG_CHEAT_WAIT, PG_CHEAT_KEY, PG_CHEAT_PAD } PGCheatStepKind;
+typedef enum { PG_CHEAT_WAIT, PG_CHEAT_KEY, PG_CHEAT_PAD, PG_CHEAT_TEXT } PGCheatStepKind;
 typedef struct {
   PGCheatStepKind kind;
   uint8_t key;
@@ -68,8 +68,10 @@ static inline bool pg_cheat_console_sequence(PGCheatSequence *sequence, const ch
   sequence->steps[sequence->count++] = (PGCheatStep){ PG_CHEAT_KEY, 0xc0, true, '`', 0, 80 };
   sequence->steps[sequence->count++] = (PGCheatStep){ PG_CHEAT_KEY, 0xc0, false, 0, 0, 300 };
   for (unsigned i = 0; i < length; i++) {
-    sequence->steps[sequence->count++] = (PGCheatStep){ PG_CHEAT_KEY, (uint8_t)code[i], true, (uint16_t)code[i], 0, 60 };
-    sequence->steps[sequence->count++] = (PGCheatStep){ PG_CHEAT_KEY, (uint8_t)code[i], false, 0, 0, 40 };
+    // The engine reads console characters from this ring independently of
+    // physical keys. Raw letters also reach developer shortcuts (I = flight).
+    sequence->steps[sequence->count++] = (PGCheatStep){ .kind = PG_CHEAT_TEXT, .text = (uint16_t)code[i], .delayMS = 60 };
+    sequence->steps[sequence->count++] = (PGCheatStep){ .delayMS = 40 };
   }
   sequence->steps[sequence->count++] = (PGCheatStep){ .delayMS = 100 };
   sequence->steps[sequence->count++] = (PGCheatStep){ PG_CHEAT_KEY, 13, true, 13, 0, 80 };
@@ -105,7 +107,7 @@ static inline bool pg_cheat_input_bounds(const uint8_t *memory, uint64_t size, u
 }
 
 static inline bool pg_cheat_key_step(uint8_t *memory, uint64_t size, uint64_t block, const PGCheatStep *step) {
-  if (!step || step->kind != PG_CHEAT_KEY || !pg_cheat_input_bounds(memory, size, block)) return false;
+  if (!step || (step->kind != PG_CHEAT_KEY && step->kind != PG_CHEAT_TEXT) || !pg_cheat_input_bounds(memory, size, block)) return false;
   uint8_t *input = memory + block;
   if (step->text) {
     _Atomic uint32_t *head = (_Atomic uint32_t *)(input + 288);
@@ -116,7 +118,8 @@ static inline bool pg_cheat_key_step(uint8_t *memory, uint64_t size, uint64_t bl
     atomic_store_explicit((_Atomic uint16_t *)(input+296+2u*(write & 63)), step->text, memory_order_relaxed);
     atomic_store_explicit(head, write+1, memory_order_release);
   }
-  atomic_store((_Atomic uint8_t *)(input+step->key), step->down ? 0x80 : 0);
+  if (step->kind == PG_CHEAT_KEY)
+    atomic_store((_Atomic uint8_t *)(input+step->key), step->down ? 0x80 : 0);
   return true;
 }
 

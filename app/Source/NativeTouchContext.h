@@ -14,6 +14,15 @@ static inline bool pg_context_u32(const uint8_t *memory,uint64_t size,uint64_t a
  if(!memory || size<4 || address>size-4 || (address&3))return false;
  *value=atomic_load_explicit((const _Atomic uint32_t *)(memory+address),memory_order_relaxed);return true;
 }
+
+// Pinned CLoadingScreens::AreActive / initial-loading script native. Shutdown
+// clears these after the loading renderer exits; pipeline compilation is separate.
+#define PG_LOADING_STATE 1
+static inline bool pg_loading_screen_active(const uint8_t *memory,uint64_t size){
+ uint32_t context;
+ if(!pg_context_u32(memory,size,19473636,&context) || size<=6972816)return true;
+ return context!=0 || atomic_load_explicit((const _Atomic uint8_t *)(memory+6972816),memory_order_relaxed)!=0;
+}
 static inline uint32_t pg_touch_context(const uint8_t *memory,uint64_t size){
  uint64_t info,ped,vehicle,check;uint32_t kind;
  if(!pg_context_u64(memory,size,20159720,&info) || !info || info>size || size-info<16)return 0;

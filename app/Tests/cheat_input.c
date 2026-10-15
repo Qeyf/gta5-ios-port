@@ -13,6 +13,30 @@ static _Alignas(8) uint8_t memory[512];
 // The pinned engine publishes 0x64748c: four-byte aligned, but not eight.
 static const uint64_t block = 36;
 
+// The engine's debug-flight shortcut reads the raw I key even while its
+// console consumes UTF-16 text. RAPIDGT and PAINKILLER must never press it.
+static void console_text_does_not_trigger_debug_flight(void) {
+  const char *codes[] = {"RAPIDGT", "PAINKILLER", "BUZZOFF"};
+  for (unsigned c = 0; c < sizeof codes / sizeof *codes; c++) {
+    PGCheatSequence sequence;
+    assert(pg_cheat_console_sequence(&sequence, codes[c]));
+    memset(memory, 0, sizeof memory);
+    for (unsigned i = 0; i < sequence.count; i++) {
+      const PGCheatStep *step = &sequence.steps[i];
+      if (step->text || step->kind == PG_CHEAT_KEY)
+        assert(pg_cheat_key_step(memory, sizeof memory, block, step));
+      assert(memory[block + 'I'] == 0);
+    }
+    unsigned count = (unsigned)strlen(codes[c]);
+    assert(atomic_load((_Atomic uint32_t *)(memory+block+288)) == count+2);
+    assert(atomic_load((_Atomic uint16_t *)(memory+block+296)) == '`');
+    for (unsigned i = 0; i < count; i++)
+      assert(atomic_load((_Atomic uint16_t *)(memory+block+298+2*i)) == codes[c][i]);
+    assert(atomic_load((_Atomic uint16_t *)(memory+block+298+2*count)) == 13);
+    for (unsigned key = 'A'; key <= 'Z'; key++) assert(memory[block+key] == 0);
+  }
+}
+
 static void pinned_engine_input_block_accepts_key_text_and_cleanup(void) {
   const uint64_t publishedBlock = UINT64_C(0x64748c);
   const size_t size = (size_t)publishedBlock + 444;
@@ -26,7 +50,7 @@ static void pinned_engine_input_block_accepts_key_text_and_cleanup(void) {
   PGCheatSequence sequence;
   assert(pg_cheat_console_sequence(&sequence, "A"));
   assert(pg_cheat_key_step(publishedMemory, size, publishedBlock, &sequence.steps[3]));
-  assert(publishedMemory[publishedBlock+'A'] == 0x80);
+  assert(publishedMemory[publishedBlock+'A'] == 0);
   assert(atomic_load((_Atomic uint32_t *)(publishedMemory+publishedBlock+288)) == 1);
   assert(atomic_load((_Atomic uint16_t *)(publishedMemory+publishedBlock+296)) == 'A');
   _Atomic uint64_t pad = pg_cheat_pad_sample(2);
@@ -45,9 +69,11 @@ static void console_delivers_text_and_key_edges(void) {
   memset(memory, 0, sizeof memory);
   for (unsigned i = 0; i < sequence.count; i++) {
     const PGCheatStep *step = &sequence.steps[i];
-    if (step->kind != PG_CHEAT_KEY) continue;
+    if (step->kind != PG_CHEAT_KEY && step->kind != PG_CHEAT_TEXT) continue;
     assert(pg_cheat_key_step(memory, sizeof memory, block, step));
-    assert(memory[block + step->key] == (step->down ? 0x80 : 0));
+    if (step->kind == PG_CHEAT_KEY)
+      assert(memory[block + step->key] == (step->down ? 0x80 : 0));
+    for (unsigned key = 'A'; key <= 'Z'; key++) assert(memory[block+key] == 0);
   }
   uint16_t expected[] = {'`','A','B',13};
   assert(atomic_load((_Atomic uint32_t *)(memory+block+288)) == 4);
@@ -113,7 +139,7 @@ static void cancelling_any_sequence_prefix_releases_input(void) {
     memset(memory, 0, sizeof memory);
     _Atomic uint64_t pad = pg_cheat_pad_sample(64);
     for (unsigned i = 0; i < prefix; i++)
-      if (sequence.steps[i].kind == PG_CHEAT_KEY)
+      if (sequence.steps[i].kind == PG_CHEAT_KEY || sequence.steps[i].kind == PG_CHEAT_TEXT)
         assert(pg_cheat_key_step(memory, sizeof memory, block, &sequence.steps[i]));
     for (unsigned offset = 264; offset <= 276; offset += 4)
       atomic_store((_Atomic uint32_t *)(memory+block+offset), 42);
@@ -193,6 +219,7 @@ static void concurrent_requests_have_one_owner(void) {
 #endif
 
 int main(void) {
+  console_text_does_not_trigger_debug_flight();
   pinned_engine_input_block_accepts_key_text_and_cleanup();
   console_delivers_text_and_key_edges();
   full_or_malformed_ring_never_overwrites_or_holds_a_key();

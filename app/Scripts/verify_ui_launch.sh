@@ -69,7 +69,7 @@ xcrun --sdk iphonesimulator swiftc -emit-executable -parse-as-library \
   -import-objc-header "$app_root/Source/Native-Bridging-Header.h" \
   -Xcc -DPG_UI_SMOKE_TEST=1 \
   -Xcc -I"$app_root/Source" -Xcc -I"$app_root/App/GameInstaller" \
-  "$app_root"/App/*.swift "$app_root"/App/GameInstaller/*.swift \
+  "$app_root"/App/*.swift "$app_root"/App/GameInstaller/*.swift "$app_root"/Tests/RuntimeRegressionChecks.swift \
   "$scratch/installer.o" "$scratch/engine-stubs.o" "$archive_dir/libarchive.a" \
   -framework UIKit -framework Metal -framework MetalKit -framework QuartzCore \
   -framework GameController -framework AVFAudio -framework CoreMotion \
@@ -133,6 +133,8 @@ info.update(plistlib.loads(pathlib.Path(sys.argv[2]).read_bytes()))
 path.write_bytes(plistlib.dumps(info))
 PY
 cp "$app_root"/Resources/ControlIcons/*.png "$app_bundle/"
+# Test-only engine substitutes read no assets, but exercise the actual Play path.
+printf '{}' > "$app_bundle/manifest.json"
 codesign --force --sign - "$app_bundle" >> "$output/build.log" 2>&1
 
 # Read installed inventory. Never launch or erase a pre-existing simulator.
@@ -219,6 +221,14 @@ PY
 launch_and_check en-home en --verify-input-reset
 python3 -c 'import pathlib, sys; assert "UIKit input reset regression passed." in pathlib.Path(sys.argv[1]).read_text()' "$output/en-home-native-port.log"
 launch_and_check tr-home tr
+launch_and_check runtime-unlocked en --verify-runtime-regressions unlocked --show-log
+launch_and_check runtime-capped tr --verify-runtime-regressions capped --show-log
+python3 - "$output/runtime-unlocked-native-port.log" "$output/runtime-capped-native-port.log" <<'PY'
+import pathlib, sys
+for name in sys.argv[1:]:
+    text = pathlib.Path(name).read_text()
+    assert 'UIKit runtime regressions passed.' in text, text
+PY
 launch_and_check en-settings en --open-settings
 launch_and_check tr-cheats tr --open-cheats
 # A full-screen modal removes the presenting view from its window. The owning

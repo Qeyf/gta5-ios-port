@@ -9,9 +9,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene,
               session.role == .windowApplication else { return }
         let window = UIWindow(windowScene: windowScene)
+        #if PG_UI_SMOKE_TEST
+        RuntimeRegressionChecks.prepare()
+        #endif
         window.rootViewController = NativePortViewController()
         self.window = window
         window.makeKeyAndVisible()
+        #if PG_UI_SMOKE_TEST
+        RuntimeRegressionChecks.schedule(on: window.rootViewController!)
+        #endif
     }
 
     // UIKit removes a presenting view's window during a full-screen modal.

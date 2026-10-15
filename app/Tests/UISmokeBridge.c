@@ -13,6 +13,11 @@
 #include "UISmokeInputProbe.h"
 static uint8_t probeKeys[256];
 static int32_t probeButtons,probeDX,probeDY,probeWheel;
+static uint32_t probeStatus=16;
+static bool probeLoading=true,probeRuntime;
+static int probeFrameLimit=-1;
+void PGUISmokeRuntimeState(uint32_t status,bool loading){probeStatus=status;probeLoading=loading;probeRuntime=true;}
+int32_t PGUISmokeFrameLimit(void){return probeFrameLimit;}
 int32_t PGUISmokeMouseButtons(void){return probeButtons;}
 int32_t PGUISmokeMouseDX(void){return probeDX;}
 int32_t PGUISmokeMouseDY(void){return probeDY;}
@@ -21,7 +26,7 @@ bool PGUISmokeKeyDown(uint8_t key){return probeKeys[key]!=0;}
 
 void PGConfigureEngine(const char *const *quality, unsigned count, int width,
                        int height, int frameLimit) {
-  (void)quality; (void)count; (void)width; (void)height; (void)frameLimit;
+  (void)quality; (void)count; (void)width; (void)height; probeFrameLimit=frameLimit;
 }
 void PGSetStartMode(int32_t mode) { (void)mode; }
 void PGSetBackBufferSize(int width, int height) { (void)width; (void)height; }
@@ -32,6 +37,7 @@ bool PGUsingLocalGameFolder(void) { return false; }
 void PGStartEngine(const char *manifest, const char *root, PGLogCallback log,
                    void *context) {
   (void)manifest; (void)root; (void)log; (void)context;
+  if(probeRuntime){log("{\"label\":\"First frame\"}",context);return;}
   fputs("UI smoke test must not materialize the game engine.\n", stderr);
   _Exit(86);
 }
@@ -40,7 +46,8 @@ void PGUpdateController(PGControllerState state, double elapsed) {
   (void)state; (void)elapsed;
 }
 uint32_t PGCurrentTouchContext(void) { return 0; }
-uint32_t PGGameStatus(void) { return 16; } // No player before engine startup.
+uint32_t PGGameStatus(void) { return probeStatus; }
+bool PGLoadingScreenActive(void) { return probeLoading; }
 PGControlHints PGReadControlHints(uint32_t context) {
   (void)context;
   PGControlHints hints = {0};

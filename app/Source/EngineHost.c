@@ -274,6 +274,9 @@ void w2c_env_wasm_audio_publish_js(struct w2c_env *host, u64 ring, u32 capacity)
 }
 
 // Read-only game-state snapshot for the touch layout (no script native is called from UIKit).
+bool PGLoadingScreenActive(void){
+ return !atomic_load(&inputBlock) || pg_loading_screen_active((const uint8_t *)(void *)env.memory.data,env.memory.size);
+}
 // Bits: 1 player control off (IS_PLAYER_CONTROL_ON == false, single player: the player info's
 // control-disabled flags at *(ped+4328)+936), 2 phone on screen (a CPhoneMgr flag at 19505653 that
 // CPhoneMgr::Render/Delete and the phone-model render phase use; set while the phone is up),
@@ -620,7 +623,7 @@ static void *pg_cheat_input_thread(void *context) {
     if (atomic_load(&cheatState) == 5 || atomic_load(&inputBlock) != job->block ||
         !pg_cheat_input_bounds(memory, size, job->block)) {
       delivered = false;
-    } else if (step->kind == PG_CHEAT_KEY) {
+    } else if (step->kind == PG_CHEAT_KEY || step->kind == PG_CHEAT_TEXT) {
       delivered = pg_cheat_key_step(memory, size, job->block, step);
     } else if (step->kind == PG_CHEAT_PAD) {
       atomic_store(&virtualPad, pg_cheat_pad_sample(step->buttons));
