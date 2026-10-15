@@ -715,6 +715,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
 
     /// The touch-controls layout editor (pre-game, or from Settings).
     private func showLayoutEditor() {
+        releaseTouchControls()
         let editor = ControlsLayoutEditorController()
         editor.modalPresentationStyle = .fullScreen
         editor.onDone = { [weak self] in
@@ -725,7 +726,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     }
     private func showSettings() {
         guard presentedViewController == nil else { return }
-        touchControls.reset()
+        releaseTouchControls()
         let controller = SettingsViewController(engineRunning: engineStarted, runningMode: bootedMode)
         controller.gameModeChanged = { [weak self] in self?.refreshModeChoice() }
         controller.resolutionChanged = { [weak self] in self?.applyLiveResolution() }
@@ -742,7 +743,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
 
     private func showCheats() {
         guard presentedViewController == nil else { return }
-        touchControls.reset()
+        releaseTouchControls()
         let controller = CheatsViewController(engineRunning: engineStarted)
         controller.onApply = { [weak self] code, buttons, mode in
             self?.dismiss(animated: true) { self?.applyCheat(code, buttons: buttons, mode: mode) }
@@ -769,6 +770,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             return
         }
         touchControls.reset(publish: false)
+        KeyboardMouse.shared.setFocused(false)
         KeyboardMouse.shared.releaseAll()
         stopMotionInput()
         PGUpdateVirtualPad(PGPadState())
@@ -832,6 +834,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         #if targetEnvironment(simulator)
         simulatorKeys.removeAll()
         #endif
+        KeyboardMouse.shared.setFocused(false)
         KeyboardMouse.shared.releaseAll()
         PGUpdateVirtualPad(PGPadState())
     }
@@ -876,6 +879,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     @objc private func pollController() {
         guard view.window?.windowScene?.activationState == .foregroundActive,
               presentedViewController == nil else {
+            KeyboardMouse.shared.setFocused(false)
             touchControls.reset(publish: false)
             stopMotionInput()
             lastControllerPoll = nil

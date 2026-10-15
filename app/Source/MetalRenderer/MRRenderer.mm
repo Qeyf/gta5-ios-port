@@ -216,6 +216,7 @@ struct Renderer {
 	uint64_t draws = 0, skipped = 0, pendingSkips = 0, clamped = 0, presents = 0, commits = 0;
 	double statT = 0, busyMs = 0, lastCommitMs = 0, lastPresentMs = 0;
 	FrameWork work;
+	uint64_t workEpoch = 0;
 	uint64_t bcNativeCreated = 0, bcFallbackCreated = 0, bcNativeUploadBytes = 0, bcDecodedBytes = 0;
 	uint64_t statDraws = 0, statPresents = 0, statSkips = 0, statPending = 0, statCommits = 0;
 	std::shared_ptr<PGForegroundFrameTiming> frameTiming = std::make_shared<PGForegroundFrameTiming>();
@@ -315,12 +316,18 @@ static void commit(CommitReason reason, id<CAMetalDrawable> drawable = nil) {
 		while (prev < serial && !r->completed.compare_exchange_weak(prev, serial)) {}
 		dispatch_semaphore_signal(r->completion);
 	}];
-	double c0 = nowMs();
 	renderLifecycle.performWhileActive([&] {
+		uint64_t activeEpoch = timing->epoch();
+		if (R->workEpoch != activeEpoch) {
+			R->work = FrameWork(); R->lastPresentMs = 0; R->workEpoch = activeEpoch;
+		}
+		// CPU submission excludes waiting for scene activation. A non-present
+		// commit can cross suspension before the next PRESENT collects work.
+		double c0 = nowMs();
 		[cb commit];
+		R->work.submit += nowMs() - c0;
 		lastSubmitted = cb;
 	});
-	R->work.submit += nowMs() - c0;
 	R->cmd = nil;
 	R->lastCommitMs = nowMs();
 	R->commits++;
@@ -2187,6 +2194,7 @@ static void loop() {
 				continue;
 			}
 			double t0 = nowMs();
+			uint64_t batchEpoch = R->frameTiming->epoch();
 			while (tail != head) {
 				// Preserve commands and their fence/query completions while iOS
 				// suspends GPU access instead of consuming and dropping them.
@@ -2204,7 +2212,7 @@ static void loop() {
 					PGGraphicsNotify(R->ring + 4);
 				}
 			}
-			R->busyMs += nowMs() - t0;
+			if (batchEpoch == R->frameTiming->epoch()) R->busyMs += nowMs() - t0;
 			if (executed) { hdr[3].fetch_add(executed); executed = 0; }
 			hdr[1].store(tail, std::memory_order_release);
 			PGGraphicsNotify(R->ring + 4);

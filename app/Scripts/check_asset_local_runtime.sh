@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+set -x
 cd "$(dirname "$0")/.."
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/gtav-asset-check.XXXXXX")
 server_pid=''

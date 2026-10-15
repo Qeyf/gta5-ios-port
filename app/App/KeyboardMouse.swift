@@ -13,7 +13,8 @@ final class KeyboardMouse {
     var hasMouse: Bool { !GCMouse.mice().isEmpty }
 
     private var started = false
-    private var enabled: Bool { GameSettings.shared.keyboardMouse }
+    private var gameFocused = false
+    private var enabled: Bool { GameSettings.shared.keyboardMouse && gameFocused }
     private var dx: Double = 0, dy: Double = 0, wheel: Double = 0
     private var remainderX = 0.0, remainderY = 0.0
     private var buttons: Int32 = 0
@@ -79,6 +80,7 @@ final class KeyboardMouse {
 
     /// Every frame while the game runs: movement since last time (whole pixels), buttons, wheel.
     func send(focused: Bool) {
+        setFocused(focused)
         guard enabled else { return }
         PGSetMouseFocus(focused, focused && hasMouse)
         let x = dx + remainderX, y = dy + remainderY
@@ -93,7 +95,18 @@ final class KeyboardMouse {
     func releaseAll() {
         held.removeAll()
         buttons = 0
+        dx = 0; dy = 0; wheel = 0
+        remainderX = 0; remainderY = 0
         PGReleaseAllKeys()
+        PGMouseInput(0, 0, 0)
+        PGSetMouseFocus(false, false)
+    }
+
+    /// Device callbacks honor UIKit/cheat ownership as well as frame polling.
+    func setFocused(_ value: Bool) {
+        guard value != gameFocused else { return }
+        gameFocused = value
+        if !value { releaseAll() }
     }
 
     /// Automation: types a key or moves the mouse as if a real device did (simulator checks).
