@@ -243,6 +243,12 @@ jobs:
           if [ "$PAID_ACCOUNT" = true ]; then EXTRA_ARGS+=(--paid); fi
           ./build_ipa.sh --mirror "$RUNNER_TEMP/game-files" "${EXTRA_ARGS[@]}"
 
+      - name: Verify native shared-memory synchronization before publication
+        run: |
+          bash app/Scripts/check_runtime.sh
+          for attempt in {1..20}; do app/Build/Probe/check > /dev/null; done
+          echo 'Passed 20 repeated native memory64 wait/notify and multi-waiter checks.'
+
       - name: Validate the built app and create Release details
         id: release
         env:
