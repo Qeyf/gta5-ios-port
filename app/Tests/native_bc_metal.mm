@@ -3,6 +3,7 @@
 #include "../Source/MetalRenderer/MRRenderer.mm"
 #include <cassert>
 #include <cstdlib>
+#include <thread>
 
 extern "C" void pg_log(const char *line) { fprintf(stderr,"%s\n",line); }
 extern "C" uint32_t PGGraphicsNotify(uint64_t) { return 0; }
@@ -308,6 +309,28 @@ static void verifyTightAndOversizedSourceStrides() {
   }
 }
 
+static void verifyForegroundWorkAfterSuspendedCommit() {
+  // Reproduce a non-present commit crossing scene suspension. The next PRESENT
+  // must not label the old frame's accumulated wall time as foreground CPU.
+  R->work.submit=30000;
+  PGMetalRendererSetAppActive(false);
+  std::atomic<bool> entered{false};
+  std::thread render([&]{@autoreleasepool {entered.store(true);commit(CIdle);}});
+  while(!entered.load())std::this_thread::yield();
+  PGMetalRendererSetAppActive(true);
+  render.join();
+  auto timing=R->frameTiming;
+  double at=CACurrentMediaTime();
+  timing->presented(timing->epoch(),at);
+  present(0);
+  PGFrameTimingSnapshot stats;
+  assert(timing->takeSnapshot(at+11,stats));
+  assert(stats.submitted==1 && stats.submitMs<1000);
+  id<MTLCommandBuffer> final=lastSubmitted;
+  [final waitUntilCompleted];waitSerial(R->serial-1);
+  puts("PASS: production non-present commit/PRESENT drops suspension-spanning work.");
+}
+
 int main() {
   @autoreleasepool {
     verifyFormatSelection();
@@ -351,6 +374,7 @@ int main() {
     fprintf(stderr,"BC1 1024x1024 GPU allocation: native %lu bytes, decoded %lu bytes\n",
       (unsigned long)small->tex.allocatedSize,(unsigned long)large->tex.allocatedSize);
     verifyTightAndOversizedSourceStrides();
+    verifyForegroundWorkAfterSuspendedCommit();
     free(R->mem); delete R; R = nullptr;
     puts("PASS: real GPU BC1–BC7 sampling versus CPU fallback, in-flight and padded uploads, tail mips, array/cube views, sRGB twins, mixed copies, overlap and original-block readbacks.");
     return 0;

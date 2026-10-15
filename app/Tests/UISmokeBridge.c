@@ -10,6 +10,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "UISmokeInputProbe.h"
+static uint8_t probeKeys[256];
+static int32_t probeButtons,probeDX,probeDY,probeWheel;
+int32_t PGUISmokeMouseButtons(void){return probeButtons;}
+int32_t PGUISmokeMouseDX(void){return probeDX;}
+int32_t PGUISmokeMouseDY(void){return probeDY;}
+int32_t PGUISmokeMouseWheel(void){return probeWheel;}
+bool PGUISmokeKeyDown(uint8_t key){return probeKeys[key]!=0;}
 
 void PGConfigureEngine(const char *const *quality, unsigned count, int width,
                        int height, int frameLimit) {
@@ -38,15 +46,15 @@ PGControlHints PGReadControlHints(uint32_t context) {
   PGControlHints hints = {0};
   return hints;
 }
-void PGSetKey(uint8_t key, bool down) { (void)key; (void)down; }
+void PGSetKey(uint8_t key, bool down) { probeKeys[key]=down; }
 void PGSetRadioWheelDirection(float x, float y, bool active) {
   (void)x; (void)y; (void)active;
 }
-void PGReleaseAllKeys(void) {}
+void PGReleaseAllKeys(void) { memset(probeKeys,0,sizeof probeKeys); }
 void PGMouseInput(int32_t x, int32_t y, int32_t buttons) {
-  (void)x; (void)y; (void)buttons;
+  probeDX+=x;probeDY+=y;probeButtons=buttons;
 }
-void PGMouseWheel(int32_t notches) { (void)notches; }
+void PGMouseWheel(int32_t notches) { probeWheel+=notches; }
 void PGSetMouseFocus(bool focused, bool locked) { (void)focused; (void)locked; }
 bool PGDebugReadMemory(uint64_t address, void *out, uint64_t length) {
   (void)address;

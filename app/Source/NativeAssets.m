@@ -59,7 +59,7 @@ static _Thread_local bool assetPrefetchRead;
 static _Thread_local bool assetSpeculativeRead;
 static bool assetQueuedHints=true;
 static PGAssetHintQueue normalHints,lowHints;
-static uint64_t hintsNormalSeen,hintsLowSeen,hintsScheduled,hintsCached,hintsLapped;
+static uint64_t hintsNormalSeen,hintsLowSeen,hintsScheduled,hintsCached,hintsLapped,hintsLocalSkipped;
 static _Thread_local double assetReadNetworkMS,assetReadLockMS;
 static _Thread_local uint64_t assetReadNetworkBytes;
 static _Thread_local unsigned assetReadSource;
@@ -384,6 +384,10 @@ void pg_assets_prewarm(void){
 static void pumpAssetHints(void){
   PGAssetHint hint;
   while(pg_asset_hint_next(&normalHints,&lowHints,(unsigned)atomic_load(&activePrefetch),(unsigned)atomic_load(&activeSpeculative),16,4,&hint)){
+    // Local demand reads use the OS file cache, never the packed server cache.
+    // Re-reading every hint cannot populate that cache and wastes dispatches,
+    // 1 MiB allocations and I/O during gameplay. Still drain/acknowledge hints.
+    if(localDataRoot){hintsLocalSkipped++;continue;}
     if(hint.id>=assetFiles.count)continue;
     uint64_t size=[assetFiles[hint.id][1] unsignedLongLongValue];if(hint.offset>=size)continue;
     hint.length=(uint32_t)MIN((uint64_t)hint.length,size-hint.offset);
@@ -417,7 +421,7 @@ static void *assetHintLoop(void *unused){
       }
       atomic_store(table+5,(int32_t)tail);
     }
-    pumpAssetHints();double now=assetNowMS();if(now-report>=10000){char line[256];snprintf(line,sizeof line,"Native asset hints: normal %llu, speculative %llu, scheduled %llu, cached %llu, lapped %llu, queues %u/%u, active %d/%d.",hintsNormalSeen,hintsLowSeen,hintsScheduled,hintsCached,hintsLapped,normalHints.count,lowHints.count,atomic_load(&activePrefetch),atomic_load(&activeSpeculative));pg_log(line);report=now;}
+    pumpAssetHints();double now=assetNowMS();if(now-report>=10000){char line[320];snprintf(line,sizeof line,"Native asset hints: normal %llu, speculative %llu, scheduled %llu, cached %llu, local skipped %llu, lapped %llu, queues %u/%u, active %d/%d.",hintsNormalSeen,hintsLowSeen,hintsScheduled,hintsCached,hintsLocalSkipped,hintsLapped,normalHints.count,lowHints.count,atomic_load(&activePrefetch),atomic_load(&activeSpeculative));pg_log(line);report=now;}
   }pg_atomic_wait32(w2c_env_memory(assetHost),assetTable,bell,10000000);}
 }
 static void *assetLoop(void *unused) {
@@ -451,7 +455,9 @@ static void *assetLoop(void *unused) {
       uint32_t id=(uint32_t)atomic_load(hint);
       uint64_t offset=(uint32_t)atomic_load(hint+1)|((uint64_t)(uint32_t)atomic_load(hint+2)<<32);
       uint32_t length=MIN((uint32_t)wanted,512*1024);
-      atomic_store(hint+3,0);used++;atomic_store(table+5,used);atomic_fetch_add(&activePrefetch,1);
+      atomic_store(hint+3,0);used++;atomic_store(table+5,used);
+      if(localDataRoot)continue;
+      atomic_fetch_add(&activePrefetch,1);
       dispatch_async(prefetchQueue,^{@autoreleasepool {assetPrefetchRead=assetSpeculativeRead=true;uint8_t *bytes=malloc(length);if(bytes){readAsset(id,offset,bytes,length);free(bytes);}assetPrefetchRead=assetSpeculativeRead=false;atomic_fetch_sub(&activePrefetch,1);}});
     }
     }

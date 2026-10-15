@@ -181,6 +181,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         #if PG_UI_SMOKE_TEST
         if arguments.contains("--verify-input-reset") {
             touchControls.verifyInputReset()
+            KeyboardMouse.shared.verifyFocusReset()
             appendLog("UIKit input reset regression passed.")
         }
         #endif

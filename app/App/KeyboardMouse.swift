@@ -100,6 +100,24 @@ final class KeyboardMouse {
     func inject(key: UInt8, down: Bool) { set(key, down) }
     func inject(dx x: Double, dy y: Double) { dx += x; dy += y }
 
+    #if PG_UI_SMOKE_TEST
+    func verifyFocusReset() {
+        let saved = GameSettings.shared.keyboardMouse
+        GameSettings.shared.keyboardMouse = true
+        defer { GameSettings.shared.keyboardMouse = saved }
+        inject(key: 0x57, down: true)
+        buttons = 3
+        send(focused: true)
+        precondition(PGUISmokeMouseButtons() == 3 && PGUISmokeKeyDown(0x57))
+        let beforeX = PGUISmokeMouseDX(), beforeY = PGUISmokeMouseDY(), beforeWheel = PGUISmokeMouseWheel()
+        dx = 42.5; dy = -17.5; wheel = 3.5; remainderX = 0.3; remainderY = -0.2
+        send(focused: false)
+        precondition(PGUISmokeMouseButtons() == 0 && !PGUISmokeKeyDown(0x57))
+        precondition(PGUISmokeMouseDX() == beforeX && PGUISmokeMouseDY() == beforeY && PGUISmokeMouseWheel() == beforeWheel)
+        precondition(dx == 0 && dy == 0 && wheel == 0 && remainderX == 0 && remainderY == 0)
+    }
+    #endif
+
     /// GCKeyCode is the USB HID usage; the game wants Windows virtual-key codes.
     static func virtualKey(_ code: GCKeyCode) -> UInt8? {
         let usage = Int(code.rawValue)

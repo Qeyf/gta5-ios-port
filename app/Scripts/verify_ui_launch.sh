@@ -67,6 +67,7 @@ xcrun --sdk iphonesimulator swiftc -emit-executable -parse-as-library \
   -swift-version 5 -D PG_UI_SMOKE_TEST -module-name "$module_name" -sdk "$sdk" \
   -target arm64-apple-ios17.0-simulator \
   -import-objc-header "$app_root/Source/Native-Bridging-Header.h" \
+  -Xcc -DPG_UI_SMOKE_TEST=1 \
   -Xcc -I"$app_root/Source" -Xcc -I"$app_root/App/GameInstaller" \
   "$app_root"/App/*.swift "$app_root"/App/GameInstaller/*.swift \
   "$scratch/installer.o" "$scratch/engine-stubs.o" "$archive_dir/libarchive.a" \
