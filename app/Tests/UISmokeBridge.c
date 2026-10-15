@@ -25,7 +25,8 @@ int32_t PGUISmokeMouseWheel(void){return probeWheel;}
 bool PGUISmokeKeyDown(uint8_t key){return probeKeys[key]!=0;}
 
 void PGConfigureEngine(const char *const *quality, unsigned count, int width,
-                       int height, int frameLimit) {
+                       int height, int frameLimit, unsigned activeCores) {
+  (void)activeCores;
   (void)quality; (void)count; (void)width; (void)height; probeFrameLimit=frameLimit;
 }
 void PGSetStartMode(int32_t mode) { (void)mode; }

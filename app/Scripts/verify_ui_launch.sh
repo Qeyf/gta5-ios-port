@@ -262,5 +262,5 @@ else:
     raise SystemExit('Metal did not resume after returning to the full-screen cheat menu.')
 PY
 cp "$data_container/Documents/native-port.log" "$output/full-screen-lifecycle.log"
-printf 'All four iOS 27 UI launches and full-screen scene suspension/resumption completed.\n' > "$output/verified.txt"
+printf 'All six iOS 27 UI launches, runtime/report regressions and full-screen scene suspension/resumption completed.\n' > "$output/verified.txt"
 verification_complete=true

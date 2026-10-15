@@ -5,7 +5,6 @@
 #include "NativeTouchContext.h"
 
 int main(void) {
-#ifdef PG_LOADING_STATE
   const size_t size = 19473640;
   uint8_t *memory = calloc(1, size);
   assert(memory);
@@ -24,8 +23,4 @@ int main(void) {
   free(memory);
   puts("PASS: production loading-screen snapshot is read-only and fails closed before memory is ready.");
   return 0;
-#else
-  fputs("FAIL: semantic loading-screen snapshot is missing.\n", stderr);
-  return 1;
-#endif
 }

@@ -5,15 +5,30 @@ import UIKit
 enum LogUploader {
     static let endpoint = URL(string: "https://gtav-mobile-diagnostics.webusta.workers.dev/v1/logs")!
     private static let queue = DispatchQueue(label: "io.github.qeyf.gtavmobile.report", qos: .utility)
+    private static let submission = DispatchSemaphore(value: 1)
+    #if PG_UI_SMOKE_TEST
+    static var testConfiguration: (() -> URLSessionConfiguration)?
+    #endif
 
     static func send(note: String, done: @escaping ((String, String)) -> Void) {
+        // Shared across screens: Cancel/reopen must not start a second request
+        // while the first is still preparing, uploading or awaiting acceptance.
+        guard submission.wait(timeout: .now()) == .success else {
+            DispatchQueue.main.async {
+                done((String(localized: "A report is already sending", table: "Files"), String(localized: "Please wait for the current report to finish. Your logs and note are sent together in one report.", table: "Files")))
+            }
+            return
+        }
         // Capture UIKit/settings values here; file reads and uploads run off-main.
         let device = "\(GameSettings.shared.tier.model) · iOS \(UIDevice.current.systemVersion) · \(GameSettings.shared.tier.memoryLimitMB) MB limit"
         let version = Theme.appVersion
         let noteHeader = String(note.prefix(400)).addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         func finish(_ title: String, _ message: String) {
-            DispatchQueue.main.async { done((title, message)) }
+            DispatchQueue.main.async {
+                submission.signal()
+                done((title, message))
+            }
         }
         queue.async {
             NativeLog.shared.flush()
@@ -29,11 +44,16 @@ enum LogUploader {
             request.setValue(version, forHTTPHeaderField: "X-App-Version")
             request.setValue(noteHeader, forHTTPHeaderField: "X-Note")
             let configuration = URLSessionConfiguration.ephemeral
-            configuration.urlCache = nil
-            configuration.httpCookieStorage = nil
-            configuration.httpShouldSetCookies = false
-            configuration.timeoutIntervalForResource = 180
-            let session = URLSession(configuration: configuration)
+            #if PG_UI_SMOKE_TEST
+            let sessionConfiguration = testConfiguration?() ?? configuration
+            #else
+            let sessionConfiguration = configuration
+            #endif
+            sessionConfiguration.urlCache = nil
+            sessionConfiguration.httpCookieStorage = nil
+            sessionConfiguration.httpShouldSetCookies = false
+            sessionConfiguration.timeoutIntervalForResource = 180
+            let session = URLSession(configuration: sessionConfiguration)
             session.uploadTask(with: request, from: body) { data, response, error in
                 defer { session.finishTasksAndInvalidate() }
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0

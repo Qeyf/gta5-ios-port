@@ -17,10 +17,10 @@ enum CheatInputMode: Int, CaseIterable {
 struct GameplayReadiness {
     private(set) var enteredGameplay = false
 
-    mutating func allowsControls(worldReady: Bool, status: UInt32, paused: Bool, preview: Bool) -> Bool {
-        if worldReady && status == 0 { enteredGameplay = true }
+    mutating func allowsControls(engineStarted: Bool, loading: Bool, status: UInt32, paused: Bool, preview: Bool) -> Bool {
+        if engineStarted && !loading && status == 0 { enteredGameplay = true }
         if preview { return true }
-        guard worldReady && enteredGameplay else { return false }
+        guard engineStarted && !loading && enteredGameplay else { return false }
         // Menus still need navigation after entering gameplay. Ordinary controls
         // disappear while there is no local player or a cutscene is playing.
         return paused || status & (4 | 16) == 0

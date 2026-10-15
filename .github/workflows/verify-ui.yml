@@ -26,6 +26,13 @@ jobs:
           cc -std=c11 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
             app/Tests/cheat_input.c -o "$RUNNER_TEMP/check-cheat-input"
           "$RUNNER_TEMP/check-cheat-input"
+      - name: Verify loading snapshots and bounded CPU concurrency
+        run: |
+          for test in loading_state engine_configuration; do
+            cc -std=c11 -O2 -Wall -Wextra -Werror -Iapp/Source \
+              "app/Tests/$test.c" -o "$RUNNER_TEMP/check-$test"
+            "$RUNNER_TEMP/check-$test"
+          done
       - name: Verify batched native log persistence
         run: |
           xcrun swiftc app/App/NativeLog.swift app/Tests/native_log.swift -o "$RUNNER_TEMP/check-native-log"

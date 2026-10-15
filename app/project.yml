@@ -9,7 +9,7 @@ settings:
     # builds an unsigned IPA that AltStore/SideStore signs with your Apple ID).
     DEVELOPMENT_TEAM: ""
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.3.5"
+    MARKETING_VERSION: "1.3.6"
     CURRENT_PROJECT_VERSION: "8"
     SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
@@ -118,8 +118,9 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         GCSupportsControllerUserInteraction: true
-        # A game: iOS turns on Game Mode while it plays (more CPU/GPU priority, lower controller latency).
+        # Declare Game Mode eligibility with both current and older supported iOS keys.
         LSApplicationCategoryType: public.app-category.action-games
+        LSSupportsGameMode: true
         GCSupportsGameMode: true
         GCSupportedGameControllers:
           - ProfileName: ExtendedGamepad

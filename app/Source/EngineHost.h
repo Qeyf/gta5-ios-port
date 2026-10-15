@@ -18,7 +18,7 @@ typedef struct {
 // using the walking weapon-wheel cursor.
 // Before PGStartEngine: engine quality options (e.g. "-shadowQuality=0"),
 // back-buffer size and frame limit (0 none, 1 = 60, 2 = 30 FPS).
-void PGConfigureEngine(const char *const *quality, unsigned count, int width, int height, int frameLimit);
+void PGConfigureEngine(const char *const *quality, unsigned count, int width, int height, int frameLimit, unsigned activeCores);
 // Before PGStartEngine: 1 Story Mode (the release startup: continues the
 // newest save in /userdata/Documents, else a new game from the Prologue),
 // 2 Sandbox Mode (free roam on the GTA V map; its files go to

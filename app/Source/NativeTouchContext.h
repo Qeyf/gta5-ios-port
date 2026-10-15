@@ -17,7 +17,6 @@ static inline bool pg_context_u32(const uint8_t *memory,uint64_t size,uint64_t a
 
 // Pinned CLoadingScreens::AreActive / initial-loading script native. Shutdown
 // clears these after the loading renderer exits; pipeline compilation is separate.
-#define PG_LOADING_STATE 1
 static inline bool pg_loading_screen_active(const uint8_t *memory,uint64_t size){
  uint32_t context;
  if(!pg_context_u32(memory,size,19473636,&context) || size<=6972816)return true;

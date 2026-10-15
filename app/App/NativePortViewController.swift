@@ -118,7 +118,11 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
         launchButton.addTarget(self, action: #selector(startEngine), for: .touchUpInside)
         output.isEditable = false
+        #if DEBUG
         output.isHidden = !ProcessInfo.processInfo.arguments.contains("--show-log")
+        #else
+        output.isHidden = true
+        #endif
         output.backgroundColor = UIColor.black.withAlphaComponent(0.65)
         output.textColor = .white
         output.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
@@ -207,7 +211,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             home.topAnchor.constraint(equalTo: view.topAnchor),
             home.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        logRefreshTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in self?.refreshLogView() }
+        if !output.isHidden {
+            logRefreshTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in self?.refreshLogView() }
+        }
         appendLog("GtaV Mobile \(Theme.appVersion) on iOS \(UIDevice.current.systemVersion)")
         appendLog("Native UIKit + Metal host. Engine compiled into the app; no WebView or JIT.")
         appendLog("Metal device: \(device?.name ?? "unavailable")")
@@ -217,11 +223,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(lookForGameFiles), name: UIScene.didActivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(installChanged), name: .gameInstallChanged, object: nil)
         displayLink = CADisplayLink(target: self, selector: #selector(pollController))
-        // ProMotion screens only run above 60 Hz when the app asks: "Unlocked" asks for up to 120.
-        if GameSettings.shared.frameRateCap == 0 {
-            let top = Float(UIScreen.main.maximumFramesPerSecond)
-            displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: min(60, top), maximum: top, preferred: top)
-        }
+        configureDisplayLink(frameRateCap: GameSettings.shared.frameRateCap)
         displayLink?.add(to: .main, forMode: .common)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidDisconnect, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(controllerChanged), name: .GCControllerDidConnect, object: nil)
@@ -277,7 +279,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     }
 
     private func refreshLogView() {
-        guard diagnosticsOverlay?.isHidden != true else { return }
+        guard !output.isHidden, diagnosticsOverlay?.isHidden != true else { return }
         let snapshot = nativeLog.snapshot()
         guard snapshot.revision != logRevision else { return }
         logRevision = snapshot.revision
@@ -313,7 +315,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             movementProofStarted = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 30) { self.verifyMovement() }
         }
-        if line == "WORLD_READY" { PGSetTargetingMode(Int32(GameSettings.shared.targetingMode)); if worldReadyAt == nil { worldReadyAt = CACurrentMediaTime() } }
+        if line == "WORLD_READY", worldReadyAt == nil { worldReadyAt = CACurrentMediaTime() }
         if line == "WORLD_READY", healthTimer == nil {
             // Every 10 s: memory, how often the memory guard held streaming back, and game-file reads.
             healthTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in self?.logHealth() }
@@ -341,6 +343,13 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         updatePlayEnabled()
     }
 
+    private func configureDisplayLink(frameRateCap: Int) {
+        let top = Float(view.window?.windowScene?.screen.maximumFramesPerSecond ?? 60)
+        let target = frameRateCap == 0 ? top : min(Float(frameRateCap == 30 ? 30 : 60), top)
+        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: frameRateCap == 0 ? min(80, top) : target, maximum: target, preferred: target)
+        appendLog("Display cadence: screen maximum=\(Int(top)) Hz, requested=\(Int(target)) Hz, engine cap=\(frameRateCap).")
+    }
+
     @objc private func startEngine() {
         if GameSettings.shared.gameModeChoice == nil {
             // Automated launches without a choice keep the old sandbox start.
@@ -366,7 +375,11 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         PGSetStartMode(testMap ? 3 : Int32(mode.rawValue))
         appendLog("Game mode: \(mode.title)\(mode == .sandbox ? " on " + GameSettings.sandboxMapTitles[GameSettings.shared.sandboxMap] : "")")
         bootedPreset = GameSettings.shared.graphicsPreset
-        appendLog("Graphics: " + GraphicsConfiguration.apply(GameSettings.shared, screen: view.bounds.size))
+        // Home settings can change after viewDidLoad. Use the cap passed to the
+        // engine now, including resetting an earlier Unlocked preference.
+        let frameRateCap = GameSettings.shared.frameRateCap
+        configureDisplayLink(frameRateCap: frameRateCap)
+        appendLog("Graphics: " + GraphicsConfiguration.apply(GameSettings.shared, screen: view.bounds.size, frameRateCap: frameRateCap))
         appendLog("Device: " + GameSettings.shared.tier.summary)
         GameSettings.shared.markBootStarted()
         launchButton.setTitle(String(localized: "Loading…", table: "Main"), for: .disabled); launchButton.setNeedsUpdateConfiguration()
@@ -648,23 +661,16 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             }
         }.resume()
     }
-    /// The popup after a launch that ran out of memory: what happened, what changed, and the way back.
+    /// An unfinished launch is not proof of an out-of-memory termination.
     private func explainRecovery(_ recovery: GameSettings.BootRecovery) {
-        let lowered = recovery.fallback != recovery.failed
-        let title = lowered ? String(localized: "Graphics lowered to \(recovery.fallback.title)", table: "Main") : String(localized: "Resolution set back to Auto", table: "Main")
-        let message: String
-        if lowered, let height = recovery.resetHeight {
-            message = String(localized: "The game closed while starting on \(recovery.failed.title) at \(height)p. That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts on \(recovery.fallback.title) with Auto resolution. You can change this any time in Settings.", table: "Main")
-        } else if lowered {
-            message = String(localized: "The game closed while starting on \(recovery.failed.title). That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts on \(recovery.fallback.title). You can change this any time in Settings.", table: "Main")
-        } else if let height = recovery.resetHeight {
-            message = String(localized: "The game closed while starting on \(recovery.failed.title) at \(height)p. That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts at its usual resolution. You can change this any time in Settings.", table: "Main")
-        } else {
-            message = String(localized: "The game closed while starting on \(recovery.failed.title). That usually means this setting needs more memory than iOS gives the app on this iPhone (about \(recovery.memoryLimitMB) MB).\n\nThe game now starts at its usual resolution. You can change this any time in Settings.", table: "Main")
-        }
+        let title = String(localized: "Ready to try again", table: "Main")
+        let message = recovery.resetHeight != nil
+            ? String(localized: "The previous game launch didn't finish. Graphics are now set to \(recovery.fallback.title) with Auto resolution. You can adjust them in Settings or share the log to help investigate.", table: "Main")
+            : String(localized: "The previous game launch didn't finish. Graphics are now set to \(recovery.fallback.title). You can adjust them in Settings or share the log to help investigate.", table: "Main")
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: String(localized: "OK", table: "Main"), style: .cancel))
-        alert.addAction(UIAlertAction(title: String(localized: "Share log", table: "Main"), style: .default) { _ in
+        alert.addAction(UIAlertAction(title: String(localized: "Share log", table: "Main"), style: .default) { [weak self] _ in
+            guard let self else { return }
             self.nativeLog.flush()
             let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             let logs = ["native-port-previous.log", "native-port.log"].map { documents.appendingPathComponent($0) }
@@ -673,10 +679,19 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             sheet.popoverPresentationController?.sourceView = self.view
             self.present(sheet, animated: true)
         })
-        alert.addAction(UIAlertAction(title: String(localized: "Try \(recovery.failed.title) again", table: "Main"), style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: String(localized: "Try \(recovery.failed.title) again", table: "Main"), style: .destructive) { [weak self] _ in
             GameSettings.shared.undoRecovery(recovery)
-            self.appendLog("Kept \(recovery.failed.title) after the warning.")
+            self?.appendLog("Kept \(recovery.failed.title) after the warning.")
         })
+        presentRecoveryWhenFree(alert)
+    }
+
+    private func presentRecoveryWhenFree(_ alert: UIAlertController) {
+        guard presentedViewController == nil, transitionCoordinator == nil,
+              view.window?.windowScene?.activationState == .foregroundActive else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.presentRecoveryWhenFree(alert) }
+            return
+        }
         present(alert, animated: true)
     }
 
@@ -761,7 +776,7 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private func applyCheat(_ code: String, buttons: [UInt16], mode: CheatInputMode) {
         let title = String(localized: "Cheat codes", table: "Cheats")
         appendLog("Cheat requested: \(code), mode \(mode.rawValue), engine \(engineStarted), status \(PGGameStatus()), pause \(PGPauseMenuActive())")
-        guard engineStarted, PGGameStatus() == 0, !PGPauseMenuActive() else {
+        guard engineStarted, !PGLoadingScreenActive(), PGGameStatus() == 0, !PGPauseMenuActive() else {
             showWhenFree(title: title, message: String(localized: "Wait until the game has loaded, close its pause menu and phone, and return to controlling the character.", table: "Cheats"))
             return
         }
@@ -942,7 +957,12 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let pcControls = keyboardMouse && KeyboardMouse.shared.hasKeyboard && KeyboardMouse.shared.hasMouse
         let previewing = ProcessInfo.processInfo.arguments.contains("--touch-controls-preview")
         var pauseMenu = PGPauseMenuActive()
-        let controlsReady = gameplayReadiness.allowsControls(worldReady: worldReadyAt != nil, status: gameStatus, paused: pauseMenu, preview: previewing)
+        let hadEnteredGameplay = gameplayReadiness.enteredGameplay
+        let controlsReady = gameplayReadiness.allowsControls(engineStarted: engineStarted, loading: PGLoadingScreenActive(), status: gameStatus, paused: pauseMenu, preview: previewing)
+        if !hadEnteredGameplay && gameplayReadiness.enteredGameplay {
+            PGSetTargetingMode(Int32(GameSettings.shared.targetingMode))
+            appendLog("Gameplay controls ready: loading screens inactive, local player controllable; pipeline quiescence not required.")
+        }
         if touchControlsAvailable && !controlsReady { touchControls.reset(publish: false) }
         touchControlsAvailable = controlsReady
         let touchActive = touchControlsAvailable && (previewing || !((hasController || pcControls) && GameSettings.shared.hideTouchWithController))

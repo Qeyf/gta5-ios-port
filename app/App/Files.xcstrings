@@ -3282,6 +3282,38 @@
           }
         }
       }
+    },
+    "A report is already sending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A report is already sending"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir rapor zaten gönderiliyor"
+          }
+        }
+      }
+    },
+    "Please wait for the current report to finish. Your logs and note are sent together in one report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please wait for the current report to finish. Your logs and note are sent together in one report."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lütfen mevcut raporun gönderilmesini bekle. Günlüklerin ve notun tek bir raporda birlikte gönderilir."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

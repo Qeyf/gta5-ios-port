@@ -122,7 +122,7 @@ enum GraphicsConfiguration {
     }
 
     /// Pass the chosen settings to the engine. Call before PGStartEngine.
-    static func apply(_ settings: GameSettings, screen: CGSize) -> String {
+    static func apply(_ settings: GameSettings, screen: CGSize, frameRateCap: Int) -> String {
         let preset = settings.graphicsPreset
         let (width, height) = size(for: preset, renderHeight: settings.renderHeight, screen: screen, matchScreenShape: settings.matchScreenShape)
         let options = preset.engineOptions
@@ -130,9 +130,9 @@ enum GraphicsConfiguration {
         defer { pointers.forEach { free($0) } }
         pointers.withUnsafeMutableBufferPointer { buffer in
             buffer.baseAddress!.withMemoryRebound(to: UnsafePointer<CChar>?.self, capacity: buffer.count) {
-                PGConfigureEngine($0, UInt32(buffer.count), Int32(width), Int32(height), settings.frameRateCap == 0 ? 0 : settings.frameRateCap == 60 ? 1 : 2)
+                PGConfigureEngine($0, UInt32(buffer.count), Int32(width), Int32(height), frameRateCap == 0 ? 0 : frameRateCap == 60 ? 1 : 2, UInt32(clamping: ProcessInfo.processInfo.activeProcessorCount))
             }
         }
-        return String(localized: "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(settings.frameRateCap))", table: "Settings")
+        return String(localized: "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(frameRateCap))", table: "Settings")
     }
 }

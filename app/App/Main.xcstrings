@@ -1861,6 +1861,54 @@
           }
         }
       }
+    },
+    "Ready to try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to try again"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden denemeye hazır"
+          }
+        }
+      }
+    },
+    "The previous game launch didn't finish. Graphics are now set to %@ with Auto resolution. You can adjust them in Settings or share the log to help investigate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous game launch didn't finish. Graphics are now set to %@ with Auto resolution. You can adjust them in Settings or share the log to help investigate."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki oyun açılışı tamamlanmadı. Grafikler %@ ve çözünürlük Otomatik olarak ayarlandı. Ayarlar’dan değiştirebilir veya sorunu incelememize yardımcı olmak için günlüğü paylaşabilirsin."
+          }
+        }
+      }
+    },
+    "The previous game launch didn't finish. Graphics are now set to %@. You can adjust them in Settings or share the log to help investigate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous game launch didn't finish. Graphics are now set to %@. You can adjust them in Settings or share the log to help investigate."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki oyun açılışı tamamlanmadı. Grafikler %@ olarak ayarlandı. Ayarlar’dan değiştirebilir veya sorunu incelememize yardımcı olmak için günlüğü paylaşabilirsin."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

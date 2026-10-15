@@ -122,6 +122,7 @@ uint64_t pg_streaming_resource_memory(uint64_t engineAvailable){
  return (uint64_t)result;
 }
 static u32 nativeEngineCores=2;
+static unsigned nativeActiveCores=2;
 u32 w2c_env_emscripten_num_logical_cores(struct w2c_env *host) { return nativeEngineCores; }
 void w2c_env_emscripten_check_blocking_allowed(struct w2c_env *host) {}
 void w2c_env_wasm_print_line_js(struct w2c_env *host, u64 address) { pg_log(pg_string(host, address)); }
@@ -559,7 +560,7 @@ void PGCancelCheat(void) {
 typedef struct { PGCheatSequence sequence; uint64_t block; } PGCheatJob;
 static bool pg_cheat_host_ready(void) {
   return pg_cheat_input_bounds((const uint8_t *)(void *)env.memory.data, env.memory.size, atomic_load(&inputBlock)) &&
-    env.memory.size >= 24627140 && PGGameStatus() == 0 && !PGPauseMenuActive();
+    env.memory.size >= 24627140 && !PGLoadingScreenActive() && PGGameStatus() == 0 && !PGPauseMenuActive();
 }
 static void pg_cheat_log_state(const char *reason) {
   char line[256];
@@ -950,8 +951,9 @@ void PGFillAudio(float *left, float *right, uint32_t count) {
 }
 
 static char *configuredQuality[32];static unsigned configuredQualityCount;
-void PGConfigureEngine(const char *const *quality,unsigned count,int width,int height,int frameLimit){
+void PGConfigureEngine(const char *const *quality,unsigned count,int width,int height,int frameLimit,unsigned activeCores){
   if(atomic_load(&started))return;
+  nativeActiveCores=activeCores;
   for(unsigned i=0;i<configuredQualityCount;i++)free(configuredQuality[i]);
   configuredQualityCount=0;
   for(unsigned i=0;i<count&&i<32;i++)configuredQuality[configuredQualityCount++]=strdup(quality[i]);
@@ -980,9 +982,9 @@ static void *boot(void *ignored) {
 #endif
   if(nativeMemoryGuard)pg_log("Native streaming memory guard enabled with 384 MB of reserve.");
   pg_assets_prewarm();
-  nativeEngineCores=pg_engine_core_configuration(getenv("PG_ENGINE_CORES"));
+  nativeEngineCores=pg_engine_core_configuration(getenv("PG_ENGINE_CORES"),nativeActiveCores);
   char coresOption[32];snprintf(coresOption,sizeof coresOption,"-numCores=%u",nativeEngineCores);
-  char coresLog[96];snprintf(coresLog,sizeof coresLog,"Native engine worker configuration: %u logical cores.",nativeEngineCores);pg_log(coresLog);
+  char coresLog[192];snprintf(coresLog,sizeof coresLog,"Native engine CPU policy: hardware active=%u, engine budget=%u, dependency/gtaSched workers=%u each.",nativeActiveCores,nativeEngineCores,nativeEngineCores>2?nativeEngineCores-2:1);pg_log(coresLog);
   wasm_rt_init();
   pg_log("Reserving 4095 MB virtual engine memory, starting with a 3328 MB shared heap.");
 #if defined(PG_HAS_ARM64_SHARED_VECTORS) && !defined(PG_SHARED_SIMD_BYTEWISE)
