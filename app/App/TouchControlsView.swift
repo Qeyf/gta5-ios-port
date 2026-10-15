@@ -770,8 +770,31 @@ final class TouchControlsView: UIView {
         enter.setProgress(0)
         sprintSince = nil; moveStick.sprinting = false
         dragOrigins.removeAll()
+        pulses.removeAll()
+        pressedAt.removeAll()
+        lastHeld = []
+        radioDirection = nil
+        PGSetRadioWheelDirection(0, 0, false)
         if publish { self.publish() }
     }
+
+    #if PG_UI_SMOKE_TEST
+    /// Runs only in the isolated UIKit verification shell, never in an IPA.
+    func verifyInputReset() {
+        let token = NSObject()
+        roles[ObjectIdentifier(token)] = .button(enter)
+        enter.setPressed(true)
+        pulses = [(.b, CACurrentMediaTime() + 1)]
+        pressedAt[PadButtons.r2.rawValue] = CACurrentMediaTime()
+        lastHeld = .r2
+        radioDirection = (1, 0)
+        reset(publish: false)
+        let sample = padState(elapsed: 1.0 / 60.0)
+        precondition(sample.buttons == 0 && sample.leftTrigger == 0 && sample.rightTrigger == 0)
+        precondition(sample.leftX == 0 && sample.leftY == 0 && sample.rightX == 0 && sample.rightY == 0)
+        precondition(pulses.isEmpty && pressedAt.isEmpty && lastHeld.isEmpty && radioDirection == nil)
+    }
+    #endif
 
     // MARK: Output
 

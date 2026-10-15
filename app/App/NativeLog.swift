@@ -75,7 +75,7 @@ final class NativeLog {
         }
         var metricsChanged = false
         for line in batch {
-            for key in ["[metal] fps:", "[metal] draw costs", "Native frame costs:", "Health:", "WORLD_READY"] where line.hasPrefix(key) {
+            for key in ["[metal] fps:", "[metal] frame timing:", "[metal] draw costs", "Native frame costs:", "Health:", "WORLD_READY"] where line.hasPrefix(key) {
                 metrics[key] = line
                 metricsChanged = true
             }

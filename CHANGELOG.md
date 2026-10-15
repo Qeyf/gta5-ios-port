@@ -1,3 +1,11 @@
+# Qeyf fork — v1.3.5
+
+- Private-recipient Cloudflare diagnostic relay with bounded off-main snapshots, verified server acceptance, and Turkish/English disclosure.
+- Skip redundant local asset hint reads/copies while preserving demand reads and server cache behavior.
+- Console-first automatic cheats; clear pending touch/radio state on reset and gate controls on actual gameplay readiness.
+- Sensor-clock gyro filtering with fresh-sample polling and modal/background resets.
+- Actual presented-frame FPS and bounded foreground GPU/frame-time diagnostics. Physical combat FPS remains to be measured.
+
 # Qeyf fork — v1.3.3
 
 - Fix immediate SDK 27 startup termination by adopting Apple's single-window UIKit scene lifecycle and scene notifications.

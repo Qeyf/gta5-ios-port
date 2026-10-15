@@ -13,6 +13,7 @@
 #include "BCTextureDecoder.h"
 #include "NativeBCTextures.h"
 #include "NativeFrameRate.h"
+#include "NativeFrameTiming.h"
 #include "NativeRenderLifecycle.h"
 #include "NativeFrameUploadCache.h"
 #import <ImageIO/ImageIO.h>
@@ -20,6 +21,7 @@
 #include <TargetConditionals.h>
 #include <pthread.h>
 #include <mutex>
+#include <memory>
 #include <functional>
 #include <algorithm>
 #include <cmath>
@@ -216,8 +218,8 @@ struct Renderer {
 	FrameWork work;
 	uint64_t bcNativeCreated = 0, bcFallbackCreated = 0, bcNativeUploadBytes = 0, bcDecodedBytes = 0;
 	uint64_t statDraws = 0, statPresents = 0, statSkips = 0, statPending = 0, statCommits = 0;
-	PGFrameRateWindow fpsWindow;
-	std::atomic<double> fps{0}, lastPresent{0};
+	std::shared_ptr<PGForegroundFrameTiming> frameTiming = std::make_shared<PGForegroundFrameTiming>();
+	uint64_t statEpoch = 0;
 	bool firstFrame = false, worldSent = false;
 	double worldSince = 0, worldClean = 0;
 	uint64_t drawsAtPresent = 0, pendingAtPresent = 0;
@@ -301,7 +303,11 @@ static void commit(CommitReason reason, id<CAMetalDrawable> drawable = nil) {
 	auto *callbacks = new std::vector<std::function<void()>>();
 	callbacks->swap(R->onComplete);
 	Renderer *r = R;
+	auto timing = R->frameTiming;
+	uint64_t timingEpoch = timing->epoch();
 	[cb addCompletedHandler:^(id<MTLCommandBuffer> done) {
+		if (done.status == MTLCommandBufferStatusCompleted)
+			timing->gpuCompleted(timingEpoch, done.GPUStartTime, done.GPUEndTime);
 		if (done.status == MTLCommandBufferStatusError) logOnce("cmderr" + std::to_string(done.error.code), "Metal renderer: command buffer failed: %s", done.error.localizedDescription.UTF8String);
 		for (auto &f : *callbacks) f();
 		delete callbacks;
@@ -1802,7 +1808,11 @@ static void capture(Texture *t, const std::string &name, id<MTLRenderPipelineSta
 	R->onComplete.push_back([out, w, h, bpr, name]() { dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{ @autoreleasepool { savePNG(out, w, h, bpr, name); } }); });
 }
 
+static void report();
 static void present(uint32_t texId) {
+	auto timing = R->frameTiming;
+	uint64_t timingEpoch = timing->epoch();
+	double drawableWaitMs = 0;
 	flushClears();
 	endEncoders();
 	Texture *t = texture(texId);
@@ -1816,8 +1826,13 @@ static void present(uint32_t texId) {
 		// Do not hold the lifecycle mutex while waiting for a drawable. If
 		// deactivation races this acquisition, commit() still waits for resume.
 		renderLifecycle.waitUntilActive();
+		double drawableStart = nowMs();
 		drawable = [R->layer nextDrawable];
+		drawableWaitMs = nowMs() - drawableStart;
 		if (drawable) {
+			[drawable addPresentedHandler:^(id<MTLDrawable> shown) {
+				timing->presented(timingEpoch, shown.presentedTime);
+			}];
 			MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
 			rp.colorAttachments[0].texture = drawable.texture; rp.colorAttachments[0].loadAction = MTLLoadActionDontCare; rp.colorAttachments[0].storeAction = MTLStoreActionStore;
 			id<MTLRenderCommandEncoder> e = [commandBuffer() renderCommandEncoderWithDescriptor:rp];
@@ -1849,12 +1864,10 @@ static void present(uint32_t texId) {
 	FrameRing &f = R->frames[R->frame % FRAME_SLOTS];
 	commit(CPresent, drawable);
 	f.lastSerial = R->serial - 1;
-	R->presents++;
+	if (drawable) R->presents++;
 	double now = CACurrentMediaTime();
-	R->lastPresent.store(now);
-	if (R->fpsWindow.record(now)) R->fps.store(R->fpsWindow.rate);
 	// loading progress for the app: first frame, then the world once 1.5 s went by without draws waiting for pipelines
-	if (!R->firstFrame) { R->firstFrame = true; pg_log("{\"pct\":76,\"label\":\"First frame\"}"); }
+	if (drawable && !R->firstFrame) { R->firstFrame = true; pg_log("{\"pct\":76,\"label\":\"First frame\"}"); }
 	uint64_t d = R->draws - R->drawsAtPresent;
 	R->drawsAtPresent = R->draws;
 	double ms = now * 1000;
@@ -1875,11 +1888,13 @@ static void present(uint32_t texId) {
 	double w0 = nowMs();
 	if (next.lastSerial) waitSerial(next.lastSerial);
 	R->work.gpuWait += nowMs() - w0;
+	timing->frameCPU(timingEpoch, drawableWaitMs, R->work.gpuWait, R->work.submit, drawable == nil);
 	next.reset(R->completed.load(std::memory_order_relaxed), uploadTrimGeneration.load(std::memory_order_relaxed));
 	double tn = nowMs();
 	if (R->lastPresentMs) frameReportsRecord(tn, tn - R->lastPresentMs, d, R->worldSent, R->work);
 	R->lastPresentMs = tn;
 	R->work = FrameWork();
+	report();
 }
 
 // ---- object creation ----------------------------------------------------------------------------------------------------
@@ -2106,11 +2121,21 @@ static void execute(uint32_t op, const uint32_t *p, uint32_t n) {
 
 static void report() {
 	double now = nowMs();
+	uint64_t epoch = R->frameTiming->epoch();
+	if (epoch != R->statEpoch) { R->statEpoch = epoch; R->statT = R->busyMs = 0; R->lastPresentMs = 0; }
+	PGFrameTimingSnapshot timing;
+	if (R->frameTiming->takeSnapshot(now / 1000, timing)) {
+		double submitted = std::max(1.0, (double)timing.submitted);
+		logf("[metal] frame timing: %s, displayed %llu, cadence %.1f fps p50/p95/p99 %.1f/%.1f/%.1f ms max %.1f ms, GPU %.2f ms/completed buffer (%llu), drawable wait %.2f ms, upload-slot wait %.2f ms, submit CPU %.2f ms, missing drawables %llu",
+		     R->worldSent ? "world" : "loading", (unsigned long long)timing.displayed, timing.cadence.fps(), timing.p50Ms, timing.cadence.p95Ms, timing.cadence.p99Ms, timing.cadence.maxMs,
+		     timing.gpuMs / std::max(1.0, (double)timing.gpuBuffers), (unsigned long long)timing.gpuBuffers,
+		     timing.drawableWaitMs / submitted, timing.slotWaitMs / submitted, timing.submitMs / submitted, (unsigned long long)timing.missingDrawables);
+	}
 	if (!R->statT) { R->statT = now; R->statDraws = R->draws; R->statPresents = R->presents; R->statSkips = R->skipped; R->statPending = R->pendingSkips; R->statCommits = R->commits; return; }
 	if (now - R->statT < 10000) return;
 	double frames = (double)(R->presents - R->statPresents);
-	logf("[metal] fps: %.1f (%.0f frames, %.0f draws/frame, %.1f command buffers/frame), skipped +%llu (waiting for pipelines +%llu), clamped %llu, pipelines %u (%u compiling), renderer busy %.1f ms/frame",
-	     frames * 1000 / (now - R->statT), frames, (R->draws - R->statDraws) / std::max(1.0, frames), (R->commits - R->statCommits) / std::max(1.0, frames),
+	logf("[metal] fps: %.1f displayed; submit %.1f fps (%.0f drawable submissions, %.0f draws/frame, %.1f command buffers/frame), skipped +%llu (waiting for pipelines +%llu), clamped %llu, pipelines %u (%u compiling), renderer CPU busy %.1f ms/frame",
+	     R->frameTiming->fps(now / 1000), frames * 1000 / (now - R->statT), frames, (R->draws - R->statDraws) / std::max(1.0, frames), (R->commits - R->statCommits) / std::max(1.0, frames),
 	     (unsigned long long)(R->skipped - R->statSkips), (unsigned long long)(R->pendingSkips - R->statPending), (unsigned long long)R->clamped, R->pipesMade, R->pipesPending.load(),
 	     R->busyMs / std::max(1.0, frames));
 	std::string reasons;
@@ -2278,6 +2303,7 @@ extern "C" void PGMetalRendererSetAppActive(bool active) {
 	id<MTLCommandBuffer> submitted = nil;
 	renderLifecycle.setActive(active, [&] {
 		if (!active) submitted = lastSubmitted;
+		if (R) R->frameTiming->setActive(active);
 	});
 	// Scheduling, rather than GPU completion, is the boundary iOS requires.
 	// No renderer or completion callback needs this thread or the lifecycle
@@ -2314,8 +2340,7 @@ extern "C" void PGStartMetalRenderer(void *memory, uint64_t memorySize, uint64_t
 
 extern "C" double PGMetalRendererFPS(void) {
 	if (!R) return 0;
-	double last = R->lastPresent.load();
-	return last && CACurrentMediaTime() - last < 1.5 ? R->fps.load() : 0;
+	return R->frameTiming->fps(CACurrentMediaTime());
 }
 
 extern "C" void PGMetalRendererCapture(const char *name) {

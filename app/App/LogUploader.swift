@@ -1,42 +1,54 @@
 import Foundation
 import UIKit
 
-/// Sends the app's logs to the developer (5★ Port Builder site, which forwards them on Telegram).
+/// User-initiated diagnostics sent through our private-recipient Cloudflare relay.
 enum LogUploader {
-    static let endpoint = URL(string: "https://fivestarport.vercel.app/api/log")!
-    /// The site accepts up to 4 MB, so each log is trimmed to its last 1.8 MB.
-    private static let perLog = 1_800_000
+    static let endpoint = URL(string: "https://gtav-mobile-diagnostics.webusta.workers.dev/v1/logs")!
+    private static let queue = DispatchQueue(label: "io.github.qeyf.gtavmobile.report", qos: .utility)
 
     static func send(note: String, done: @escaping ((String, String)) -> Void) {
-        NativeLog.shared.flush()
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        var body = Data()
-        for (title, name) in [("PREVIOUS RUN", "native-port-previous.log"), ("THIS RUN", "native-port.log")] {
-            guard let data = try? Data(contentsOf: documents.appendingPathComponent(name)), !data.isEmpty else { continue }
-            body.append("===== \(title) (\(name)) =====\n".data(using: .utf8)!)
-            body.append(data.count > perLog ? data.suffix(perLog) : data)
-            body.append("\n".data(using: .utf8)!)
+        // Capture UIKit/settings values here; file reads and uploads run off-main.
+        let device = "\(GameSettings.shared.tier.model) · iOS \(UIDevice.current.systemVersion) · \(GameSettings.shared.tier.memoryLimitMB) MB limit"
+        let version = Theme.appVersion
+        let noteHeader = String(note.prefix(400)).addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+        let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        func finish(_ title: String, _ message: String) {
+            DispatchQueue.main.async { done((title, message)) }
         }
-        guard !body.isEmpty else { DispatchQueue.main.async { done((String(localized: "No log yet", table: "Files"), String(localized: "Start the game once, then try again.", table: "Files"))) }; return }
-        var request = URLRequest(url: endpoint, timeoutInterval: 60)
-        request.httpMethod = "POST"
-        request.setValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.setValue("\(GameSettings.shared.tier.model) · iOS \(UIDevice.current.systemVersion) · \(GameSettings.shared.tier.memoryLimitMB) MB limit", forHTTPHeaderField: "X-Device")
-        request.setValue(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?", forHTTPHeaderField: "X-App-Version")
-        request.setValue(String(note.prefix(400)).addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "", forHTTPHeaderField: "X-Note")
-        URLSession.shared.uploadTask(with: request, from: body) { data, response, error in
-            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-            let reply = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
-            let result: (String, String)
-            if status == 200 {
-                result = (String(localized: "Log sent, thank you!", table: "Files"), String(localized: "Reference: \(reply?["id"] as? String ?? "-"). Mention it if you also ask for help in the community.", table: "Files"))
-            } else if error != nil {
-                result = (String(localized: "Couldn't send the log", table: "Files"), String(localized: "No internet connection? Try again, or use Share log instead.", table: "Files"))
-            } else {
-                result = (String(localized: "Couldn't send the log", table: "Files"), (reply?["error"] as? String).map { String(localized: "The server could not accept the log: \($0)", table: "Files") } ?? String(localized: "Try again later, or use Share log instead.", table: "Files"))
+        queue.async {
+            NativeLog.shared.flush()
+            guard let body = try? DiagnosticReport.body(directory: directory), !body.isEmpty else {
+                finish(String(localized: "No log yet", table: "Files"), String(localized: "Start the game once, then try again.", table: "Files"))
+                return
             }
-            DispatchQueue.main.async { done(result) }
-        }.resume()
+            var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 120)
+            request.httpMethod = "POST"
+            request.setValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+            request.setValue("GtaVMobile/\(version) (iOS; diagnostics)", forHTTPHeaderField: "User-Agent")
+            request.setValue(device.addingPercentEncoding(withAllowedCharacters: .alphanumerics), forHTTPHeaderField: "X-Device")
+            request.setValue(version, forHTTPHeaderField: "X-App-Version")
+            request.setValue(noteHeader, forHTTPHeaderField: "X-Note")
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.urlCache = nil
+            configuration.httpCookieStorage = nil
+            configuration.httpShouldSetCookies = false
+            configuration.timeoutIntervalForResource = 180
+            let session = URLSession(configuration: configuration)
+            session.uploadTask(with: request, from: body) { data, response, error in
+                defer { session.finishTasksAndInvalidate() }
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                if let id = DiagnosticReport.acceptedID(status: status, data: data) {
+                    finish(String(localized: "Log sent, thank you!", table: "Files"), String(localized: "The developer's email service accepted your report. Reference: \(id)", table: "Files"))
+                } else if status == 429 {
+                    finish(String(localized: "Couldn't send the log", table: "Files"), String(localized: "Please wait one minute before sending another report.", table: "Files"))
+                } else if error != nil {
+                    finish(String(localized: "Couldn't send the log", table: "Files"), String(localized: "No internet connection? Try again, or use Share log instead.", table: "Files"))
+                } else {
+                    // Provider error text can contain private routing information.
+                    finish(String(localized: "Couldn't send the log", table: "Files"), String(localized: "Try again later, or use Share log instead.", table: "Files"))
+                }
+            }.resume()
+        }
     }
 }
 
@@ -55,7 +67,7 @@ final class SendLogViewController: UIViewController {
         navigationItem.rightBarButtonItem?.style = .done
 
         let info = UILabel()
-        info.text = String(localized: "Sends this run's game log and the previous one: your iPhone model, iOS version, app settings and what the game printed. No personal data, photos or contacts.", table: "Files")
+        info.text = String(localized: "Sends the current and previous game logs and your optional note to the developer's email service through Cloudflare. Logs include device details, settings, file paths and game messages. Large logs keep startup details and recent lines. Use Share log to review them first. Photos and contacts are not accessed.", table: "Files")
         info.numberOfLines = 0
         info.font = .preferredFont(forTextStyle: .footnote)
         info.textColor = .secondaryLabel

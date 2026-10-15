@@ -1683,6 +1683,22 @@
           }
         }
       }
+    },
+    "Close the game's pause menu and wait until you can control the character. Auto uses the console to avoid triggering vehicle-exit or attack buttons. Gamepad sends normal controller buttons. Check the game's own message for the result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the game's pause menu and wait until you can control the character. Auto uses the console to avoid triggering vehicle-exit or attack buttons. Gamepad sends normal controller buttons. Check the game's own message for the result."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oyunun duraklatma menüsünü kapat ve karakteri kontrol edebilene kadar bekle. Otomatik yöntem, araçtan inme veya saldırı tuşlarını tetiklememek için konsolu kullanır. Gamepad yöntemi normal kontrolcü tuşlarını gönderir. Sonuç için oyunun kendi bildirimini kontrol et."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

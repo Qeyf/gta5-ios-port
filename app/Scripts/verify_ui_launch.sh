@@ -64,7 +64,7 @@ xcrun --sdk iphonesimulator clang -std=c11 -target arm64-apple-ios17.0-simulator
   -c "$app_root/Tests/UISmokeBridge.c" -o "$scratch/engine-stubs.o" \
   >> "$output/build.log" 2>&1
 xcrun --sdk iphonesimulator swiftc -emit-executable -parse-as-library \
-  -swift-version 5 -module-name "$module_name" -sdk "$sdk" \
+  -swift-version 5 -D PG_UI_SMOKE_TEST -module-name "$module_name" -sdk "$sdk" \
   -target arm64-apple-ios17.0-simulator \
   -import-objc-header "$app_root/Source/Native-Bridging-Header.h" \
   -Xcc -I"$app_root/Source" -Xcc -I"$app_root/App/GameInstaller" \
@@ -215,7 +215,8 @@ PY
   echo "Verified $name: app remains running and the real UIKit shell rendered."
 }
 
-launch_and_check en-home en
+launch_and_check en-home en --verify-input-reset
+python3 -c 'import pathlib, sys; assert "UIKit input reset regression passed." in pathlib.Path(sys.argv[1]).read_text()' "$output/en-home-native-port.log"
 launch_and_check tr-home tr
 launch_and_check en-settings en --open-settings
 launch_and_check tr-cheats tr --open-cheats

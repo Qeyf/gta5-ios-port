@@ -30,9 +30,20 @@ jobs:
         run: |
           xcrun swiftc app/App/NativeLog.swift app/Tests/native_log.swift -o "$RUNNER_TEMP/check-native-log"
           "$RUNNER_TEMP/check-native-log"
+      - name: Verify gyro sampling, gameplay readiness and private report snapshots
+        run: |
+          for pair in 'MotionRateFilter motion_rate' 'InputPolicy input_policy' 'DiagnosticReport diagnostic_report'; do
+            read -r source test <<< "$pair"
+            xcrun swiftc "app/App/$source.swift" "app/Tests/$test.swift" -o "$RUNNER_TEMP/check-$test"
+            "$RUNNER_TEMP/check-$test"
+          done
+      - name: Verify production local asset hints and demand reads
+        run: bash app/Scripts/check_asset_local_runtime.sh
+      - name: Verify diagnostics relay validation and recipient privacy
+        run: node --test diagnostics/worker.test.mjs
       - name: Verify Metal suspension and completed upload cache reclamation
         run: |
-          for test in render_lifecycle frame_upload_cache; do
+          for test in render_lifecycle frame_upload_cache frame_timing; do
             c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
               "app/Tests/$test.cpp" -o "$RUNNER_TEMP/check-$test"
             "$RUNNER_TEMP/check-$test"

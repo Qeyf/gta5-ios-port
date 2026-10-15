@@ -25,6 +25,7 @@ static void pauseFill(uint32_t id,uint64_t offset){
 }
 static void failFill(uint32_t id,uint64_t offset){@throw [NSException exceptionWithName:@"ProbeFillFailure" reason:@"Controlled cleanup check" userInfo:nil];}
 int main(void){@autoreleasepool {
+ if(getenv("PG_ASSET_TEST_SERVER"))PGSetAssetServer(getenv("PG_ASSET_TEST_SERVER"));
  NSString *token=NSUUID.UUID.UUIDString;
  NSString *name=[NSString stringWithFormat:@"_codex_asset_probe_%@.bin",token];
  NSString *served=[[[NSString stringWithUTF8String:getenv("PG_LOCAL_MIRROR")?:"."] stringByAppendingPathComponent:@"data"] stringByAppendingPathComponent:name];
@@ -117,8 +118,27 @@ int main(void){@autoreleasepool {
   NSString *one=[packedRoot stringByAppendingPathComponent:@"1"];
   assert(pg_packed_present_bytes([one stringByAppendingString:@".data"].fileSystemRepresentation,[one stringByAppendingString:@".map"].fileSystemRepresentation,fixture.length,0,fixture.length)==fixture.length);
   assert(readAsset(1,fixture.length-123,bytes,123)==123&&!memcmp(bytes,original+fixture.length-123,123)&&atomic_load(&fetchedBytes)==beforeHints+fixture.length+4096);
+  // Local files already use the OS file cache. Hints must be drained without
+  // scheduling duplicate reads or probing/populating the server's packed cache.
+  // ID 2 has no packed-cache entry: using IDs 0/1 here would accidentally test
+  // the already-cached fast path instead of reproducing the local-file bug.
+  assetFiles=[assetFiles arrayByAddingObject:@[name,@(fixture.length)]];
+  assetLocks=[assetLocks arrayByAddingObject:[PGAssetCondition new]];
+  PGSetLocalGameFolder(served.stringByDeletingLastPathComponent.fileSystemRepresentation);
+  uint64_t scheduledBefore=hintsScheduled,readsBefore=atomic_load(&healthReads);
+  assert(pg_asset_hint_decode(2,0,(uint32_t)fixture.length,&hint));pg_asset_hint_push(&normalHints,hint);
+  assert(pg_asset_hint_decode(2,16384,0x40000000|8192,&hint));pg_asset_hint_push(&lowHints,hint);
+  pumpAssetHints();
+  dispatch_barrier_sync(prefetchQueue,^{});
+  if(speculativeQueue!=prefetchQueue)dispatch_barrier_sync(speculativeQueue,^{});
+  assert(normalHints.count==0&&lowHints.count==0&&hintsScheduled==scheduledBefore);
+  assert(atomic_load(&activePrefetch)==0&&atomic_load(&healthReads)==readsBefore);
+  assert(readAsset(2,127,bytes,2000)==2000&&!memcmp(bytes,original+127,2000));
+  assert(atomic_load(&healthReads)==readsBefore+1);
+  PGSetLocalGameFolder(NULL);
+  puts("PASS: local hints drain without any background reads; direct local demand bytes remain exact.");
   free(bytes);[assetSession invalidateAndCancel];
-  puts("PASS: real HTTPS ranges, exact cache bytes, migration/fallback, concurrent disjoint fills, shared overlaps, exception cleanup, production hint scheduler with full ranges/bit-30 flags, and cached hint skipping.");
+  puts("PASS: real HTTP ranges, exact cache bytes, migration/fallback, concurrent disjoint fills, shared overlaps, exception cleanup, production hint scheduler with full ranges/bit-30 flags, and cached hint skipping.");
  } @finally {
   [[NSFileManager defaultManager] removeItemAtPath:served error:nil];
   [[NSFileManager defaultManager] removeItemAtPath:temporary error:nil];

@@ -55,7 +55,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private var tiltNeutral: Double?
     private var tiltSince: CFTimeInterval?
     private var tiltSmoothed: Double = 0
+    private var motionOrientation: UIInterfaceOrientation?
     private var touchControlsAvailable = false
+    private var gameplayReadiness = GameplayReadiness()
     private var lastTouchInputTrace = ""
     private var movementProofStarted = false
     private var proofController: GCController?
@@ -176,6 +178,12 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             self.setNeedsUpdateOfPrefersPointerLocked()
         }
         view.addSubview(touchControls)
+        #if PG_UI_SMOKE_TEST
+        if arguments.contains("--verify-input-reset") {
+            touchControls.verifyInputReset()
+            appendLog("UIKit input reset regression passed.")
+        }
+        #endif
         NSLayoutConstraint.activate([
             touchControls.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             touchControls.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -315,7 +323,6 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
         if line == "WORLD_READY" || line.contains("\"label\":\"First frame\"") {
             diagnosticsOverlay?.isHidden = true
-            touchControlsAvailable = true
             fpsLabel.isHidden = false
         }
         if line.hasPrefix("Native boot stopped:") || line == "iOS could not reserve the engine memory." {
@@ -762,7 +769,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
         touchControls.reset(publish: false)
         KeyboardMouse.shared.releaseAll()
-        let useGamepad = mode == .gamepad || (mode == .automatic && !buttons.isEmpty)
+        stopMotionInput()
+        PGUpdateVirtualPad(PGPadState())
+        let useGamepad = mode.usesGamepad
         let sent = useGamepad
             ? buttons.withUnsafeBufferPointer { PGApplyCheatGamepad($0.baseAddress, UInt32($0.count)) }
             : code.withCString { PGApplyCheatConsole($0) }
@@ -808,10 +817,16 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         PGSetBackBufferSize(Int32(width), Int32(height))
         appendLog("Graphics: live resize to \(width)×\(height)")
     }
+    private func stopMotionInput() {
+        gyro.setRunning(false, orientation: .landscapeRight)
+        tiltNeutral = nil; tiltSince = nil; tiltSmoothed = 0
+        motionOrientation = nil
+    }
+
     @objc private func releaseTouchControls() {
         PGCancelCheat()
         touchControls.reset(publish: false)
-        gyro.setRunning(false, orientation: .landscapeRight)
+        stopMotionInput()
         lastControllerPoll = nil
         #if targetEnvironment(simulator)
         simulatorKeys.removeAll()
@@ -858,8 +873,10 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
     }
     @objc private func pollController() {
-        guard view.window?.windowScene?.activationState == .foregroundActive else {
+        guard view.window?.windowScene?.activationState == .foregroundActive,
+              presentedViewController == nil else {
             touchControls.reset(publish: false)
+            stopMotionInput()
             lastControllerPoll = nil
             PGUpdateVirtualPad(PGPadState())
             return
@@ -877,7 +894,11 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         }
         // The injector owns input until its sequence finishes. Hardware/touch
         // polling must not erase its pressed keys or virtual-pad sample.
-        guard !PGIsCheatInProgress() else { lastControllerPoll = nil; return }
+        guard !PGIsCheatInProgress() else {
+            stopMotionInput()
+            lastControllerPoll = nil
+            return
+        }
         let now = CACurrentMediaTime()
         if now - lastFPSLabelUpdate >= 0.25 {
             let fps = PGRenderedFramesPerSecond()
@@ -915,10 +936,13 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         if let ready = worldReadyAt { injectTestInput(sinceWorld: now - ready) }
         let pcControls = keyboardMouse && KeyboardMouse.shared.hasKeyboard && KeyboardMouse.shared.hasMouse
         let previewing = ProcessInfo.processInfo.arguments.contains("--touch-controls-preview")
+        var pauseMenu = PGPauseMenuActive()
+        let controlsReady = gameplayReadiness.allowsControls(worldReady: worldReadyAt != nil, status: gameStatus, paused: pauseMenu, preview: previewing)
+        if touchControlsAvailable && !controlsReady { touchControls.reset(publish: false) }
+        touchControlsAvailable = controlsReady
         let touchActive = touchControlsAvailable && (previewing || !((hasController || pcControls) && GameSettings.shared.hideTouchWithController))
         touchControls.isHidden = !touchActive
         var vehicle = touchActive ? PGCurrentTouchContext() : 0
-        var pauseMenu = PGPauseMenuActive()
         // Debug: --preview-context <vehicle type + 1 | menu> to review a layout.
         let arguments = ProcessInfo.processInfo.arguments
         if let i = arguments.firstIndex(of: "--preview-context"), i + 1 < arguments.count {
@@ -972,8 +996,12 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
         let onFoot = vehicle == 0
         let driving = touchControls.context.driving
         let tiltWanted = touchActive && driving && settings.tiltSteer != .off
-        let gyroWanted = touchActive && ((settings.gyroAim != .off && !touchControls.flyingWithRightStick && touchControls.context != .menu) || tiltWanted)
+        let gyroWanted = touchActive && gameStatus == 0 && !pauseMenu && ((settings.gyroAim != .off && !touchControls.flyingWithRightStick && touchControls.context != .menu) || tiltWanted)
         let orientation = view.window?.windowScene?.interfaceOrientation ?? .landscapeRight
+        if motionOrientation != orientation || !gyroWanted {
+            tiltNeutral = nil; tiltSince = nil; tiltSmoothed = 0
+        }
+        motionOrientation = gyroWanted ? orientation : nil
         gyro.setRunning(gyroWanted, orientation: orientation)
         if tiltWanted, let angle = gyro.steeringAngle() {
             // The neutral angle is however the phone is held on entering.
@@ -997,11 +1025,9 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
             let aiming = touchControls.aiming || state.leftTrigger > 0.1
             let active = aiming || (settings.gyroAim == .always && onFoot)
             let rate = gyro.rate(active: active, elapsed: elapsed)
-            // About 2 rad/s of phone rotation is a full stick at sensitivity 1.
-            let gain = 350 * settings.gyroSensitivity
-            let invert: CGFloat = settings.gyroInvertY ? -1 : 1
-            state.rightX = max(-1, min(1, state.rightX + TouchControlsView.lookAxis(rate.dx * gain)))
-            state.rightY = max(-1, min(1, state.rightY - TouchControlsView.lookAxis(rate.dy * gain * invert)))
+            let invert: Double = settings.gyroInvertY ? -1 : 1
+            state.rightX = max(-1, min(1, state.rightX + MotionRateFilter.axis(Double(rate.dx), sensitivity: settings.gyroSensitivity)))
+            state.rightY = max(-1, min(1, state.rightY - MotionRateFilter.axis(Double(rate.dy) * invert, sensitivity: settings.gyroSensitivity)))
         }
         // A controller's right stick picks on the radio wheel (its own inputs have no controller
         // binding in this build; see PGSetRadioWheelDirection). The camera ignores the stick meanwhile.

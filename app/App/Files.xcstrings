@@ -3234,6 +3234,54 @@
           }
         }
       }
+    },
+    "The developer's email service accepted your report. Reference: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The developer's email service accepted your report. Reference: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geliştiricinin e-posta servisi raporunu kabul etti. Referans: %@"
+          }
+        }
+      }
+    },
+    "Please wait one minute before sending another report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please wait one minute before sending another report."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni bir rapor göndermeden önce bir dakika bekle."
+          }
+        }
+      }
+    },
+    "Sends the current and previous game logs and your optional note to the developer's email service through Cloudflare. Logs include device details, settings, file paths and game messages. Large logs keep startup details and recent lines. Use Share log to review them first. Photos and contacts are not accessed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends the current and previous game logs and your optional note to the developer's email service through Cloudflare. Logs include device details, settings, file paths and game messages. Large logs keep startup details and recent lines. Use Share log to review them first. Photos and contacts are not accessed."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli ve önceki oyun günlüklerini, isteğe bağlı notunla birlikte Cloudflare üzerinden geliştiricinin e-posta servisine gönderir. Günlüklerde cihaz bilgileri, ayarlar, dosya yolları ve oyun mesajları bulunur. Büyük günlüklerde başlangıç bilgileri ve son satırlar korunur. Önce incelemek için Günlüğü paylaş seçeneğini kullan. Fotoğraflara ve kişilere erişilmez."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

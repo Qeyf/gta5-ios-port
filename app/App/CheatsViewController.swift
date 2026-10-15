@@ -1,17 +1,5 @@
 import UIKit
 
-enum CheatInputMode: Int, CaseIterable {
-    case automatic, console, gamepad
-
-    var title: String {
-        switch self {
-        case .automatic: return String(localized: "Auto", table: "Cheats")
-        case .console: return String(localized: "Console", table: "Cheats")
-        case .gamepad: return String(localized: "Gamepad", table: "Cheats")
-        }
-    }
-}
-
 typealias CheatApplyHandler = (String, [UInt16], CheatInputMode) -> Void
 
 /// GTA V's cheat inputs, delivered through its console or virtual controller.
@@ -115,7 +103,7 @@ final class CheatsViewController: UITableViewController, UISearchResultsUpdating
             case 0:
                 content.text = String(localized: "Names and instructions follow the app language. Codes stay unchanged.", table: "Cheats")
                 content.secondaryText = engineRunning
-                    ? String(localized: "Close the game's pause menu and wait until you can control the character. Auto sends a known gamepad sequence, or uses the console for other codes. Check the game's own message for the result.", table: "Cheats")
+                    ? String(localized: "Close the game's pause menu and wait until you can control the character. Auto uses the console to avoid triggering vehicle-exit or attack buttons. Gamepad sends normal controller buttons. Check the game's own message for the result.", table: "Cheats")
                     : String(localized: "Start the game before applying a cheat. You can browse and copy codes here while it loads.", table: "Cheats")
                 cell.selectionStyle = .none
             case 1:
