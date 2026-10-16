@@ -79,7 +79,7 @@ final class SettingsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
         case .mode: return GameMode.allCases.count + (settings.gameModeChoice == .sandbox ? 1 : 0)
-        case .graphics: return settings.tier.allowed.count + 3
+        case .graphics: return settings.tier.allowed.count + 4
         case .controls: return 10
         case .gyro: return (settings.gyroAim == .off ? 1 : 3) + (settings.tiltSteer == .off ? 1 : 2)
         case .files: return fileRows.count
@@ -207,7 +207,7 @@ final class SettingsViewController: UITableViewController {
                     cell.accessoryView = toggle(settings.matchScreenShape, label: String(localized: "Fill the screen", table: "Settings")) { [weak self] in
                         self?.settings.matchScreenShape = $0; self?.resolutionChanged?(); self?.tableView.reloadData()
                     }
-                } else {
+                } else if row == 2 {
                     content.text = String(localized: "Frame rate", table: "Settings")
                     content.secondaryText = String(localized: "Higher uses more power and heat; 30 FPS is steadiest. Unlocked goes up to 120 on ProMotion iPhones.", table: "Settings")
                     let button = UIButton(type: .system)
@@ -217,6 +217,28 @@ final class SettingsViewController: UITableViewController {
                     button.menu = UIMenu(children: [30, 60, 0].map { cap in
                         UIAction(title: GameSettings.frameRateTitle(cap), state: cap == settings.frameRateCap ? .on : .off) { [weak self] _ in
                             self?.settings.frameRateCap = cap; self?.reloadFooters(); self?.tableView.reloadData()
+                        }
+                    })
+                    button.sizeToFit()
+                    cell.accessoryView = button
+                } else {
+                    let supported = GraphicsConfiguration.spatialUpscalingSupported
+                    let effective: ImageUpscaling = supported ? settings.imageUpscaling : .native
+                    content.text = String(localized: "Image upscaling", table: "Settings")
+                    content.secondaryText = supported
+                        ? String(localized: "Apple MetalFX draws fewer pixels and scales to the selected resolution. Native renders at full resolution.", table: "Settings")
+                        : String(localized: "MetalFX is unavailable on this GPU; native resolution is used.", table: "Settings")
+                    let button = UIButton(type: .system)
+                    button.setTitle(effective.title + " ▾", for: .normal)
+                    button.accessibilityLabel = String(localized: "Image upscaling", table: "Settings")
+                    button.showsMenuAsPrimaryAction = true
+                    button.menu = UIMenu(children: ImageUpscaling.allCases.map { mode in
+                        UIAction(title: mode.title, attributes: supported || mode == .native ? [] : .disabled,
+                                 state: mode == effective ? .on : .off) { [weak self] _ in
+                            guard let self else { return }
+                            self.settings.imageUpscaling = mode
+                            self.resolutionChanged?()
+                            self.tableView.reloadSections([Section.graphics.rawValue], with: .none)
                         }
                     })
                     button.sizeToFit()
@@ -573,8 +595,12 @@ final class SettingsViewController: UITableViewController {
 
     private func currentSizeText() -> String {
         let screen = view.window?.windowScene?.screen.bounds.size ?? UIScreen.main.bounds.size
-        let (w, h) = GraphicsConfiguration.size(for: engineRunning ? bootPreset : settings.graphicsPreset, renderHeight: settings.renderHeight,
-                                                screen: screen, matchScreenShape: settings.matchScreenShape)
+        let size = GraphicsConfiguration.renderDimensions(settings, preset: engineRunning ? bootPreset : settings.graphicsPreset, screen: screen)
+        let w = Int(size.width), h = Int(size.height)
+        if size.upscaled {
+            let outputWidth = Int(size.outputWidth), outputHeight = Int(size.outputHeight)
+            return String(localized: "Renders at \(w)×\(h) → output \(outputWidth)×\(outputHeight)", table: "Settings")
+        }
         return String(localized: "Renders at \(w)×\(h)", table: "Settings")
     }
     /// Uploads the logs after the player confirms, with an optional note (its own screen, so the

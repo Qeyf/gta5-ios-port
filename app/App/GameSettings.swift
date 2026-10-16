@@ -123,6 +123,10 @@ final class GameSettings {
         get { defaults.object(forKey: "resolutionScale") as? Double ?? 1.0 }
         set { defaults.set(min(max(newValue, 0.5), 1.0), forKey: "resolutionScale") }
     }
+    var imageUpscaling: ImageUpscaling {
+        get { (defaults.object(forKey: "imageUpscaling") as? Int).flatMap(ImageUpscaling.init(rawValue:)) ?? .quality }
+        set { defaults.set(newValue.rawValue, forKey: "imageUpscaling") }
+    }
     /// Render at the screen's shape instead of a stretched 16:9 picture.
     /// Render height in pixels, changeable while playing; 0 follows the detail preset.
     var renderHeight: Int {

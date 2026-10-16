@@ -26,9 +26,9 @@ jobs:
           cc -std=c11 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
             app/Tests/cheat_input.c -o "$RUNNER_TEMP/check-cheat-input"
           "$RUNNER_TEMP/check-cheat-input"
-      - name: Verify loading snapshots and bounded CPU concurrency
+      - name: Verify loading, CPU concurrency, BC layouts and upscale dimensions
         run: |
-          for test in loading_state engine_configuration; do
+          for test in loading_state engine_configuration native_bc_layout upscaling_dimensions; do
             cc -std=c11 -O2 -Wall -Wextra -Werror -Iapp/Source \
               "app/Tests/$test.c" -o "$RUNNER_TEMP/check-$test"
             "$RUNNER_TEMP/check-$test"
@@ -63,46 +63,23 @@ jobs:
         run: node --test diagnostics/worker.test.mjs
       - name: Verify Metal suspension and completed upload cache reclamation
         run: |
-          for test in render_lifecycle frame_upload_cache frame_timing; do
+          for test in render_lifecycle frame_upload_cache frame_timing pipeline_inputs; do
             c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
               "app/Tests/$test.cpp" -o "$RUNNER_TEMP/check-$test"
             "$RUNNER_TEMP/check-$test"
           done
-      - name: Verify native BC layouts and real Metal texture operations
+      - name: Verify BC texture memory and official Apple upscaling
         run: |
-          cc -std=c11 -O2 -Wall -Wextra -Werror -Iapp/Source \
-            app/Tests/native_bc_layout.c -o "$RUNNER_TEMP/check-native-bc-layout"
-          "$RUNNER_TEMP/check-native-bc-layout"
-          python3 - <<'PY'
-          import hashlib, pathlib, urllib.request
-          path = pathlib.Path('app/Tools/bcdec/bcdec.h')
-          path.parent.mkdir(parents=True, exist_ok=True)
-          with urllib.request.urlopen('https://raw.githubusercontent.com/iOrange/bcdec/80859ed3b7afb1c527a2a99d70c61457bea72d0c/bcdec.h', timeout=30) as response:
-              data = response.read()
-          if hashlib.sha256(data).hexdigest() != '134520764d96f70a27db814173616c89ad85db95fbd3328417c7a8c77e7ca189':
-              raise SystemExit('Pinned BC decoder header checksum mismatch')
-          path.write_bytes(data)
-          PY
-          xcrun clang -std=c11 -O2 -mmacosx-version-min=14.0 \
-            -c app/Source/BCTextureDecoder.c -o "$RUNNER_TEMP/bc-decoder.o"
-          xcrun clang++ -std=c++20 -O1 -fobjc-arc -fblocks -mmacosx-version-min=14.0 \
-            -Iapp/Source -Iapp/Source/MetalRenderer app/Tests/native_bc_metal.mm \
-            app/Source/MetalRenderer/MRShaders.mm "$RUNNER_TEMP/bc-decoder.o" \
-            -framework Foundation -framework Metal -framework QuartzCore -framework CoreGraphics \
-            -framework ImageIO -framework UniformTypeIdentifiers -o "$RUNNER_TEMP/check-native-bc-metal"
-          mkdir -p app/Build/UIVerification/launch
           set +e
-          MTL_DEBUG_LAYER=1 "$RUNNER_TEMP/check-native-bc-metal" \
-            > app/Build/UIVerification/launch/native-bc-metal.log 2>&1
+          bash app/Scripts/check_apple_graphics.sh
           status=$?
           set -e
-          cat app/Build/UIVerification/launch/native-bc-metal.log
           if [ "$status" -eq 77 ]; then
-            echo '::warning::Native BC GPU execution skipped: this runner has no capable Metal GPU. Compilation and layout checks passed; device validation remains required.'
-            echo 'Native BC GPU execution: **SKIPPED (no capable GPU)**.' >> "$GITHUB_STEP_SUMMARY"
+            echo '::warning::At least one real GPU check was skipped on this runner; physical Apple GPU verification remains required.'
+            echo 'Apple graphics GPU execution: **SKIPPED (GPU capability)**.' >> "$GITHUB_STEP_SUMMARY"
           else
             test "$status" -eq 0
-            echo 'Native BC GPU execution: **PASSED with real Metal resources and validation layer**.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Apple graphics GPU execution: **PASSED with real Metal resources and validation layer**.' >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Compile all Swift UI against the iOS SDK
         run: |

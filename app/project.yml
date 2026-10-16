@@ -9,7 +9,7 @@ settings:
     # builds an unsigned IPA that AltStore/SideStore signs with your Apple ID).
     DEVELOPMENT_TEAM: ""
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.3.7"
+    MARKETING_VERSION: "1.3.8"
     CURRENT_PROJECT_VERSION: "8"
     SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
@@ -66,6 +66,8 @@ targets:
     dependencies:
       - sdk: QuartzCore.framework
       - sdk: Metal.framework
+      - sdk: MetalFX.framework
+      - sdk: MetalPerformanceShaders.framework
       - sdk: ImageIO.framework
       - sdk: UniformTypeIdentifiers.framework
       - sdk: IOSurface.framework

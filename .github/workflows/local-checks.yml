@@ -1,0 +1,54 @@
+name: Local checks and IPA
+
+# Deliberately manual-only: act runs this workflow without consuming hosted
+# GitHub Actions minutes. Apple SDK/GPU validation is a separate Mac step.
+on:
+  workflow_dispatch:
+    inputs:
+      mirror:
+        description: Local Mac folder containing data/ and b/ (IPA job only)
+        required: false
+        type: string
+      build_number:
+        description: Local IPA build number
+        default: '17.1'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Run portable production regressions
+        run: bash app/Scripts/check_portable.sh
+  apple:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Execute real Apple GPU regressions
+        run: bash app/Scripts/check_apple_graphics.sh
+      - name: Compile UIKit and bilingual catalogs with the active iOS SDK
+        run: bash app/Scripts/check_apple_ui.sh
+  ipa:
+    needs: [portable, apple]
+    runs-on: macos-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Require the real Apple build host
+        run: bash app/Scripts/require_apple_host.sh --arm64
+      - name: Build and verify the local IPA
+        env:
+          PG_GAME_MIRROR: ${{ inputs.mirror }}
+          GTV_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          test -n "$PG_GAME_MIRROR" || { echo 'Set the mirror input to your local data/ and b/ folder.' >&2; exit 1; }
+          bash build_ipa.sh --mirror "$PG_GAME_MIRROR"
+          codesign --verify --deep --strict 'app/Build/Release/Build/Products/Release-iphoneos/GtaV Mobile.app'
+          shasum -a 256 'GtaV Mobile.ipa'
