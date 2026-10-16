@@ -4,15 +4,7 @@ cd "$(dirname "$0")/../.."
 bash app/Scripts/require_apple_host.sh
 checks_dir="$PWD/app/Build/AppleGraphicsChecks"
 mkdir -p "$checks_dir" app/Build/UIVerification/launch
-python3 - <<'PY'
-import hashlib,pathlib,urllib.request
-p=pathlib.Path('app/Tools/bcdec/bcdec.h')
-p.parent.mkdir(parents=True,exist_ok=True)
-expected='134520764d96f70a27db814173616c89ad85db95fbd3328417c7a8c77e7ca189'
-if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=expected:
-    with urllib.request.urlopen('https://raw.githubusercontent.com/iOrange/bcdec/80859ed3b7afb1c527a2a99d70c61457bea72d0c/bcdec.h',timeout=30) as r:p.write_bytes(r.read())
-assert hashlib.sha256(p.read_bytes()).hexdigest()==expected,'Pinned BC decoder checksum mismatch'
-PY
+python3 app/Scripts/fetch_bcdec.py
 xcrun clang -std=c11 -O2 -mmacosx-version-min=14.0 \
   -c app/Source/BCTextureDecoder.c -o "$checks_dir/bc-decoder.o"
 xcrun clang++ -std=c++20 -O1 -fobjc-arc -fblocks -mmacosx-version-min=14.0 \

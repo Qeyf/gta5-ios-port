@@ -18,6 +18,9 @@ act workflow_dispatch -W .github/workflows/local-checks.yml -j portable \
 This compiles and runs the production C/C++ regressions, checks both language
 catalogs, and runs Python and diagnostic-relay tests. Docker is unnecessary in
 this host mode. The script explicitly lists Apple checks as not run.
+The decoder checks verify the pinned upstream `bcdec.h`; the first fetch needs
+network access, while a valid cached header is reused. They execute the actual
+CPU decoder across all BC4/BC5 endpoint pairs and the BC1–BC7 traversal suite.
 
 ## Apple tests and IPA on an Apple Silicon Mac
 

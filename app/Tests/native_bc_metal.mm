@@ -246,6 +246,21 @@ static void probeBC1SrgbComparison() {
   puts("PASS: known BC1 block retains exact bytes and the same quantization budget across linear/sRGB views.");
 }
 
+static void probeBC45PreciseCopies() {
+  const uint8_t blocks[]={0x02,0xe0,0x8a,0x20,0x2f,0x4e,0xbc,0x14,
+                          0x02,0xe0,0x8a,0x20,0x2f,0x4e,0xbc,0x14};
+  for(uint32_t dxgi:{80u,83u}) {
+    Texture *decoded=makeTexture(dxgi,4,4,1,1,false),*native=makeTexture(dxgi,4,4,1,1,true);
+    size_t bytes=bcBlockBytes(decoded->bcKind);
+    uploadTextureBytes(decoded,0,0,0,0,0,4,4,1,(uint32_t)bytes,0,blocks,bytes);
+    copyResource(native->oid,decoded->oid);
+    auto nativeSamples=sample(native,0,0),decodedSamples=sample(decoded,0,0);
+    checkReadback(native,0,0,decoded); // Rule out copy corruption before pixel comparison.
+    compare(nativeSamples,decodedSamples,decoded->bcKind,"known precise BC4/BC5 decoded-to-native copy");
+  }
+  puts("PASS: known BC4/BC5 precise fallback and decoded-to-native copies retain exact blocks.");
+}
+
 static void checkPartialPaddedReadback(Texture *native,Texture *fallback) {
   // Capture the right block-column in both rows of array slice 1. Destination
   // padding/guards must survive, and a following upload must not change this
@@ -327,7 +342,9 @@ static void verifyFormat(uint32_t dxgi) {
     }
     // Software source to native destination is the reverse mixed-format path.
     copyResource(target->oid,fallback->oid);
-    compare(sample(target,0,0),sample(fallback,0,0),native->bcKind,destinationNative ? "CopyResource decoded source to native destination layer 0" : "CopyResource decoded source to decoded destination layer 0");
+    auto targetSamples=sample(target,0,0),sourceSamples=sample(fallback,0,0);
+    checkReadback(target,0,0,fallback);
+    compare(targetSamples,sourceSamples,native->bcKind,destinationNative ? "CopyResource decoded source to native destination layer 0" : "CopyResource decoded source to decoded destination layer 0");
   }
   // A self copy must snapshot blocks before overwriting the destination.
   for (Texture *t : {native,fallback}) {
@@ -614,6 +631,7 @@ int main() {
       return 0;
     }
     probeBC1SrgbComparison();
+    probeBC45PreciseCopies();
     for (uint32_t dxgi : {71u,74u,77u,80u,83u,95u,98u}) verifyFormat(dxgi);
     Texture *unaligned = makeTexture(71,7,5,3,1,true);
     assert(!unaligned->hardwareBC && unaligned->format == MTLPixelFormatRGBA8Unorm);
