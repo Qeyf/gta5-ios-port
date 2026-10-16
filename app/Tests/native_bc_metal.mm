@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <thread>
+#include "BCSampleComparison.h"
 
 // A drawable may be unavailable while previously encoded GPU work still runs.
 @interface PGNoDrawableTestLayer : CAMetalLayer
@@ -75,7 +76,12 @@ static void uploadPair(Texture *native,Texture *fallback,uint32_t mip,uint32_t s
     uploadTextureBytes(t,mip,0,0,0,0,w,h,t->depthOrLayers,pitch,rows,padded.data(),padded.size());
 }
 
-static id<MTLBuffer> sample(Texture *t,uint32_t mip,uint32_t layer,uint32_t dxgi = 0) {
+struct BCTextureSamples {
+  id<MTLBuffer> values;
+  bool srgb;
+};
+
+static BCTextureSamples sample(Texture *t,uint32_t mip,uint32_t layer,uint32_t dxgi = 0) {
   View srv(OSrv,0);
   srv.res = t->oid; srv.fmt = dxgi; srv.a = mip; srv.b = 1; srv.c = layer;
   ResBinding binding{}; binding.kind = RTexture; binding.dim = D2;
@@ -91,18 +97,26 @@ static id<MTLBuffer> sample(Texture *t,uint32_t mip,uint32_t layer,uint32_t dxgi
   [encoder dispatchThreads:MTLSizeMake(source.width,source.height,1) threadsPerThreadgroup:MTLSizeMake(8,8,1)];
   [encoder endEncoding];
   t->lastUse = R->serial;
-  return output;
+  MTLPixelFormat format=source.pixelFormat;
+  bool srgb=format==MTLPixelFormatBC1_RGBA_sRGB || format==MTLPixelFormatBC2_RGBA_sRGB ||
+    format==MTLPixelFormatBC3_RGBA_sRGB || format==MTLPixelFormatBC7_RGBAUnorm_sRGB ||
+    format==MTLPixelFormatRGBA8Unorm_sRGB || format==MTLPixelFormatBGRA8Unorm_sRGB;
+  uint32_t requested=dxgi ? dxgi : t->dxgi;
+  bool expectedSrgb=requested==72 || requested==75 || requested==78 || requested==99;
+  assert(srgb==expectedSrgb && "Sampled BC SRV must honor the requested DXGI color space.");
+  return {output,srgb};
 }
 
-static void compare(id<MTLBuffer> a,id<MTLBuffer> b,int kind,const char *stage = "unspecified") {
+static void compare(BCTextureSamples a,BCTextureSamples b,int kind,const char *stage = "unspecified") {
   completeGPU();
-  assert(a.length == b.length);
-  const float *x = (const float *)a.contents, *y = (const float *)b.contents;
-  for (size_t i = 0; i < a.length/sizeof(float); i++) {
-    assert(std::isfinite(x[i]) && std::isfinite(y[i]));
-    float tolerance = kind == 6 ? std::max(0.002f,std::abs(y[i])*0.01f) : 2.1f/255;
-    if (std::abs(x[i]-y[i]) > tolerance) {
-      fprintf(stderr,"BC%d [%s] sample %zu: native %.9g, CPU fallback %.9g, tolerance %.9g\n",kind,stage,i,x[i],y[i],tolerance);
+  assert(a.values.length == b.values.length);
+  assert(a.srgb==b.srgb && "Native and fallback SRVs must expose the same color space.");
+  const float *x = (const float *)a.values.contents, *y = (const float *)b.values.contents;
+  for (size_t i = 0; i < a.values.length/sizeof(float); i++) {
+    auto error=compareBCSample(x[i],y[i],kind,(unsigned)(i%4),a.srgb);
+    if (!error.matches()) {
+      const char *space=a.srgb && i%4<3 ? "sRGB encoded UNorm" : kind==6 ? "linear HDR" : "linear UNorm";
+      fprintf(stderr,"BC%d [%s] sample %zu: native %.9g, CPU fallback %.9g, error %.9g, tolerance %.9g (%s)\n",kind,stage,i,x[i],y[i],error.difference,error.tolerance,space);
       abort();
     }
   }
@@ -219,6 +233,19 @@ static void checkReadback(Texture *t,uint32_t mip,uint32_t layer,Texture *refere
   assert(!memcmp(R->mem+4096,expected.data(),expected.size()));
 }
 
+static void probeBC1SrgbComparison() {
+  // Exact first block reconstructed from the failing deterministic upload.
+  // The pinned CPU decoder produces R=186 at pixel8; the supplied virtual GPU
+  // reported an sRGB result near R=188. Preserve the original code-value budget.
+  const uint8_t block[]={0xe5,0xe7,0xc9,0x65,0xd0,0xda,0x06,0x43};
+  Texture *native=makeTexture(71,4,4,1,1,true),*fallback=makeTexture(71,4,4,1,1,false);
+  for(Texture *t:{native,fallback})uploadTextureBytes(t,0,0,0,0,0,4,4,1,8,0,block,sizeof block);
+  checkReadback(native,0,0,fallback); // Compressed data must still match exactly.
+  compare(sample(native,0,0),sample(fallback,0,0),1,"known quantized BC1 linear view");
+  compare(sample(native,0,0,72),sample(fallback,0,0,72),1,"known quantized BC1 sRGB view");
+  puts("PASS: known BC1 block retains exact bytes and the same quantization budget across linear/sRGB views.");
+}
+
 static void checkPartialPaddedReadback(Texture *native,Texture *fallback) {
   // Capture the right block-column in both rows of array slice 1. Destination
   // padding/guards must survive, and a following upload must not change this
@@ -273,9 +300,9 @@ static void verifyFormat(uint32_t dxgi) {
   for (uint32_t mip = 0; mip < 4; mip++) uploadPair(native,fallback,mip,0xabc123u+17*dxgi+mip,false);
   // These samples really read the initial uploads on the GPU before an update.
   // Updating the same texture now must use staging and order behind that read.
-  id<MTLBuffer> beforeNative = sample(native,0,0), beforeFallback = sample(fallback,0,0);
+  auto beforeNative = sample(native,0,0), beforeFallback = sample(fallback,0,0);
   uploadPair(native,fallback,0,0x146facbu+dxgi,false);
-  id<MTLBuffer> afterNative = sample(native,0,0), afterFallback = sample(fallback,0,0);
+  auto afterNative = sample(native,0,0), afterFallback = sample(fallback,0,0);
   compare(beforeNative,beforeFallback,native->bcKind,"in-flight sample before update");
   compare(afterNative,afterFallback,native->bcKind,"in-flight sample after update");
   for (uint32_t mip = 0; mip < 4; mip++) for (uint32_t layer = 0; layer < 2; layer++) {
@@ -586,6 +613,7 @@ int main() {
       puts("PASS: known BC1 probe only; the full randomized texture suite was not run.");
       return 0;
     }
+    probeBC1SrgbComparison();
     for (uint32_t dxgi : {71u,74u,77u,80u,83u,95u,98u}) verifyFormat(dxgi);
     Texture *unaligned = makeTexture(71,7,5,3,1,true);
     assert(!unaligned->hardwareBC && unaligned->format == MTLPixelFormatRGBA8Unorm);

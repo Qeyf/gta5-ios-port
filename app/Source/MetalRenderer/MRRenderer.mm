@@ -1942,7 +1942,8 @@ static void readback(const uint32_t *p) {
 // ---- present ------------------------------------------------------------------------------------------------------------
 static void savePNG(id<MTLBuffer> buf, uint32_t w, uint32_t h, uint32_t bpr, std::string name) {
 	CGColorSpaceRef color = CGColorSpaceCreateDeviceRGB();
-	CGContextRef bitmap = CGBitmapContextCreate(buf.contents, w, h, 8, bpr, color, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+	CGBitmapInfo bitmapInfo=static_cast<CGBitmapInfo>(kCGBitmapByteOrder32Little) | static_cast<CGBitmapInfo>(kCGImageAlphaNoneSkipFirst);
+	CGContextRef bitmap = CGBitmapContextCreate(buf.contents, w, h, 8, bpr, color, bitmapInfo);
 	CGImageRef image = CGBitmapContextCreateImage(bitmap);
 	NSMutableData *png = [NSMutableData data];
 	CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)png, (__bridge CFStringRef)UTTypePNG.identifier, 1, nullptr);
