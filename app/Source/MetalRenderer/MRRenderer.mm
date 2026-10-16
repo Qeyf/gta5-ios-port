@@ -11,6 +11,7 @@
 #include "MetalRenderer.h"
 #include "MRFrameReports.h"
 #include "MRSpatialUpscaler.h"
+#include "MRPipelineSeed.h"
 #include "BCTextureDecoder.h"
 #include "NativeBCTextures.h"
 #include "NativeFrameRate.h"
@@ -18,6 +19,7 @@
 #include "NativeRenderLifecycle.h"
 #include "NativeFrameUploadCache.h"
 #include "NativePipelineInputs.h"
+#include "NativePipelineWarmup.h"
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <TargetConditionals.h>
@@ -113,6 +115,7 @@ struct Pipe {
 	struct VbReq { uint32_t slot, stride, last; bool instance; };
 	std::vector<VbReq> vbReq;
 	bool zeroStream = false;
+	bool prewarmed = false;
 	std::string label;
 };
 struct ComputePipe { id<MTLComputePipelineState> state = nil; bool failed = false; };
@@ -125,6 +128,13 @@ struct PassInfo {
 	bool roDepth = false, roStencil = false;
 	uint64_t key = 0;
 };
+
+static uint64_t passPipelineKey(const PassInfo &info) {
+	uint64_t key=1469598103934665603ull;
+	for(uint32_t i=0;i<info.colorCount;i++)key=fnv(key,info.colors[i]);
+	return fnv(fnv(fnv(key,info.depth),info.samples),
+	           (info.roDepth ? 1 : 0)|(info.roStencil ? 2 : 0)|(info.colorCount<<4));
+}
 
 struct PendingClear { uint32_t tex, mip, slice; bool depth; float color[4]; uint32_t flags; float z; uint32_t stencil; };
 
@@ -196,6 +206,11 @@ struct Renderer {
 	std::unordered_map<uint64_t, Pipe *> pipes;
 	PGPipelineInputIds pipelineInputs;
 	uint64_t pipelineLookups=0,pipelineHits=0;
+	std::vector<PipelineSeed> pipelineSeeds;
+	PGPipelineWarmupQueue warmupQueue;
+	std::unordered_map<std::string,std::unique_ptr<Shader>> warmupShaders;
+	uint64_t warmupGeneration=0,warmupMade=0,warmupUsed=0;
+	bool warmupStopped=false;
 	std::unordered_map<uint32_t, ComputePipe> computePipes;
 	std::unordered_map<uint64_t, id<MTLDepthStencilState>> dssCache;
 	std::atomic<uint32_t> pipesPending{0};
@@ -235,6 +250,7 @@ struct Renderer {
 	bool firstFrame = false, worldSent = false;
 	double worldSince = 0, worldClean = 0;
 	uint64_t drawsAtPresent = 0, pendingAtPresent = 0;
+	uint64_t drawRequests=0,requestsAtPresent=0;
 	std::mutex captureLock;
 	std::string captureName;
 };
@@ -807,7 +823,6 @@ static bool ensurePass() {
 		}
 		return nullptr;
 	};
-	uint64_t key = 1469598103934665603ull;
 	for (uint32_t i = 0; i < 8; i++) {
 		Texture *t = texture(R->rt[i].tex);
 		if (!t || !t->tex) continue;
@@ -851,9 +866,7 @@ static bool ensurePass() {
 	R->clears.clear();
 	for (auto &c : rest) encodeClear(c);
 	d.visibilityResultBuffer = R->visibility;
-	for (uint32_t i = 0; i < info.colorCount; i++) key = fnv(key, info.colors[i]);
-	key = fnv(fnv(fnv(key, info.depth), info.samples), (info.roDepth ? 1 : 0) | (info.roStencil ? 2 : 0) | (info.colorCount << 4));
-	info.key = key;
+	info.key = passPipelineKey(info);
 	R->passInfo = info;
 	R->pass = [commandBuffer() renderCommandEncoderWithDescriptor:d];
 	R->rtDirty = false;
@@ -906,18 +919,20 @@ static MTLPrimitiveType primitiveType(uint32_t topo) {
 	switch (topo) { case 1: return MTLPrimitiveTypePoint; case 2: return MTLPrimitiveTypeLine; case 3: return MTLPrimitiveTypeLineStrip; case 5: return MTLPrimitiveTypeTriangleStrip; default: return MTLPrimitiveTypeTriangle; }
 }
 
-static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
-	State *blend = state(R->blendId);
-	const PassInfo &pi = R->passInfo;
+// Explicit immutable inputs let startup warmup use the exact demand cache and
+// descriptor builder without temporarily changing any live encoder/D3D state.
+static Pipe *pipelineFor(Shader *vs, Shader *ps, Layout *lay, const PassInfo &pi,
+                         const uint32_t strides[16], State *blend, uint32_t topo, bool warmup=false) {
 	uint64_t key = fnv(fnv(fnv(1469598103934665603ull, vs->info->uid), ps && ps->info ? ps->info->uid : 0), pi.key);
 	key = fnv(fnv(key, lay->inputIdentity),vs->signatureIdentity);
-	for (auto &s : lay->slots) { Buffer *b = buffer(R->vb[s.first].buf); key = fnv(key, b && b->buf ? R->vb[s.first].stride : 0xffffffffu); }
-	key = fnv(fnv(key, topologyClass(R->topo)), blend ? blend->hash : 0);
+	for (auto &s : lay->slots) key=fnv(key,strides[s.first]);
+	key = fnv(fnv(key, topologyClass(topo)), blend ? blend->hash : 0);
 	auto it = R->pipes.find(key);
-	R->pipelineLookups++;
-	if (it != R->pipes.end()) {R->pipelineHits++;return it->second;}
+	if(!warmup)R->pipelineLookups++;
+	if (it != R->pipes.end()) {if(!warmup)R->pipelineHits++;return it->second;}
 
 	auto *pipe = new Pipe();
+	pipe->prewarmed=warmup;
 	R->pipes[key] = pipe;
 	ShaderInfo *vsi = vs->info, *psi = ps ? ps->info : nullptr;
 	pipe->label = vsi->label + " + " + (psi ? psi->label : "-");
@@ -947,8 +962,7 @@ static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
 		SlotInfo &si = slots[e.slot];
 		si.used = true; si.instance = e.cls == 1; si.last = std::max(si.last, e.offset + bytes);
 		auto *l = vd.layouts[kVertexBufferTop - e.slot];
-		Buffer *vbuf = buffer(R->vb[e.slot].buf);
-		uint32_t stride = vbuf && vbuf->buf ? R->vb[e.slot].stride : 0;
+		uint32_t stride=strides[e.slot];
 		if (stride == 0) { l.stepFunction = MTLVertexStepFunctionConstant; l.stepRate = 0; l.stride = std::max(4u, (si.last + 3) & ~3u); }
 		else { l.stride = stride; l.stepFunction = si.instance ? MTLVertexStepFunctionPerInstance : MTLVertexStepFunctionPerVertex; l.stepRate = si.instance ? std::max(1u, e.rate) : 1; }
 	}
@@ -960,8 +974,7 @@ static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
 	}
 	d.vertexDescriptor = vd;
 	for (uint32_t s = 0; s < 16; s++) if (slots[s].used) {
-		Buffer *vbuf = buffer(R->vb[s].buf);
-		uint32_t stride = vbuf && vbuf->buf ? R->vb[s].stride : 0;
+		uint32_t stride=strides[s];
 		pipe->vbReq.push_back({s, stride, slots[s].last, slots[s].instance});
 	}
 	const uint32_t *bw = blend && blend->words.size() >= 66 ? blend->words.data() : nullptr;
@@ -988,8 +1001,8 @@ static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
 	d.rasterSampleCount = pi.samples;
 	// D3D11 alpha-to-coverage also works on single-sample targets (an alpha test at 0.5); Metal accepts it there too.
 	d.alphaToCoverageEnabled = bw && bw[0] && psi && std::find(psi->outputs.begin(), psi->outputs.end(), 0u) != psi->outputs.end();
-	d.inputPrimitiveTopology = topologyClass(R->topo);
-	if (R->topo == 1) logOnce("points", "Metal renderer: point-list draws (%s): shaders do not write a point size", pipe->label.c_str());
+	d.inputPrimitiveTopology = topologyClass(topo);
+	if (topo == 1) logOnce("points", "Metal renderer: point-list draws (%s): shaders do not write a point size", pipe->label.c_str());
 	R->pipesPending++; R->pipesMade++;
 	Renderer *r = R;
 	std::string label = pipe->label;
@@ -1001,6 +1014,82 @@ static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
 		r->pipesPending--;
 	}];
 	return pipe;
+}
+
+static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
+	uint32_t strides[16]={};
+	for(const auto &s:lay->slots) {
+		Buffer *b=buffer(R->vb[s.first].buf);
+		if(b && b->buf)strides[s.first]=R->vb[s.first].stride;
+	}
+	Pipe *pipe=pipelineFor(vs,ps,lay,R->passInfo,strides,state(R->blendId),R->topo);
+	if(pipe->prewarmed && pipe->ready.load(std::memory_order_acquire) && pipe->state) {
+		pipe->prewarmed=false;R->warmupUsed++;
+	}
+	return pipe;
+}
+
+static void stopPipelineWarmup(const char *reason) {
+	if(R->warmupStopped)return;
+	R->warmupStopped=true;
+	R->warmupQueue.stop();R->warmupShaders.clear();
+	std::vector<PipelineSeed>().swap(R->pipelineSeeds);
+	logf("Metal renderer: startup pipeline warmup stopped (%s), %llu requested, %llu used so far; no compiler wait.",
+	     reason,(unsigned long long)R->warmupMade,(unsigned long long)R->warmupUsed);
+}
+
+static void warmupPipelines() {
+	if(R->warmupStopped || R->pipelineSeeds.empty())return;
+	// Conservative world heuristic, independent of WORLD_READY: count attempted
+	// draws too, so missing/pending pipelines cannot prolong speculative work.
+	if(R->worldSince || R->drawRequests-R->requestsAtPresent>300) {stopPipelineWarmup("world rendering");return;}
+	if(uploadTrimGeneration.load(std::memory_order_relaxed) || NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious) {
+		stopPipelineWarmup("memory/thermal pressure");return;
+	}
+#if TARGET_OS_IOS && !TARGET_OS_SIMULATOR && !TARGET_OS_MACCATALYST
+	if(os_proc_available_memory()<768ull*1048576) {stopPipelineWarmup("memory headroom");return;}
+#endif
+	double deadline=nowMs()+0.5;
+	// The CPU budget limits submission, not driver compiler latency. Speculation
+	// only adds work while fewer than two render compiles are pending. Demand
+	// misses remain unrestricted; never stall actual draws to enforce this cap.
+	for(unsigned scanned=0;scanned<32 && R->pipesPending.load()<2 && nowMs()<deadline;scanned++) {
+		size_t index;
+		if(!R->warmupQueue.next(R->warmupGeneration,index))break;
+		const PipelineSeed &seed=R->pipelineSeeds[index];
+		auto it=R->warmupShaders.find(seed.vs);
+		if(it==R->warmupShaders.end()) {R->warmupQueue.defer(index);continue;}
+		Shader *vs=it->second.get();
+		Shader ps(0);ps.info=seed.ps.empty() ? nullptr : findShader(seed.ps);
+		if(!vs->info || (seed.ps.size() && (!ps.info || ps.info->stage!=1)) || ![R->device supportsTextureSampleCount:seed.samples])continue;
+		Layout layout(0);
+		uint32_t seen=0;
+		std::vector<uint32_t> words;
+		for(const auto &e:seed.elements) {
+			layout.els.push_back(e);
+			words.insert(words.end(),{e.sem,e.idx,e.fmt,e.slot,e.offset,e.cls,e.rate});
+			if(!(seen&(1u<<e.slot))) {seen|=1u<<e.slot;layout.slots.push_back({e.slot,e.cls});}
+		}
+		layout.inputIdentity=R->pipelineInputs.intern(words.data(),words.size());
+		uint32_t strides[16]={};
+		for(size_t i=0;i<layout.slots.size();i++)strides[layout.slots[i].first]=seed.strides[i];
+		PassInfo pass;
+		pass.colorCount=(uint32_t)seed.colors.size();
+		for(size_t i=0;i<seed.colors.size();i++)pass.colors[i]=seed.colors[i];
+		pass.depth=seed.depth;pass.samples=seed.samples;
+		pass.roDepth=seed.depth && (seed.readOnly&1);pass.roStencil=seed.depth && (seed.readOnly&2);
+		pass.key=passPipelineKey(pass);
+		State blend(0);blend.words=seed.blend;
+		blend.hash=fnv(1469598103934665603ull,0);
+		for(uint32_t w:blend.words)blend.hash=fnv(blend.hash,w);
+		uint32_t before=R->pipesMade;
+		pipelineFor(vs,ps.info ? &ps : nullptr,&layout,pass,strides,seed.blend.empty() ? nullptr : &blend,seed.topology,true);
+		R->warmupMade+=R->pipesMade-before;
+		// An engine producer may have filled the ring while this descriptor was
+		// prepared. Leave the rest of this slice to its commands immediately.
+		auto *header=(std::atomic<uint32_t> *)(R->mem+R->ring);
+		if(header[0].load(std::memory_order_acquire)!=header[1].load(std::memory_order_relaxed))break;
+	}
 }
 
 static id<MTLDepthStencilState> depthStencilState() {
@@ -1345,6 +1434,7 @@ static void capture(Texture *t, const std::string &name, id<MTLRenderPipelineSta
 static void drawInner(const uint32_t *p);
 static const char *drawOutcome;
 static void draw(const uint32_t *p) {
+	R->drawRequests++;
 	drawOutcome = "ok";
 	drawInner(p);
 #if MR_TRACE
@@ -1971,6 +2061,8 @@ static void present(uint32_t texId) {
 	if (drawable && !R->firstFrame) { R->firstFrame = true; pg_log("{\"pct\":76,\"label\":\"First frame\"}"); }
 	uint64_t d = R->draws - R->drawsAtPresent;
 	R->drawsAtPresent = R->draws;
+	if(R->drawRequests-R->requestsAtPresent>300)stopPipelineWarmup("first world-sized frame");
+	R->requestsAtPresent=R->drawRequests;
 	double ms = now * 1000;
 	if (!R->worldSent && (R->worldSince || d > 300)) {
 		if (!R->worldSince) R->worldSince = ms;
@@ -2010,6 +2102,15 @@ static void createShader(const uint32_t *p) {
 	s->signatureIdentity=R->pipelineInputs.intern(p+5,std::min(nin,64u)*4);
 	s->info = findShader(s->hash);
 	if (s->info) R->shaderObjects.emplace(s->info, p[0]);
+	if(!R->warmupStopped && s->stage==0 && s->info && s->info->stage==0) {
+		auto it=R->warmupShaders.find(s->hash);
+		if(it==R->warmupShaders.end() || it->second->signatureIdentity!=s->signatureIdentity) {
+			auto saved=std::make_unique<Shader>(0);
+			saved->stage=0;saved->hash=s->hash;saved->info=s->info;
+			saved->sig=s->sig;saved->signatureIdentity=s->signatureIdentity;
+			R->warmupShaders[s->hash]=std::move(saved);R->warmupGeneration++;
+		}
+	}
 #if MR_TRACE
 	static FILE *shaderList = nullptr;
 	static bool shaderListChecked = false;
@@ -2253,6 +2354,8 @@ static void report() {
 	logf("[metal] command buffers per frame: %s; skipped draws: %s", reasons.c_str(), skips.empty() ? "none" : skips.c_str());
 	logf("[metal] pipeline cache: %llu/%llu lookup hits, %zu retained pipelines, %zu unique input descriptions (session totals).",
 	     (unsigned long long)R->pipelineHits,(unsigned long long)R->pipelineLookups,R->pipes.size(),R->pipelineInputs.size());
+	logf("[metal] startup pipeline warmup: %llu requested, %llu first used after ready; %s (session totals).",
+	     (unsigned long long)R->warmupMade,(unsigned long long)R->warmupUsed,R->warmupStopped ? "stopped" : "loading only");
 	if (R->bcNativeCreated || R->bcFallbackCreated)
 		logf("[metal] BC totals: %llu native textures created, %llu CPU fallback textures created, %.1f MB native blocks uploaded, %.1f MB CPU decoded pixels",
 		     (unsigned long long)R->bcNativeCreated,(unsigned long long)R->bcFallbackCreated,
@@ -2289,9 +2392,11 @@ static void loop() {
 				// (at most every 2 ms: the engine issues dozens of occlusion queries per frame between short ring gaps)
 				bool waiting = !R->pendingQueries.empty();
 				if (waiting && nowMs() - R->lastCommitMs >= 2) { commit(CIdle); waiting = false; }
+				warmupPipelines();
+				bool compilingStartup=!R->warmupStopped && !R->pipelineSeeds.empty() && R->pipesPending.load()>0;
 				hdr[5].store(1);
 				double i0 = nowMs();
-				if (hdr[0].load() == tail) PGGraphicsWait(R->ring, tail, (waiting ? 2 : 100) * 1000000ll);
+				if (hdr[0].load() == tail) PGGraphicsWait(R->ring, tail, ((waiting || compilingStartup) ? 2 : 100) * 1000000ll);
 				R->work.idle += nowMs() - i0;
 				hdr[5].store(0);
 				report();
@@ -2350,6 +2455,9 @@ static bool setup() {
 	R->borderColors = [R->device supportsFamily:MTLGPUFamilyApple7];
 	R->bcTextures = R->device.supportsBCTextureCompression;
 	if (!loadShaderLibrary(R->device)) return false;
+	R->pipelineSeeds=loadPipelineSeeds();
+	R->warmupQueue.reset(R->pipelineSeeds.size());
+	R->warmupStopped=R->pipelineSeeds.empty();
 	R->zeroBuffer = [R->device newBufferWithLength:65536 options:MTLResourceStorageModeShared];
 	memset(R->zeroBuffer.contents, 0, 65536);
 	R->visibility = [R->device newBufferWithLength:OCCLUSION_SLOTS * 8 options:MTLResourceStorageModeShared];

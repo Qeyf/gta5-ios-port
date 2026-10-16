@@ -468,6 +468,97 @@ static void verifyPipelineInputReuse() {
   puts("PASS: real Metal pipeline reuse across recreated/deleted layouts and separate vertex signatures.");
 }
 
+static bool verifySeedParserAndWarmPipeline() {
+  // This is a real Metal test, not a substitute for execution on an Apple host.
+  if(NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious) {
+    fputs("SKIP: host thermal pressure prevents the production startup warmup policy; no warmup GPU validation performed.\n",stderr);
+    return false;
+  }
+  NSString *json=@"{\"version\":1,\"recipes\":[{\"vs\":\"0123456789abcdef\",\"ps\":\"\",\"el\":[[17,0,16,0,0,0,0]],\"st\":[8],\"b\":null,\"rt\":[],\"ds\":\"depth32float\",\"n\":1,\"ro\":0,\"tp\":4}]}";
+  auto seeds=parsePipelineSeeds([json dataUsingEncoding:NSUTF8StringEncoding]);
+  assert(seeds.size()==1 && seeds[0].strides[0]==8 && seeds[0].depth==MTLPixelFormatDepth32Float);
+  for(NSString *bad in @[@"{}",@"[]",@"{\"version\":2,\"recipes\":[]}",
+                         [json stringByReplacingOccurrencesOfString:@"depth32float" withString:@"unknown"],
+                         [json stringByReplacingOccurrencesOfString:@"[17,0,16,0,0,0,0]" withString:@"[17,0,16,16,0,0,0]"],
+                         [json stringByReplacingOccurrencesOfString:@"[17,0,16,0,0,0,0]" withString:@"[17,0,16,0,4294967295,0,0]"]])
+    assert(parsePipelineSeeds([bad dataUsingEncoding:NSUTF8StringEncoding]).empty());
+  NSError *error=nil;
+  NSString *source=@"#include <metal_stdlib>\nusing namespace metal;\nstruct In {float2 p [[attribute(0)]];};\nvertex float4 seedVertex(In v [[stage_in]]) {return float4(v.p,0.5,1);}";
+  id<MTLLibrary> library=[R->device newLibraryWithSource:source options:nil error:&error];
+  assert(library);
+  ShaderInfo vertexInfo;vertexInfo.uid=11001;vertexInfo.stage=0;
+  vertexInfo.function=[library newFunctionWithName:@"seedVertex"];vertexInfo.inputs={0};
+  assert(vertexInfo.function);
+  auto vertex=std::make_unique<Shader>(0);vertex->info=&vertexInfo;vertex->sig={{17,0,0,15}};
+  const uint32_t signature[]={17,0,0,15};
+  vertex->signatureIdentity=R->pipelineInputs.intern(signature,4);
+  R->warmupStopped=false;R->worldSince=0;R->warmupGeneration=1;
+  R->drawsAtPresent=R->draws;
+  R->requestsAtPresent=R->drawRequests;
+  R->pipelineSeeds=seeds;R->warmupQueue.reset(seeds.size());
+  // With no engine signature, no descriptor/compile is allowed.
+  uint32_t before=R->pipesMade;
+  warmupPipelines();
+  assert(R->pipesMade==before);
+  R->warmupShaders[seeds[0].vs]=std::move(vertex);R->warmupGeneration++;
+  uint32_t layoutWords[]={nextTextureId++,1,17,0,16,0,0,0,0};createLayout(layoutWords);
+  Layout *layout=R->objs.as<Layout>(layoutWords[0],OLayout);
+  uint32_t bufferId=nextTextureId++;
+  auto *stream=new Buffer(bufferId);stream->buf=[R->device newBufferWithLength:32 options:MTLResourceStorageModeShared];
+  stream->size=stream->bytes=32;R->objs.set(bufferId,stream);
+  auto previousVB=R->vb[0];R->vb[0]={bufferId,8,0};
+  PassInfo previousPass=R->passInfo;
+  R->passInfo=PassInfo{};R->passInfo.depth=MTLPixelFormatDepth32Float;
+  R->passInfo.key=passPipelineKey(R->passInfo);
+  uint32_t previousBlend=R->blendId,previousTopo=R->topo,previousLayout=R->layout;
+  R->blendId=0;R->topo=4;R->layout=layoutWords[0];
+  Pipe *previousLast=R->lastPipe;
+  bool previousDirty=R->pipeDirty;
+  auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+  // OS preemption may consume a complete soft-budget slice before any submit.
+  while(R->pipesMade==before && !R->warmupStopped && std::chrono::steady_clock::now()<deadline) {
+    warmupPipelines();
+    if(R->pipesMade==before)std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  if(R->warmupStopped) {
+    fputs("SKIP: pressure stopped startup warmup during the Metal regression.\n",stderr);
+    return false;
+  }
+  assert(R->pipesMade==before+1);
+  assert(R->vb[0].buf==bufferId && R->vb[0].stride==8 && R->layout==layoutWords[0]);
+  assert(R->passInfo.key==passPipelineKey(R->passInfo) && R->lastPipe==previousLast && R->pipeDirty==previousDirty);
+  Shader *actual=R->warmupShaders.at(seeds[0].vs).get();
+  uint64_t used=R->warmupUsed;
+  Pipe *pipe=getPipeline(actual,nullptr,layout);
+  // A cached driver compile may complete before this first demand lookup.
+  assert(R->pipesMade==before+1 && (pipe->prewarmed || R->warmupUsed==used+1));
+  deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+  while(R->pipesPending.load() && std::chrono::steady_clock::now()<deadline)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  assert(!R->pipesPending.load() && pipe->state);
+  assert(getPipeline(actual,nullptr,layout)==pipe && R->warmupUsed==used+1 && !pipe->prewarmed);
+  assert(getPipeline(actual,nullptr,layout)==pipe && R->warmupUsed==used+1);
+
+  // Missing and bound zero-stride streams generate the same constant-step
+  // descriptor and must reuse it. Nonzero stride remains a distinct pipeline.
+  R->vb[0]={};Pipe *constant=getPipeline(actual,nullptr,layout);
+  R->vb[0]={bufferId,0,0};assert(getPipeline(actual,nullptr,layout)==constant && constant!=pipe);
+  deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+  while(R->pipesPending.load() && std::chrono::steady_clock::now()<deadline)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  assert(!R->pipesPending.load() && constant->state);
+
+  R->drawRequests+=301; // Even skipped draws stop speculative work.
+  warmupPipelines();
+  assert(R->warmupStopped && R->pipelineSeeds.empty() && R->warmupShaders.empty());
+  R->vb[0]=previousVB;R->passInfo=previousPass;R->blendId=previousBlend;
+  R->topo=previousTopo;R->layout=previousLayout;R->drawsAtPresent=R->draws;
+  R->requestsAtPresent=R->drawRequests;
+  destroyObject(layoutWords[0]);destroyObject(bufferId);
+  puts("PASS: parsed startup recipe, required actual signature, same Metal warm/demand pipeline, zero-stride reuse and unchanged live state.");
+  return true;
+}
+
 int main() {
   @autoreleasepool {
     verifyFormatSelection();
@@ -512,6 +603,7 @@ int main() {
       (unsigned long)small->tex.allocatedSize,(unsigned long)large->tex.allocatedSize);
     verifyTightAndOversizedSourceStrides();
     verifyPipelineInputReuse();
+    if(!verifySeedParserAndWarmPipeline())return 77;
     verifyNoDrawableScalerReadLifetime();
     verifyForegroundWorkAfterSuspendedCommit();
     free(R->mem); delete R; R = nullptr;

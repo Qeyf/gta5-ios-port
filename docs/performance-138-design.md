@@ -66,6 +66,57 @@ it is written but uncompiled/unrun on this Linux host.
 For the additional engine inputs required by temporal MetalFX and interpolation,
 see [the render input contract](temporal-render-inputs.md).
 
+## Recorded pipeline warmup
+
+The supplied reference worker and matching shader index identify 720 normal
+and 425 low-memory web pipeline recipes: 865 distinct web recipes, referencing
+598 vertex/pixel shaders. All references exist with the correct successful stage
+in the index; its SHA-256 matches the project's pinned shader index. The low
+profile omits shadow pipelines. It is a source of additional recipes, not a
+replacement graphics preset.
+
+`app/Scripts/import_pipeline_seed.py` validates the layout/stride/blend/pass
+inputs and merges both lists into 502 native recipes. It removes web-only
+depth/raster pipeline fields, canonicalizes primitive topology classes and maps
+web depth24/stencil to this renderer's depth32/stencil format. Preserve actual
+blend words, readonly flags, color holes, sample count, shader hashes, vertex
+layouts and strides. The 224,448-byte bundled `pipeline-seed.json` contains source
+checksums; raw uploads and the full shader index are not duplicated in the app.
+Reimport a replacement catalog using the matching shader index; unknown,
+failed/wrong-stage shaders and unsupported formats are errors.
+
+The renderer captures a copy of each real CREATE_SHADER vertex signature while
+loading. No semantic-to-register mapping is guessed from recipe element order.
+When the command ring is empty, it may submit startup compiles through the same
+descriptor builder/cache used by real draws, adding speculative work only while
+fewer than two render compiles are pending, with 32 recipe inspections and a
+soft 0.5 ms submission slice. Later demand misses remain unrestricted; this is
+not a global cap that blocks actual draw requests.
+A driver call can exceed this slice; it is not a hard compiler-time guarantee.
+Missing signatures are retried once when the signature generation advances.
+Copies are independent of engine shader-object lifetimes. No live render state
+is temporarily replaced, no GPU commands are submitted by warmup and no CPU
+compiler/GPU wait is added. Demand work takes priority, and idle sleep shortens
+only while loading compiles remain in flight.
+
+Stop scheduling at the first world-sized frame (>300 attempted draws, using a
+conservative renderer heuristic), independently of the delayed WORLD_READY
+progress event and even if pending pipelines skip actual draws. This does not
+identify every possible scene; a frame below the threshold may still warm up.
+Also stop on serious thermal state, memory-warning/trim request or under 768 MB
+of iOS process headroom. Release recipe/signature copies on stop; only already
+submitted startup jobs remain. A missing/invalid catalog leaves ordinary demand
+compilation available. Existing controls/loading behavior is unchanged. Logs
+distinguish warm requests and actual first ready demand uses. Pipeline binaries
+are not persisted with MTLBinaryArchive by this change.
+
+Portable tests exercise catalog conversion/rejection and generation-limited
+retry/stop. The real Metal harness additionally exercises parsing, signature
+gating, warm/demand state identity, absent/bound zero-stride equivalence and live
+state preservation. Those Apple tests are written but uncompiled/unrun here;
+physical-device stutter and startup-memory effects remain unmeasured. This work
+targets first-use pipeline stalls and does not establish a sustained FPS gain.
+
 ## Verification and build constraints
 
 The requested nektos/act 0.2.89 binary is verified against its official release

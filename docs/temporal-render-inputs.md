@@ -24,6 +24,16 @@ these engine signals. If source is unavailable, a real-device Metal frame
 capture and shader reflection can help investigate what already exists, but
 cannot establish a correct temporal integration in advance.
 
+The subsequently supplied `wgpu_worker.js`, `pipelines.json`,
+`pipelines_low.json` and matching `index.json` have been inspected. They support
+the startup pipeline warmup implementation described in
+[the performance design](performance-138-design.md). The index includes
+`postfx/PS_MotionBlurFPV` and exposure programs, but names alone do not identify
+valid per-frame motion textures, units, jitter, history resets or the UI boundary.
+The command producer/render-pass sources above are still needed for a correct
+temporal integration. The matching shader packs already exist in the validated
+build-input mirror; do not request duplicate asset packs for this investigation.
+
 ## Required per-frame information
 
 | Input | Contract that must be verified |

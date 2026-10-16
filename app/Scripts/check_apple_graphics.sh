@@ -17,7 +17,8 @@ xcrun clang -std=c11 -O2 -mmacosx-version-min=14.0 \
   -c app/Source/BCTextureDecoder.c -o "$checks_dir/bc-decoder.o"
 xcrun clang++ -std=c++20 -O1 -fobjc-arc -fblocks -mmacosx-version-min=14.0 \
   -Iapp/Source -Iapp/Source/MetalRenderer app/Tests/native_bc_metal.mm \
-  app/Source/MetalRenderer/MRShaders.mm app/Source/MetalRenderer/MRSpatialUpscaler.mm "$checks_dir/bc-decoder.o" \
+  app/Source/MetalRenderer/MRShaders.mm app/Source/MetalRenderer/MRSpatialUpscaler.mm \
+  app/Source/MetalRenderer/MRPipelineSeed.mm "$checks_dir/bc-decoder.o" \
   -framework Foundation -framework Metal -framework MetalFX -framework MetalPerformanceShaders \
   -framework QuartzCore -framework CoreGraphics -framework ImageIO -framework UniformTypeIdentifiers \
   -o "$checks_dir/native-bc-metal"
