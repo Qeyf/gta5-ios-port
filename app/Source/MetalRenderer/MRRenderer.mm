@@ -17,6 +17,7 @@
 #include "NativeFrameTiming.h"
 #include "NativeRenderLifecycle.h"
 #include "NativeFrameUploadCache.h"
+#include "NativePipelineInputs.h"
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <TargetConditionals.h>
@@ -150,6 +151,7 @@ struct Renderer {
 	// command buffers
 	id<MTLCommandBuffer> cmd;
 	uint64_t serial = 1;
+	uint64_t buffersInFrame=0;
 	std::atomic<uint64_t> completed{0};
 	dispatch_semaphore_t completion;
 	std::vector<std::function<void()>> onComplete;
@@ -192,6 +194,8 @@ struct Renderer {
 
 	// pipelines
 	std::unordered_map<uint64_t, Pipe *> pipes;
+	PGPipelineInputIds pipelineInputs;
+	uint64_t pipelineLookups=0,pipelineHits=0;
 	std::unordered_map<uint32_t, ComputePipe> computePipes;
 	std::unordered_map<uint64_t, id<MTLDepthStencilState>> dssCache;
 	std::atomic<uint32_t> pipesPending{0};
@@ -314,9 +318,12 @@ static void commit(CommitReason reason, id<CAMetalDrawable> drawable = nil) {
 	Renderer *r = R;
 	auto timing = R->frameTiming;
 	uint64_t timingEpoch = timing->epoch();
+	const uint64_t frame=R->frame,frameBufferCount=++R->buffersInFrame;
+	const uint64_t expectedFrameBuffers=reason==CPresent ? frameBufferCount : 0;
+	if(reason==CPresent)R->buffersInFrame=0;
 	[cb addCompletedHandler:^(id<MTLCommandBuffer> done) {
 		if (done.status == MTLCommandBufferStatusCompleted)
-			timing->gpuCompleted(timingEpoch, done.GPUStartTime, done.GPUEndTime);
+			timing->gpuCompleted(timingEpoch, done.GPUStartTime, done.GPUEndTime,frame,expectedFrameBuffers);
 		if (done.status == MTLCommandBufferStatusError) logOnce("cmderr" + std::to_string(done.error.code), "Metal renderer: command buffer failed: %s", done.error.localizedDescription.UTF8String);
 		for (auto &f : *callbacks) f();
 		delete callbacks;
@@ -903,11 +910,12 @@ static Pipe *getPipeline(Shader *vs, Shader *ps, Layout *lay) {
 	State *blend = state(R->blendId);
 	const PassInfo &pi = R->passInfo;
 	uint64_t key = fnv(fnv(fnv(1469598103934665603ull, vs->info->uid), ps && ps->info ? ps->info->uid : 0), pi.key);
-	key = fnv(key, lay->oid);
+	key = fnv(fnv(key, lay->inputIdentity),vs->signatureIdentity);
 	for (auto &s : lay->slots) { Buffer *b = buffer(R->vb[s.first].buf); key = fnv(key, b && b->buf ? R->vb[s.first].stride : 0xffffffffu); }
 	key = fnv(fnv(key, topologyClass(R->topo)), blend ? blend->hash : 0);
 	auto it = R->pipes.find(key);
-	if (it != R->pipes.end()) return it->second;
+	R->pipelineLookups++;
+	if (it != R->pipes.end()) {R->pipelineHits++;return it->second;}
 
 	auto *pipe = new Pipe();
 	R->pipes[key] = pipe;
@@ -1999,6 +2007,7 @@ static void createShader(const uint32_t *p) {
 	s->hash = hash;
 	uint32_t nin = p[4];
 	for (uint32_t i = 0; i < nin && i < 64; i++) s->sig.push_back({p[5 + i * 4], p[6 + i * 4], p[7 + i * 4], p[8 + i * 4]});
+	s->signatureIdentity=R->pipelineInputs.intern(p+5,std::min(nin,64u)*4);
 	s->info = findShader(s->hash);
 	if (s->info) R->shaderObjects.emplace(s->info, p[0]);
 #if MR_TRACE
@@ -2018,6 +2027,7 @@ static void createShader(const uint32_t *p) {
 static void createLayout(const uint32_t *p) {
 	auto *l = new Layout(p[0]);
 	uint32_t n = p[1];
+	l->inputIdentity=R->pipelineInputs.intern(p+2,std::min(n,32u)*7);
 	uint32_t seen = 0;
 	for (uint32_t i = 0; i < n && i < 32; i++) {
 		const uint32_t *q = p + 2 + i * 7;
@@ -2223,6 +2233,10 @@ static void report() {
 		     R->worldSent ? "world" : "loading", (unsigned long long)timing.displayed, timing.cadence.fps(), timing.p50Ms, timing.cadence.p95Ms, timing.cadence.p99Ms, timing.cadence.maxMs,
 		     timing.gpuMs / std::max(1.0, (double)timing.gpuBuffers), (unsigned long long)timing.gpuBuffers,
 		     timing.drawableWaitMs / submitted, timing.slotWaitMs / submitted, timing.submitMs / submitted, (unsigned long long)timing.missingDrawables);
+		const auto &span=timing.gpuFrameSpan;
+		if(span.frames)logf("[metal] GPU frame span: %llu complete groups, mean %.2f ms, p50/p95/p99 %.1f/%.1f/%.1f ms, max %.1f ms (first start to last end, includes inter-buffer gaps; not GPU occupancy).",
+		     (unsigned long long)span.frames,span.totalMs/span.frames,timing.gpuFrameP50Ms,span.p95Ms,span.p99Ms,span.maxMs);
+		else logf("[metal] GPU frame span: no complete foreground timestamp groups; per-buffer time is not full-frame GPU time.");
 	}
 	if (!R->statT) { R->statT = now; R->statDraws = R->draws; R->statPresents = R->presents; R->statSkips = R->skipped; R->statPending = R->pendingSkips; R->statCommits = R->commits; return; }
 	if (now - R->statT < 10000) return;
@@ -2237,6 +2251,8 @@ static void report() {
 	std::string skips;
 	for (int i = 0; i < 5; i++) if (R->skipReasons[i]) { char b[64]; snprintf(b, sizeof b, "%s%s %llu", skips.empty() ? "" : ", ", skipNames[i], (unsigned long long)R->skipReasons[i]); skips += b; }
 	logf("[metal] command buffers per frame: %s; skipped draws: %s", reasons.c_str(), skips.empty() ? "none" : skips.c_str());
+	logf("[metal] pipeline cache: %llu/%llu lookup hits, %zu retained pipelines, %zu unique input descriptions (session totals).",
+	     (unsigned long long)R->pipelineHits,(unsigned long long)R->pipelineLookups,R->pipes.size(),R->pipelineInputs.size());
 	if (R->bcNativeCreated || R->bcFallbackCreated)
 		logf("[metal] BC totals: %llu native textures created, %llu CPU fallback textures created, %.1f MB native blocks uploaded, %.1f MB CPU decoded pixels",
 		     (unsigned long long)R->bcNativeCreated,(unsigned long long)R->bcFallbackCreated,

@@ -110,6 +110,7 @@ struct Shader : Object {
 	std::string hash;
 	struct Sig { uint32_t sem, idx, reg, mask; };
 	std::vector<Sig> sig;
+	uint64_t signatureIdentity=0;
 };
 
 struct LayoutEl { uint32_t sem, idx, fmt, slot, offset, cls, rate; };
@@ -117,6 +118,7 @@ struct Layout : Object {
 	Layout(uint32_t i) : Object(OLayout, i) {}
 	std::vector<LayoutEl> els;
 	std::vector<std::pair<uint32_t, uint32_t>> slots;		// (slot, class) once per slot
+	uint64_t inputIdentity=0;
 };
 
 struct State : Object {

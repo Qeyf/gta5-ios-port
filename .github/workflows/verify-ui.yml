@@ -63,7 +63,7 @@ jobs:
         run: node --test diagnostics/worker.test.mjs
       - name: Verify Metal suspension and completed upload cache reclamation
         run: |
-          for test in render_lifecycle frame_upload_cache frame_timing; do
+          for test in render_lifecycle frame_upload_cache frame_timing pipeline_inputs; do
             c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
               "app/Tests/$test.cpp" -o "$RUNNER_TEMP/check-$test"
             "$RUNNER_TEMP/check-$test"

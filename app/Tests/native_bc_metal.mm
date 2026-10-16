@@ -3,6 +3,7 @@
 #include "../Source/MetalRenderer/MRRenderer.mm"
 #include <cassert>
 #include <cstdlib>
+#include <chrono>
 #include <thread>
 
 // A drawable may be unavailable while previously encoded GPU work still runs.
@@ -426,6 +427,47 @@ static void verifyNoDrawableScalerReadLifetime() {
   puts("PASS: production no-drawable PRESENT retains scaler source lifetime bookkeeping.");
 }
 
+static void verifyPipelineInputReuse() {
+  NSError *error=nil;
+  NSString *source=@"#include <metal_stdlib>\nusing namespace metal;\nstruct Input {float2 position [[attribute(0)]];float2 offset [[attribute(1)]];};\nstruct Output {float4 p [[position]];};\nvertex Output cacheVertex(Input v [[stage_in]]) {return {float4(v.position+v.offset,0,1)};}\nfragment float4 cacheFragment() {return float4(1,0,0,1);}";
+  id<MTLLibrary> library=[R->device newLibraryWithSource:source options:nil error:&error];
+  assert(library);
+  ShaderInfo vertexInfo,pixelInfo;
+  vertexInfo.uid=10001;vertexInfo.function=[library newFunctionWithName:@"cacheVertex"];
+  vertexInfo.inputs={0,1};
+  pixelInfo.uid=10002;pixelInfo.function=[library newFunctionWithName:@"cacheFragment"];pixelInfo.outputs={0};
+  Shader vertex(0),pixel(0);vertex.info=&vertexInfo;pixel.info=&pixelInfo;
+  const uint32_t signature[]={17,0,0,15,18,0,1,15};
+  vertex.sig={{17,0,0,15},{18,0,1,15}};
+  vertex.signatureIdentity=R->pipelineInputs.intern(signature,8);
+  PassInfo previous=R->passInfo;
+  R->passInfo=PassInfo{};R->passInfo.colors[0]=MTLPixelFormatBGRA8Unorm;
+  R->passInfo.colorCount=1;R->passInfo.key=0x138ca;
+  const uint32_t before=R->pipesMade;
+  uint32_t a[]={nextTextureId++,2,17,0,16,0,0,0,0,18,0,16,0,8,0,0};
+  uint32_t b[]={nextTextureId++,2,17,0,16,0,0,0,0,18,0,16,0,8,0,0};
+  createLayout(a);createLayout(b);
+  Pipe *first=getPipeline(&vertex,&pixel,R->objs.as<Layout>(a[0],OLayout));
+  Pipe *recreated=getPipeline(&vertex,&pixel,R->objs.as<Layout>(b[0],OLayout));
+  assert(first==recreated && R->pipesMade==before+1 && "Equal vertex input layouts must share one actual Metal pipeline.");
+  destroyObject(a[0]);destroyObject(b[0]);
+  uint32_t c[]={nextTextureId++,2,17,0,16,0,0,0,0,18,0,16,0,8,0,0};createLayout(c);
+  assert(getPipeline(&vertex,&pixel,R->objs.as<Layout>(c[0],OLayout))==first);
+  // The same shader program with another semantic-to-register signature must
+  // not accidentally reuse a descriptor built from the preceding signature.
+  const uint32_t remapped[]={17,0,1,15,18,0,0,15};
+  vertex.sig={{17,0,1,15},{18,0,0,15}};
+  vertex.signatureIdentity=R->pipelineInputs.intern(remapped,8);
+  Pipe *different=getPipeline(&vertex,&pixel,R->objs.as<Layout>(c[0],OLayout));
+  assert(different!=first && R->pipesMade==before+2);
+  auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+  while(R->pipesPending.load() && std::chrono::steady_clock::now()<deadline)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  assert(!R->pipesPending.load() && first->state && different->state);
+  destroyObject(c[0]);R->passInfo=previous;
+  puts("PASS: real Metal pipeline reuse across recreated/deleted layouts and separate vertex signatures.");
+}
+
 int main() {
   @autoreleasepool {
     verifyFormatSelection();
@@ -469,6 +511,7 @@ int main() {
     fprintf(stderr,"BC1 1024x1024 GPU allocation: native %lu bytes, decoded %lu bytes\n",
       (unsigned long)small->tex.allocatedSize,(unsigned long)large->tex.allocatedSize);
     verifyTightAndOversizedSourceStrides();
+    verifyPipelineInputReuse();
     verifyNoDrawableScalerReadLifetime();
     verifyForegroundWorkAfterSuspendedCommit();
     free(R->mem); delete R; R = nullptr;

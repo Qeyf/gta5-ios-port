@@ -5,6 +5,8 @@
 - Grafik ayarlarına Apple MetalFX Kalite, MetalFX Performans ve Doğal çözünürlük seçenekleri eklendi. Seçilen çıkış çözünürlüğü korunur; iç render boyutu Kalite'de her eksende 2/3, Performans'ta 1/2 olur. Bu, yaklaşık %56 veya %75 daha az render pikselidir; FPS artışı ölçümü değildir. Desteklenmeyen GPU'lar doğal çözünürlüğü kullanır. Ayarlar giriş ve çıkış boyutunu Türkçe/İngilizce gösterir.
 - Yükseltme mevcut Metal komut akışında Apple'ın `MTLFXSpatialScaler` API'sini kullanır; çözünürlük geçişleri veya oluşturma başarısızlığı için `MPSImageBilinearScale` yolu bulunur. Kare üretimi eklenmez. Görüntü ve oyun arayüzü birlikte yükseltilir; doğal çözünürlük tam boyutta render seçeneğidir.
 - GPU'da sıkıştırılmış BC dokularının her mip seviyesi için RAM'de tutulan kalıcı ikinci kopya kaldırıldı. Yerel BC kopyaları ve okumaları sıralı GPU blit işlemleriyle yapılır; CPU ile çözülen eski cihaz yolu asıl blokları saklamaya devam eder. RAM kazancının miktarı henüz cihazda ölçülmedi.
+- Aynı vertex düzeni yeni nesne kimliğiyle tekrar oluşturulduğunda aynı Metal pipeline'ının yeniden derlenmesi önlendi. Önbellek gerçek düzen ve vertex imza içeriğini paylaşır; farklı eşlemeler, tampon stride değerleri ve render durumları ayrı kalır. Tekrar kullanım sayaçları günlüğe eklenmiştir.
+- Günlükte tamamlanmış bir karenin ilk GPU başlangıcından son GPU bitişine kadar olan aralık ayrıca ölçülür. Komut tamponu ortalamasıyla karıştırılmaz; tamponlar arası boşlukları içerir ve GPU doluluk ölçümü değildir. Sıra dışı callback, eksik zaman damgası ve arka plan geçişleri için testler eklendi.
 - GitHub Actions kotası kullanmayan yerel `nektos/act` kontrolleri ve Mac IPA tarifi eklendi. Linux'ta taşınabilir testler geçti; bu sürüm henüz Apple SDK ile derlenmedi, GPU'da veya iPhone'da doğrulanmadı ve yayımlanmadı. Kararlı 120 FPS iddiası yoktur.
 
 **English**
@@ -12,6 +14,8 @@
 - Added Apple MetalFX Quality, MetalFX Performance and Native resolution choices. Preserve selected output resolution while rendering at 2/3 or 1/2 of each dimension: approximately 56% or 75% fewer rendered pixels, not a measured FPS gain. Unsupported GPUs retain native rendering. EN/TR settings show input and output sizes.
 - Encode Apple's `MTLFXSpatialScaler` in the existing Metal command stream, with `MPSImageBilinearScale` for resolution transitions or scaler creation failure. No frame generation. Scene and game UI are upscaled together; Native remains the full-resolution option.
 - Remove permanent CPU duplicates of native BC texture mip data. Native copies/readbacks use ordered GPU blits; CPU-decoded fallback textures retain original blocks. Actual device memory savings remain unmeasured.
+- Reuse actual input-layout/vertex-signature contents across recreated engine objects instead of compiling another identical Metal pipeline for each new object ID. Preserve distinct signatures, buffer strides and render state; expose session cache counters.
+- Report completed first-GPU-start to last-GPU-end frame intervals separately from average command-buffer duration. This includes inter-buffer gaps and is not GPU occupancy. Tests cover out-of-order/concurrent handlers, incomplete timestamps and foreground transitions.
 - Add local `nektos/act` checks and a Mac IPA recipe without hosted Actions minutes. Portable checks passed on Linux. This development version has not been compiled with Apple's SDK, executed on an Apple GPU or tested on iPhone, and is not released. No sustained 120 FPS claim.
 
 ## 1.3.7 — Değişiklikler / Changes

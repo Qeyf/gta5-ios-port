@@ -15,7 +15,7 @@ for test in cheat_input loading_state engine_configuration native_bc_layout upsc
   "$checks_dir/$test"
 done
 
-for test in render_lifecycle frame_upload_cache frame_timing frame_rate; do
+for test in render_lifecycle frame_upload_cache frame_timing frame_rate pipeline_inputs; do
   c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iapp/Source \
     "app/Tests/$test.cpp" -o "$checks_dir/$test"
   "$checks_dir/$test"
