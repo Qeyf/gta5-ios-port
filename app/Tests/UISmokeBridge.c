@@ -106,6 +106,8 @@ double PGRenderedFramesPerSecond(void) { return 0; }
 void PGAttachMetalLayer(void *layer) { (void)layer; }
 void PGSetGraphicsActive(bool active) { (void)active; }
 void PGTrimGraphicsMemory(void) {}
+bool PGSupportsMetalFXSpatial(void) { return false; }
+void PGSetPresentationSize(int32_t width,int32_t height) { (void)width;(void)height; }
 void PGStartGraphics(void *memory, uint64_t memorySize, uint64_t ring,
                      uint64_t ringSize, uint64_t debug) {
   (void)memory; (void)memorySize; (void)ring; (void)ringSize; (void)debug;

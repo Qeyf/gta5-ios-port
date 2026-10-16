@@ -5,6 +5,13 @@
 #include <cstdlib>
 #include <thread>
 
+// A drawable may be unavailable while previously encoded GPU work still runs.
+@interface PGNoDrawableTestLayer : CAMetalLayer
+@end
+@implementation PGNoDrawableTestLayer
+- (id<CAMetalDrawable>)nextDrawable { return nil; }
+@end
+
 extern "C" void pg_log(const char *line) { fprintf(stderr,"%s\n",line); }
 extern "C" uint32_t PGGraphicsNotify(uint64_t) { return 0; }
 extern "C" uint32_t PGGraphicsWait(uint64_t,uint32_t,int64_t) { return 0; }
@@ -132,8 +139,8 @@ static void probeBC1UploadsAndReads() {
     completeGPU();
     uint8_t actual[sizeof solidRed] = {};
     [t->tex getBytes:actual bytesPerRow:8 bytesPerImage:0 fromRegion:MTLRegionMake2D(0,0,4,4) mipmapLevel:0 slice:0];
-    const auto &shadow = t->compressedShadow.at(0);
-    bool bytesMatch = shadow.size() == sizeof actual && !memcmp(actual,shadow.data(),sizeof actual);
+    assert(t->compressedShadow.empty() && "Native BC blocks must not be permanently duplicated on the CPU.");
+    bool bytesMatch = !memcmp(actual,solidRed,sizeof actual);
     // Bind the base texture directly: this probe has no array, mip or SRV view.
     id<MTLBuffer> read = probeBaseTexture(t->tex,samplingPipeline);
     id<MTLBuffer> sampled = probeBaseTexture(t->tex,nearestSamplingPipeline);
@@ -171,8 +178,7 @@ static void probeBC1PartialUpdates() {
     uint8_t actual[32] = {};
     [t->tex getBytes:actual bytesPerRow:16 bytesPerImage:0 fromRegion:MTLRegionMake2D(0,0,8,8) mipmapLevel:0 slice:0];
     bool rawCorrect = !memcmp(actual,expected,sizeof actual);
-    bool shadowCorrect = t->compressedShadow.at(0).size() == sizeof expected &&
-      !memcmp(t->compressedShadow.at(0).data(),expected,sizeof expected);
+    bool shadowCorrect = t->compressedShadow.empty();
     bool gpuCorrect = true;
     const float *values = (const float *)after.contents;
     for (unsigned y = 0; y < 8; y++) for (unsigned x = 0; x < 8; x++) for (unsigned channel = 0; channel < 4; channel++) {
@@ -183,7 +189,7 @@ static void probeBC1PartialUpdates() {
     }
     bool beforeCorrect = !before || probeIsSolidRed(before);
     const float *bottom = values+(4*8+4)*4;
-    fprintf(stderr,"BC1 partial %s: original-block shadow=%s, GPU raw blocks=%s [top-left %02x %02x, bottom-right %02x %02x], top-left=(%.6g %.6g %.6g %.6g), bottom-right=(%.6g %.6g %.6g %.6g), pixels=%s, preceding read=%s\n",
+    fprintf(stderr,"BC1 partial %s: no duplicate CPU blocks=%s, GPU raw blocks=%s [top-left %02x %02x, bottom-right %02x %02x], top-left=(%.6g %.6g %.6g %.6g), bottom-right=(%.6g %.6g %.6g %.6g), pixels=%s, preceding read=%s\n",
       staged ? "GPU staging after encoded read" : "GPU staging without pending reads",
       shadowCorrect ? "correct" : "INCORRECT",rawCorrect ? "correct" : "INCORRECT",actual[0],actual[1],actual[24],actual[25],
       values[0],values[1],values[2],values[3],bottom[0],bottom[1],bottom[2],bottom[3],
@@ -193,19 +199,72 @@ static void probeBC1PartialUpdates() {
   assert(correct && "Partial BC1 updates must preserve untouched blocks before and after prior GPU reads.");
 }
 
-static void checkReadback(Texture *t,uint32_t mip,uint32_t layer) {
+static void checkReadback(Texture *t,uint32_t mip,uint32_t layer,Texture *reference=nullptr) {
+  if(!reference)reference=t;
   uint32_t w,h,d; mipExtent(t,mip,w,h,d);
   PGBCUploadLayout layout;
   assert(pg_bc_upload_layout(t->bcKind,w,h,1,0,0,SIZE_MAX,&layout));
-  const auto &expected = t->compressedShadow.at(((uint64_t)mip<<32)|layer);
+  const auto &expected = reference->compressedShadow.at(((uint64_t)mip<<32)|layer);
   assert(expected.size() == layout.imageBytes && expected.size()+4096 < R->memSize);
   memset(R->mem+4096,0x55,expected.size());
   *(uint32_t *)(R->mem+128) = 1;
   uint32_t p[17] = {t->oid,t->dim == 3 ? mip : mip+layer*t->mips,t->dim == 3 ? 1u : 0u,0,0,layer,w,h,layer+1,
     4096,0,(uint32_t)layout.rowBytes,(uint32_t)layout.imageBytes,0,(uint32_t)layout.imageBytes,128,0};
+  uint64_t serial=R->serial;
   readback(p);
+  completeGPU();
+  if(R->serial>serial)waitSerial(serial);
   assert(*(uint32_t *)(R->mem+128) == 0);
   assert(!memcmp(R->mem+4096,expected.data(),expected.size()));
+}
+
+static void checkPartialPaddedReadback(Texture *native,Texture *fallback) {
+  // Capture the right block-column in both rows of array slice 1. Destination
+  // padding/guards must survive, and a following upload must not change this
+  // pending readback's original bytes.
+  PGBCUploadLayout full,region;
+  assert(pg_bc_upload_layout(native->bcKind,8,8,1,0,0,SIZE_MAX,&full));
+  assert(pg_bc_upload_layout(native->bcKind,4,8,1,0,0,SIZE_MAX,&region));
+  const auto original=fallback->compressedShadow.at(1);
+  const uint32_t pitch=(uint32_t)region.rowBytes+13;
+  const size_t span=region.rows*pitch+16;
+  std::vector<uint8_t> expected(span,0x55);
+  for(size_t row=0;row<region.rows;row++)
+    memcpy(expected.data()+row*pitch,original.data()+row*full.rowBytes+bcBlockBytes(native->bcKind),region.rowBytes);
+  memset(R->mem+4096,0x55,span);
+  *(uint32_t *)(R->mem+128)=1;
+  uint32_t p[17]={native->oid,native->mips,1,4,0,0,8,8,1,4096,0,pitch,(uint32_t)span,0,(uint32_t)span,128,0};
+  uint64_t serial=R->serial;
+  readback(p);
+  assert(R->serial>serial && "A valid native BC readback must submit its GPU copy.");
+  assert(native->lastUse==serial && "Readback must prevent early CPU replacement of its source.");
+  const auto replacement=blocks(native->bcKind,full.imageBytes*native->depthOrLayers,0x6578ac1u+native->bcKind);
+  for(Texture *t:{native,fallback})
+    uploadTextureBytes(t,0,0,0,0,0,8,8,t->depthOrLayers,(uint32_t)full.rowBytes,0,replacement.data(),replacement.size());
+  completeGPU();
+  waitSerial(serial);
+  assert(*(uint32_t *)(R->mem+128)==0);
+  assert(!memcmp(R->mem+4096,expected.data(),span));
+  checkReadback(native,0,1,fallback);
+  compare(sample(native,0,1),sample(fallback,0,1),native->bcKind,"upload after partial padded readback");
+}
+
+static void verifyOverlappingCopy(uint32_t dxgi) {
+  Texture *native=makeTexture(dxgi,12,4,1,1,true),*fallback=makeTexture(dxgi,12,4,1,1,false);
+  uploadPair(native,fallback,0,0x2c39e61u+dxgi,false);
+  const auto original=fallback->compressedShadow.at(0);
+  auto expected=original;
+  size_t block=bcBlockBytes(native->bcKind);
+  // [A,B,C] -> [A,A,B]: source and destination share the middle block.
+  memcpy(expected.data()+block,original.data(),2*block);
+  for(Texture *t:{native,fallback}) {
+    uint32_t p[14]={t->oid,0,4,0,0,t->oid,0,1,0,0,0,8,4,1};
+    copyRegion(p);
+  }
+  assert(fallback->compressedShadow.at(0)==expected);
+  assert(native->compressedShadow.empty());
+  checkReadback(native,0,0,fallback);
+  compare(sample(native,0,0),sample(fallback,0,0),native->bcKind,"overlapping two-block self-copy");
 }
 
 static void verifyFormat(uint32_t dxgi) {
@@ -221,11 +280,13 @@ static void verifyFormat(uint32_t dxgi) {
   for (uint32_t mip = 0; mip < 4; mip++) for (uint32_t layer = 0; layer < 2; layer++) {
     char stage[64]; snprintf(stage,sizeof stage,"initial chain mip %u layer %u",mip,layer);
     compare(sample(native,mip,layer),sample(fallback,mip,layer),native->bcKind,stage);
-    checkReadback(native,mip,layer); checkReadback(fallback,mip,layer);
+    checkReadback(native,mip,layer,fallback); checkReadback(fallback,mip,layer);
   }
   // Odd source padding must repack into block-aligned rows before a Metal blit.
   uploadPair(native,fallback,0,0x9f00812u+dxgi,true);
   compare(sample(native,0,1),sample(fallback,0,1),native->bcKind,"odd-padded source upload layer 1");
+  checkPartialPaddedReadback(native,fallback);
+  verifyOverlappingCopy(dxgi);
 
   for (bool destinationNative : {true,false}) {
     Texture *target = makeTexture(dxgi,8,8,4,2,destinationNative);
@@ -233,8 +294,8 @@ static void verifyFormat(uint32_t dxgi) {
     for (uint32_t mip = 0; mip < 4; mip++) {
       char stage[80]; snprintf(stage,sizeof stage,"CopyResource native source to %s destination mip %u layer 1",destinationNative ? "native" : "decoded",mip);
       compare(sample(target,mip,1),sample(fallback,mip,1),native->bcKind,stage);
-      assert(target->compressedShadow.at(((uint64_t)mip<<32)|1) == native->compressedShadow.at(((uint64_t)mip<<32)|1));
-      checkReadback(target,mip,1);
+      if(target->hardwareBC)assert(target->compressedShadow.empty());
+      checkReadback(target,mip,1,fallback);
     }
     // Software source to native destination is the reverse mixed-format path.
     copyResource(target->oid,fallback->oid);
@@ -246,17 +307,30 @@ static void verifyFormat(uint32_t dxgi) {
     copyRegion(region);
   }
   compare(sample(native,0,0),sample(fallback,0,0),native->bcKind,"self-copy 4x4 block to bottom-right of 8x8 mip");
-  assert(native->compressedShadow.at(0) == fallback->compressedShadow.at(0));
-  std::vector<uint8_t> beforeInvalid = native->compressedShadow.at(0);
+  assert(native->compressedShadow.empty());
+  checkReadback(native,0,0,fallback);
+  std::vector<uint8_t> beforeInvalid = fallback->compressedShadow.at(0);
   uint64_t uploadedBeforeInvalid = R->bcNativeUploadBytes;
   uploadTextureBytes(native,0,0,0,0,0,8,8,1,0,0,beforeInvalid.data(),beforeInvalid.size()-1);
-  assert(native->compressedShadow.at(0) == beforeInvalid && R->bcNativeUploadBytes == uploadedBeforeInvalid);
+  assert(native->compressedShadow.empty() && R->bcNativeUploadBytes == uploadedBeforeInvalid);
+  checkReadback(native,0,0,fallback);
   // Both directions of an sRGB/linear reinterpretation use actual SRV views.
   if (native->bcKind == 1 || native->bcKind == 2 || native->bcKind == 3 || native->bcKind == 7) {
     compare(sample(native,0,0,dxgi+1),sample(fallback,0,0,dxgi+1),native->bcKind,"linear texture sampled through sRGB SRV");
     Texture *s = makeTexture(dxgi+1,8,8,4,2,true), *f = makeTexture(dxgi+1,8,8,4,2,false);
-    uploadPair(s,f,0,0x315fca1u+dxgi,false);
+    for(uint32_t mip=0;mip<4;mip++)uploadPair(s,f,mip,0x315fca1u+dxgi+mip,false);
     compare(sample(s,0,0,dxgi),sample(f,0,0,dxgi),native->bcKind,"sRGB texture sampled through linear SRV");
+    // Different native Metal formats must snapshot their exact BC bytes via
+    // the staging buffer, preserving bits without a gamma conversion.
+    copyResource(s->oid,native->oid);
+    copyResource(f->oid,fallback->oid);
+    checkReadback(s,0,1,fallback);
+    compare(sample(s,0,1),sample(f,0,1),native->bcKind,"native linear to sRGB copy");
+    uploadPair(s,f,0,0xa17c4e3u+dxgi,false);
+    copyResource(native->oid,s->oid);
+    copyResource(fallback->oid,f->oid);
+    checkReadback(native,0,1,f);
+    compare(sample(native,0,1),sample(fallback,0,1),native->bcKind,"native sRGB to linear copy");
   }
 }
 
@@ -305,7 +379,7 @@ static void verifyTightAndOversizedSourceStrides() {
     for (Texture *t : {native,fallback})
       uploadTextureBytes(t,0,0,0,0,0,4,4,1,pitch,0,source.data(),source.size());
     compare(sample(native,0,0),sample(fallback,0,0),1);
-    checkReadback(native,0,0);
+    checkReadback(native,0,0,fallback);
   }
 }
 
@@ -329,6 +403,27 @@ static void verifyForegroundWorkAfterSuspendedCommit() {
   id<MTLCommandBuffer> final=lastSubmitted;
   [final waitUntilCompleted];waitSerial(R->serial-1);
   puts("PASS: production non-present commit/PRESENT drops suspension-spanning work.");
+}
+
+static void verifyNoDrawableScalerReadLifetime() {
+  if(![MTLFXSpatialScalerDescriptor supportsDevice:R->device])return;
+  completeGPU();
+  Texture *source=makeTexture(28,384,216,1,1,false);
+  std::vector<uint8_t> pixels(384*216*4,255);
+  uploadTextureBytes(source,0,0,0,0,0,384,216,1,384*4,0,pixels.data(),pixels.size());
+  PGNoDrawableTestLayer *layer=[PGNoDrawableTestLayer new];
+  layer.device=R->device;layer.pixelFormat=MTLPixelFormatBGRA8Unorm;
+  R->layer=layer;
+  PGMetalRendererSetPresentationSize(768,432);
+  uint64_t serial=R->serial;
+  present(source->oid);
+  assert(R->upscaler.usesMetalFX());
+  assert(source->lastUse==serial && "MetalFX reads must protect the source even without a drawable.");
+  id<MTLCommandBuffer> submitted=lastSubmitted;
+  [submitted waitUntilCompleted];waitSerial(serial);
+  assert(submitted.status==MTLCommandBufferStatusCompleted);
+  PGMetalRendererSetPresentationSize(0,0);R->upscaler.reset();R->layer=nil;
+  puts("PASS: production no-drawable PRESENT retains scaler source lifetime bookkeeping.");
 }
 
 int main() {
@@ -374,6 +469,7 @@ int main() {
     fprintf(stderr,"BC1 1024x1024 GPU allocation: native %lu bytes, decoded %lu bytes\n",
       (unsigned long)small->tex.allocatedSize,(unsigned long)large->tex.allocatedSize);
     verifyTightAndOversizedSourceStrides();
+    verifyNoDrawableScalerReadLifetime();
     verifyForegroundWorkAfterSuspendedCommit();
     free(R->mem); delete R; R = nullptr;
     puts("PASS: real GPU BC1–BC7 sampling versus CPU fallback, in-flight and padded uploads, tail mips, array/cube views, sRGB twins, mixed copies, overlap and original-block readbacks.");

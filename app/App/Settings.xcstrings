@@ -2176,6 +2176,125 @@
           }
         }
       }
+    },
+    "Native resolution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Native resolution"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doğal çözünürlük"
+          }
+        }
+      }
+    },
+    "MetalFX Quality": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MetalFX Quality"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MetalFX Kalite"
+          }
+        }
+      }
+    },
+    "MetalFX Performance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MetalFX Performance"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MetalFX Performans"
+          }
+        }
+      }
+    },
+    "Image upscaling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image upscaling"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüntü ölçekleme"
+          }
+        }
+      }
+    },
+    "Apple MetalFX draws fewer pixels and scales to the selected resolution. Native renders at full resolution.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple MetalFX draws fewer pixels and scales to the selected resolution. Native renders at full resolution."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple MetalFX daha az piksel çizip seçilen çözünürlüğe büyütür. Doğal mod tam çözünürlükte çizer."
+          }
+        }
+      }
+    },
+    "MetalFX is unavailable on this GPU; native resolution is used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MetalFX is unavailable on this GPU; native resolution is used."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu GPU’da MetalFX kullanılamıyor; doğal çözünürlük kullanılır."
+          }
+        }
+      }
+    },
+    "Renders at %lld×%lld → output %lld×%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renders at %lld×%lld → output %lld×%lld"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çizim %lld×%lld → çıkış %lld×%lld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

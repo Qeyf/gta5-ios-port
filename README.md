@@ -16,9 +16,13 @@ The public fork runs **Verify GtaV Mobile UI and translations**, which compiles 
 
 ### Versioned IPA releases
 
+For local checks and an IPA build without hosted Actions minutes, see
+[local builds with nektos/act](docs/local-build.md). Linux supports the portable
+checks; the real Metal tests and IPA still require an Apple Silicon Mac/Xcode.
+
 CI explicitly selects stable Xcode 27 and the iOS 27 SDK on the `xcode-27` Apple Silicon image. The app adopts Apple's single-window `UIWindowSceneDelegate` lifecycle, required for launch with SDK 27, while supporting iOS 17 and later. Local Mac builds produce `GtaV Mobile.ipa`; GitHub releases use **`GtaV-Mobile.ipa`** so the downloaded filename matches `release-metadata.json` and `SHA256SUMS` exactly.
 
-Every successful **Build GtaV Mobile IPA** run automatically publishes a new private Release containing `GtaV-Mobile.ipa`, `release-metadata.json`, `SHA256SUMS` and bilingual release notes. The notes include the actual packaged version/build, source commit, workflow link, minimum iOS, languages, file size, SHA-256 and toolchain. Publication rejects an IPA with a missing or unusable scene manifest. Previous releases are retained. Version `1.3.3` and base build `8` live in `app/project.yml`; workflow run 4 produces build `12.1`, its retry `12.2`. The tag comes from the packaged plist, for example `v1.3.3-build.12.1`.
+Every successful **Build GtaV Mobile IPA** hosted run automatically publishes a new private Release containing `GtaV-Mobile.ipa`, `release-metadata.json`, `SHA256SUMS` and bilingual release notes. The notes include the actual packaged version/build, source commit, workflow link, minimum iOS, languages, file size, SHA-256 and toolchain. Publication rejects an IPA with a missing or unusable scene manifest. Previous releases are retained. `app/project.yml` holds the source version and base build; hosted runs add their run number and attempt. The tag always comes from the actual packaged plist.
 
 Qeyf's existing **`Qeyf/muguet-ios-game-build`** private repository can invoke this workflow using a pinned source commit and its own private input Release. In **Actions › Build GtaV Mobile › Run workflow**, provide the name and SHA-256 of a shader ZIP uploaded to the same input Release. The shader-folder ZIP may include an identical `index.json`; it must include all 18 packs referenced by that index. The existing engine/manifest/index ZIP alone is insufficient. Input checks run on Linux before the macOS build, and missing/truncated packs block publication.
 

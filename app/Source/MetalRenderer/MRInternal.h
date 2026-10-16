@@ -81,7 +81,8 @@ struct Texture : Object {
 	bool bcSrgb = false;
 	uint64_t lastUse = 0;		// command buffer serial that last referenced it
 	std::unordered_map<uint64_t, id<MTLTexture>> views;
-	std::unordered_map<uint64_t, std::vector<uint8_t>> compressedShadow;		// "mip:layer" -> original blocks, for CPU readbacks
+	std::unordered_map<uint64_t, std::vector<uint8_t>> compressedShadow;		// decoded fallback only: "mip:layer" -> original blocks
+	uint64_t compressedShadowBytes=0;
 	Texture *depthProxy = nullptr;		// r32float copy of a depth texture, for shaders that read it as float (if needed)
 	bool proxyDirty = true;
 	~Texture() override;

@@ -10,6 +10,7 @@
 #include "MRInternal.h"
 #include "MetalRenderer.h"
 #include "MRFrameReports.h"
+#include "MRSpatialUpscaler.h"
 #include "BCTextureDecoder.h"
 #include "NativeBCTextures.h"
 #include "NativeFrameRate.h"
@@ -31,7 +32,11 @@
 
 namespace mr {
 
-Texture::~Texture() { delete depthProxy; }
+static std::atomic<uint64_t> compressedShadowLiveBytes{0};
+Texture::~Texture() {
+	compressedShadowLiveBytes.fetch_sub(compressedShadowBytes,std::memory_order_relaxed);
+	delete depthProxy;
+}
 
 static const uint32_t RING_DATA = 64;
 enum Op : uint32_t {
@@ -206,6 +211,8 @@ struct Renderer {
 	id<MTLSamplerState> dummySampler, dummyCompare;
 	id<MTLRenderPipelineState> blitPipe, capturePipe;
 	id<MTLDepthStencilState> noDepth;
+	SpatialUpscaler upscaler;
+	uint64_t presentationLogKey=UINT64_MAX;
 
 	// game shader objects by program (the first object created for each), for program substitutions
 	std::unordered_map<ShaderInfo *, uint32_t> shaderObjects;
@@ -237,6 +244,7 @@ static id<MTLCommandBuffer> lastSubmitted;
 // UIKit memory warnings request a trim; the renderer performs it only after
 // each upload slot's GPU work completes. No resources mutate on the UI thread.
 static std::atomic<uint64_t> uploadTrimGeneration{0};
+static std::atomic<uint64_t> presentationSize{0};
 
 // ---- debug trace (simulator only, env PG_MR_TRACE=<seconds after the world is shown>) ---------------------------------
 // Writes every command of one frame (draws with their shaders, targets, states and textures; clears, copies) to
@@ -497,6 +505,9 @@ static uint32_t decodedBytes(int kind) { return kind == 4 ? 1 : kind == 5 ? 2 : 
 
 static bool storeCompressed(Texture *t, uint32_t mip, uint32_t slice, uint32_t x, uint32_t y, uint32_t z, uint32_t d,
                             const PGBCUploadLayout &layout, const uint8_t *data) {
+	// The native texture already contains the exact compressed blocks. Only a
+	// decoded fallback needs a CPU copy to reconstruct the original BC format.
+	if(t->hardwareBC)return true;
 	uint32_t mw, mh, md; mipExtent(t, mip, mw, mh, md);
 	PGBCUploadLayout target;
 	if (!pg_bc_upload_layout(t->bcKind, mw, mh, 1, 0, 0, SIZE_MAX, &target)) return false;
@@ -507,7 +518,11 @@ static bool storeCompressed(Texture *t, uint32_t mip, uint32_t slice, uint32_t x
 	for (uint32_t layer = 0; layer < d; layer++) {
 		uint64_t key = ((uint64_t)mip << 32) | (three ? z + layer : slice + layer);
 		auto &shadow = t->compressedShadow[key];
-		if (shadow.empty()) shadow.resize(target.imageBytes);
+		if (shadow.empty()) {
+			shadow.resize(target.imageBytes);
+			t->compressedShadowBytes+=target.imageBytes;
+			compressedShadowLiveBytes.fetch_add(target.imageBytes,std::memory_order_relaxed);
+		}
 		for (size_t row = 0; row < layout.rows; row++) {
 			size_t from = layer*layout.sourceImagePitch+row*layout.sourceRowPitch;
 			size_t to = (row0+row)*target.rowBytes+column;
@@ -1511,9 +1526,28 @@ static void dispatch(uint32_t x, uint32_t y, uint32_t z) {
 }
 
 // ---- copies -------------------------------------------------------------------------------------------------------------
+struct NativeBCRead {
+	Alloc storage;
+	size_t rowPitch=0,rowBytes=0,rows=0;
+};
+static bool stageNativeBC(Texture *s,uint32_t mip,uint32_t layer,uint32_t x,uint32_t y,uint32_t w,uint32_t h,NativeBCRead &read) {
+	if(!s->hardwareBC || !s->tex || s->dim!=2 || mip>=s->mips || layer>=s->depthOrLayers)return false;
+	uint32_t mw,mh,md;mipExtent(s,mip,mw,mh,md);
+	PGBCUploadLayout layout;
+	if(!pg_bc_region_valid(mw,mh,x,y,w,h) || !pg_bc_upload_layout(s->bcKind,w,h,1,0,0,SIZE_MAX,&layout))return false;
+	read.rowBytes=layout.rowBytes;read.rows=layout.rows;read.rowPitch=(layout.rowBytes+255)&~size_t(255);
+	read.storage=frameAlloc(read.rowPitch*read.rows,256);
+	if(!read.storage.buf || !read.storage.ptr)return false;
+	[blitEncoder() copyFromTexture:s->tex sourceSlice:layer sourceLevel:mip sourceOrigin:MTLOriginMake(x,y,0)
+	  sourceSize:MTLSizeMake(w,h,1) toBuffer:read.storage.buf destinationOffset:read.storage.off
+	  destinationBytesPerRow:read.rowPitch destinationBytesPerImage:0];
+	s->lastUse=R->serial;
+	return true;
+}
+
 static bool copyCompressedRegion(Texture *s, Texture *d, uint32_t sMip, uint32_t sLayer, uint32_t sx, uint32_t sy, uint32_t sz,
                                  uint32_t dMip, uint32_t dLayer, uint32_t dx, uint32_t dy, uint32_t dz, uint32_t w, uint32_t h, uint32_t depth) {
-	if (!s->bcKind || s->bcKind != d->bcKind || s->dim != d->dim || s->samples != 1 || d->samples != 1 || sMip >= 32 || dMip >= 32) return false;
+	if (!s->bcKind || s->bcKind != d->bcKind || s->dim != d->dim || s->samples != 1 || d->samples != 1 || sMip >= s->mips || dMip >= d->mips || sMip >= 32 || dMip >= 32) return false;
 	uint32_t sw, sh, sd, dw, dh, dd; mipExtent(s,sMip,sw,sh,sd); mipExtent(d,dMip,dw,dh,dd);
 	if (!pg_bc_region_valid(sw,sh,sx,sy,w,h) || !pg_bc_region_valid(dw,dh,dx,dy,w,h)) return false;
 	bool three = s->dim == 3;
@@ -1522,12 +1556,33 @@ static bool copyCompressedRegion(Texture *s, Texture *d, uint32_t sMip, uint32_t
 	PGBCUploadLayout patch, source;
 	if (!pg_bc_upload_layout(s->bcKind,w,h,depth,0,0,SIZE_MAX,&patch) ||
 	    !pg_bc_upload_layout(s->bcKind,sw,sh,1,0,0,SIZE_MAX,&source)) return false;
+	if(s->hardwareBC && d->hardwareBC) {
+		if(s!=d && s->format==d->format) {
+			[blitEncoder() copyFromTexture:s->tex sourceSlice:sLayer sourceLevel:sMip sourceOrigin:MTLOriginMake(sx,sy,0)
+			  sourceSize:MTLSizeMake(w,h,1) toTexture:d->tex destinationSlice:dLayer destinationLevel:dMip destinationOrigin:MTLOriginMake(dx,dy,0)];
+		} else {
+			// The first ordered blit snapshots overlapping/self copies and format
+			// twins before the destination is overwritten. No CPU read or wait.
+			NativeBCRead raw;if(!stageNativeBC(s,sMip,sLayer,sx,sy,w,h,raw))return false;
+			[blitEncoder() copyFromBuffer:raw.storage.buf sourceOffset:raw.storage.off sourceBytesPerRow:raw.rowPitch sourceBytesPerImage:0
+			  sourceSize:MTLSizeMake(w,h,1) toTexture:d->tex destinationSlice:dLayer destinationLevel:dMip destinationOrigin:MTLOriginMake(dx,dy,0)];
+		}
+		s->lastUse=d->lastUse=R->serial;d->proxyDirty=true;return true;
+	}
 	// Original blocks are authoritative for BC readbacks. Snapshot them before
 	// writing, including self-overlapping copies, and let the destination's normal
 	// upload path choose GPU blocks or CPU decoding. A cross-format Metal blit
 	// between compressed and decoded textures would reinterpret incompatible bytes.
 	std::vector<uint8_t> bytes(patch.totalBytes);
-	for (uint32_t z = 0; z < depth; z++) {
+	if(s->hardwareBC) {
+		// Rare native->decoded copies need original blocks for CPU decoding.
+		// The normal all-native path above never blocks the CPU.
+		NativeBCRead raw;if(!stageNativeBC(s,sMip,sLayer,sx,sy,w,h,raw))return false;
+		id<MTLCommandBuffer> buffer=R->cmd;uint64_t serial=R->serial;
+		commit(CReadback);[buffer waitUntilCompleted];waitSerial(serial);
+		if(buffer.status!=MTLCommandBufferStatusCompleted)return false;
+		for(size_t row=0;row<raw.rows;row++)memcpy(bytes.data()+row*raw.rowBytes,raw.storage.ptr+row*raw.rowPitch,raw.rowBytes);
+	} else for (uint32_t z = 0; z < depth; z++) {
 		auto it = s->compressedShadow.find(((uint64_t)sMip<<32) | (three ? sz+z : sLayer));
 		if (it == s->compressedShadow.end() || it->second.size() < source.imageBytes) return false;
 		for (size_t row = 0; row < patch.rows; row++) {
@@ -1736,7 +1791,21 @@ static void readback(const uint32_t *p) {
 	uint32_t w = hasBox ? r - l : mw, h = hasBox ? b - t : mh, d = hasBox ? bk - f : md;
 	uint32_t x0 = hasBox ? l : 0, y0 = hasBox ? t : 0, z0 = hasBox ? f : 0;
 	bool three = s->dim == 3;
-	if (s->bcKind) {		// original blocks, whether the GPU samples BC directly or a decoded copy
+	if(s->hardwareBC) {
+		NativeBCRead raw;
+		if(!stageNativeBC(s,mip,layer,x0,y0,w,h,raw) || raw.rowBytes>rowPitch ||
+		   (uint64_t)(raw.rows-1)*rowPitch+raw.rowBytes>R->memSize-addr) {done();return;}
+		id<MTLBuffer> storage=raw.storage.buf;
+		NSUInteger offset=raw.storage.off;
+		uint8_t *destination=R->mem+addr;
+		R->onComplete.push_back([storage,offset,destination,rowPitch,raw,done]() {
+			const uint8_t *source=(const uint8_t *)storage.contents+offset;
+			for(size_t row=0;row<raw.rows;row++)memcpy(destination+row*rowPitch,source+row*raw.rowPitch,raw.rowBytes);
+			done();
+		});
+		commit(CReadback);return;
+	}
+	if (s->bcKind) {		// decoded fallback retains authoritative original blocks
 		uint32_t bb = bcBlockBytes(s->bcKind), rows = (h + 3) / 4, pitch = (mw + 3) / 4 * bb, rowBytes = (w + 3) / 4 * bb;
 		for (uint32_t z = 0; z < (three ? d : 1); z++) {
 			auto it = s->compressedShadow.find(((uint64_t)mip << 32) | (three ? z0 + z : layer));
@@ -1828,7 +1897,24 @@ static void present(uint32_t texId) {
 		std::string name;
 		{ std::lock_guard<std::mutex> g(R->captureLock); name.swap(R->captureName); }
 		if (!name.empty()) capture(t, name);
-		CGSize size = CGSizeMake(t->width, t->height);
+		id<MTLTexture> image=t->tex;
+		uint64_t output=presentationSize.load(std::memory_order_acquire);
+		if(output) {
+			id<MTLTexture> scaled=R->upscaler.encode(commandBuffer(),image,output>>32,(uint32_t)output,R->frame%FRAME_SLOTS);
+			if(scaled) {
+				image=scaled;
+				// Scaling already reads the source even if nextDrawable returns nil.
+				t->lastUse=R->serial;
+			}
+		} else R->upscaler.reset();
+		uint64_t mode=image==t->tex ? 0 : R->upscaler.usesMetalFX() ? 1 : 2;
+		uint64_t key=fnv(fnv(fnv(fnv(fnv(0,t->width),t->height),image.width),image.height),mode);
+		if(key!=R->presentationLogKey) {
+			R->presentationLogKey=key;
+			logf("Presentation: %ux%u -> %lux%lu using %s.",t->width,t->height,(unsigned long)image.width,(unsigned long)image.height,
+			     mode==1 ? "MetalFX spatial" : mode==2 ? "Apple MPS resize fallback" : "native complete frame");
+		}
+		CGSize size = CGSizeMake(image.width,image.height);
 		if (!CGSizeEqualToSize(R->layer.drawableSize, size)) R->layer.drawableSize = size;
 		// Do not hold the lifecycle mutex while waiting for a drawable. If
 		// deactivation races this acquisition, commit() still waits for resume.
@@ -1843,7 +1929,7 @@ static void present(uint32_t texId) {
 			MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
 			rp.colorAttachments[0].texture = drawable.texture; rp.colorAttachments[0].loadAction = MTLLoadActionDontCare; rp.colorAttachments[0].storeAction = MTLStoreActionStore;
 			id<MTLRenderCommandEncoder> e = [commandBuffer() renderCommandEncoderWithDescriptor:rp];
-			[e setRenderPipelineState:R->blitPipe]; [e setFragmentTexture:t->tex atIndex:0];
+			[e setRenderPipelineState:R->blitPipe]; [e setFragmentTexture:image atIndex:0];
 			[e drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
 			[e endEncoding];
 			t->lastUse = R->serial;
@@ -2155,6 +2241,8 @@ static void report() {
 		logf("[metal] BC totals: %llu native textures created, %llu CPU fallback textures created, %.1f MB native blocks uploaded, %.1f MB CPU decoded pixels",
 		     (unsigned long long)R->bcNativeCreated,(unsigned long long)R->bcFallbackCreated,
 		     R->bcNativeUploadBytes/1048576.0,R->bcDecodedBytes/1048576.0);
+	logf("[metal] BC CPU shadow: %llu KB (decoded fallback only).",
+	     (unsigned long long)(compressedShadowLiveBytes.load(std::memory_order_relaxed)/1024));
 	uint64_t uploadBytes = 0;
 	for (const auto &frame : R->frames) {
 		uploadBytes += frame.chunks.size() * FrameRing::CHUNK;
@@ -2306,6 +2394,15 @@ using namespace mr;
 static CAMetalLayer *pendingLayer;
 
 extern "C" void PGMetalRendererAttachLayer(void *layer) { pendingLayer = (__bridge CAMetalLayer *)layer; }
+extern "C" bool PGMetalRendererSupportsSpatialUpscaling(void) {
+	id<MTLDevice> device=MTLCreateSystemDefaultDevice();
+	return device && [MTLFXSpatialScalerDescriptor supportsDevice:device];
+}
+extern "C" void PGMetalRendererSetPresentationSize(int32_t width,int32_t height) {
+	uint64_t size=width>=320 && height>=180 && width<=3840 && height<=2160
+	  ? ((uint64_t)(uint32_t)width<<32)|(uint32_t)height : 0;
+	presentationSize.store(size,std::memory_order_release);
+}
 
 extern "C" void PGMetalRendererSetAppActive(bool active) {
 	id<MTLCommandBuffer> submitted = nil;

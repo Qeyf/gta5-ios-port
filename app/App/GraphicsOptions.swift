@@ -3,6 +3,17 @@ import Metal
 import UIKit
 import os
 
+enum ImageUpscaling: Int, CaseIterable {
+    case native, quality, performance
+    var title: String {
+        switch self {
+        case .native: return String(localized: "Native resolution", table: "Settings")
+        case .quality: return String(localized: "MetalFX Quality", table: "Settings")
+        case .performance: return String(localized: "MetalFX Performance", table: "Settings")
+        }
+    }
+}
+
 /// Graphics presets. The engine reads quality settings once at boot; only the
 /// resolution can change while it runs.
 enum GraphicsPreset: Int, CaseIterable {
@@ -103,6 +114,7 @@ struct DeviceTier {
 }
 
 enum GraphicsConfiguration {
+    static let spatialUpscalingSupported = PGSupportsMetalFXSpatial()
     /// The screen's height in pixels (the "Native" resolution).
     static var nativeHeight: Int {
         let screen = UIScreen.main
@@ -121,10 +133,17 @@ enum GraphicsConfiguration {
         return (even(width), even(height))
     }
 
+    static func renderDimensions(_ settings: GameSettings, preset: GraphicsPreset, screen: CGSize) -> PGRenderDimensions {
+        let (w, h) = size(for: preset, renderHeight: settings.renderHeight, screen: screen, matchScreenShape: settings.matchScreenShape)
+        return pg_render_dimensions(Int32(w), Int32(h), Int32(settings.imageUpscaling.rawValue), spatialUpscalingSupported)
+    }
+
     /// Pass the chosen settings to the engine. Call before PGStartEngine.
     static func apply(_ settings: GameSettings, screen: CGSize, frameRateCap: Int) -> String {
         let preset = settings.graphicsPreset
-        let (width, height) = size(for: preset, renderHeight: settings.renderHeight, screen: screen, matchScreenShape: settings.matchScreenShape)
+        let dimensions = renderDimensions(settings, preset: preset, screen: screen)
+        let width = Int(dimensions.width), height = Int(dimensions.height)
+        PGSetPresentationSize(dimensions.upscaled ? Int32(dimensions.outputWidth) : 0, dimensions.upscaled ? Int32(dimensions.outputHeight) : 0)
         let options = preset.engineOptions
         var pointers = options.map { strdup($0) }
         defer { pointers.forEach { free($0) } }
@@ -133,6 +152,7 @@ enum GraphicsConfiguration {
                 PGConfigureEngine($0, UInt32(buffer.count), Int32(width), Int32(height), frameRateCap == 0 ? 0 : frameRateCap == 60 ? 1 : 2, UInt32(clamping: ProcessInfo.processInfo.activeProcessorCount))
             }
         }
-        return String(localized: "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(frameRateCap))", table: "Settings")
+        let summary = String(localized: "\(preset.title) \(width)×\(height) at \(GameSettings.frameRateTitle(frameRateCap))", table: "Settings")
+        return dimensions.upscaled ? summary + " → \(dimensions.outputWidth)×\(dimensions.outputHeight) · \(settings.imageUpscaling.title)" : summary
     }
 }

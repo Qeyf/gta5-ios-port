@@ -3,8 +3,8 @@
 [English](README.md) · **Türkçe**
 
 Bu depo, [kevinerikjs/gta5-ios-port](https://github.com/kevinerikjs/gta5-ios-port)
-projesinin Qeyf hesabındaki forkudur. Kaynak v1.3.1 sürümüne dayanır; bu fork
-1.3.3 sürümünü kullanır. Uygulama adı **GtaV Mobile**, çıktı dosyası
+projesinin Qeyf hesabındaki forkudur. Kaynak v1.3.1 sürümüne dayanır; sürüm
+değeri `app/project.yml` içindedir. Uygulama adı **GtaV Mobile**, çıktı dosyası
 **`GtaV Mobile.ipa`** olur. Yerleşik ARM64 motoru, Metal görüntüleyicisi ve
 mevcut kontrol sistemi korunur.
 
@@ -42,6 +42,11 @@ hileleri sıfırlar.
 
 ## IPA derleme ve kurulum
 
+GitHub Actions kotası kullanmadan çalıştırılan kontroller ve IPA derlemesi için
+[yerel nektos/act rehberine](docs/local-build.md) bakın. Linux üzerinde taşınabilir
+kontroller çalışır; gerçek Metal testleri ve IPA için Apple Silicon Mac/Xcode
+gerekir. `act` Linux'a macOS veya Xcode eklemez.
+
 CI, Apple Silicon `xcode-27` makinesinde kararlı Xcode 27 ve iOS 27 SDK kullanır; en düşük iOS sürümü 17 olarak kalır. Uygulama, SDK 27'nin açılışta zorunlu tuttuğu Apple `UIWindowSceneDelegate` yaşam döngüsünü kullanır. Mac çıktısı `GtaV Mobile.ipa`, GitHub Release dosyası **`GtaV-Mobile.ipa`** olur. Böylece indirilen dosya adı metadata ve SHA256SUMS ile birebir eşleşir.
 
 Tam derleme için kendi oyun kopyanızın şu dosyaları gerekir:
@@ -65,14 +70,14 @@ belirtilen 18 paketin tamamını içermelidir; aynı `index.json` dosyası da ol
 Mevcut motor/manifest/indeks arşivi tek başına yeterli değildir. Eksik veya
 kısmi paketler macOS derlemesi başlamadan kontrol edilir.
 
-Her başarılı derleme otomatik olarak yeni bir Release yayımlar: **GtaV-Mobile.ipa**,
+Her başarılı hosted derleme otomatik olarak yeni bir Release yayımlar: **GtaV-Mobile.ipa**,
 **release-metadata.json**, **SHA256SUMS** ve Türkçe/İngilizce sürüm notları.
 Notlarda IPA'nın gerçek sürümü, build kodu, kaynak commit, iş akışı bağlantısı,
 iOS gereksinimi, diller, dosya boyutu, SHA-256 ve Xcode/SDK bilgisi bulunur.
 Eksik veya kullanılamayan sahne tanımına sahip IPA'nın yayımı engellenir.
-Önceki Release'ler korunur. `app/project.yml` sürüm `1.3.3` ve taban build `8`
-değerlerini tutar: dördüncü iş akışı çalışması `12.1`, tekrarı `12.2` olur.
-Etiket örneği: `v1.3.3-build.12.1`.
+Önceki Release'ler korunur. `app/project.yml` kaynak sürümünü ve taban build
+değerini tutar; hosted derlemeler çalışma numarasını ve deneme sayısını ekler.
+Etiket, IPA içindeki gerçek sürüm/build değerlerinden oluşturulur.
 
 Apple Silicon Mac üzerinde:
 

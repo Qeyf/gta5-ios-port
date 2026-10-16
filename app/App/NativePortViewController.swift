@@ -832,9 +832,10 @@ final class NativePortViewController: UIViewController, MTKViewDelegate {
     private func applyLiveResolution() {
         guard engineStarted else { return }
         let settings = GameSettings.shared
-        let (width, height) = GraphicsConfiguration.size(for: bootedPreset, renderHeight: settings.renderHeight, screen: view.bounds.size, matchScreenShape: settings.matchScreenShape)
-        PGSetBackBufferSize(Int32(width), Int32(height))
-        appendLog("Graphics: live resize to \(width)×\(height)")
+        let size = GraphicsConfiguration.renderDimensions(settings, preset: bootedPreset, screen: view.bounds.size)
+        PGSetPresentationSize(size.upscaled ? Int32(size.outputWidth) : 0, size.upscaled ? Int32(size.outputHeight) : 0)
+        PGSetBackBufferSize(Int32(size.width), Int32(size.height))
+        appendLog("Graphics: live input \(size.width)×\(size.height), requested output \(size.outputWidth)×\(size.outputHeight), upscaling \(size.upscaled).")
     }
     private func stopMotionInput() {
         gyro.setRunning(false, orientation: .landscapeRight)
