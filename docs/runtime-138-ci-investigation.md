@@ -65,3 +65,49 @@ References:
 - https://developer.apple.com/documentation/metal/mtlpixelformat/bc1_rgba_srgb
 - https://developer.apple.com/library/archive/documentation/Miscellaneous/Conceptual/MetalProgrammingGuide/Mem-Obj/Mem-Obj.html
 - https://developer.apple.com/documentation/coregraphics/cgbitmapinfo
+
+## BC4 follow-up after the sRGB fix
+
+[Run 38922541709](https://github.com/Qeyf/gta5-ios-port/actions/runs/38922541709),
+source `0c5010e58d34ff21a180ba0351d381222d4b22be`, passed the known BC1 sRGB
+probe and reached BC4. It failed a decoded-source to native-destination copy
+comparison at sample 40: native `0.361519605`, CPU fallback `0.352941185`.
+
+The deterministic source block is `02 e0 8a 20 2f 4e bc 14`, endpoints 2/224.
+Sample 40 is the red component of full-image pixel (2,1), block-local pixel 6,
+selector 3. Its ideal unsigned interpolated value is `90.8/255`. The existing
+upstream decoder's legacy BC4 mode truncates this to 90; the library's documented
+`BCDEC_BC4BC5_PRECISE` mode rounds it to 91. The reported GPU value is equivalent
+to 92.187499/255. Against 91, the discrepancy is 1.187499 code values instead of
+2.187499, inside the unchanged 2.1-code budget. These observations motivate the
+CPU precision correction; new raw-copy assertions still have to run on Metal
+before copy correctness can be established for that path.
+
+Enable that upstream mode and its explicit unsigned argument in both production
+and the original traversal reference. The reference compares traversal and
+copying, using the same current decode mode. BC4/BC5 CPU fallback bytes can now
+change by nearest rounding; the native compressed path and other decoder
+formats retain their existing configuration. The upstream documents a potential
+CPU speed cost for precise decoding; no measured device FPS gain is claimed.
+This uses the existing pinned library, not a new decoding algorithm or an
+increased test tolerance.
+
+A production `PGDecodeBC` regression exercises all 65,536 endpoint pairs, both
+palette modes, every selector, BC4 and both BC5 channels, plus the exact failure
+block and clipped dimensions. Its known-block assertion failed before the mode
+change and passed after it. Existing 1,372 BC1–BC7 traversal equivalence/bounds
+cases also pass. Portable checks now fetch/verify the same pinned header as
+Apple checks and execute both actual decoder suites. The header itself is
+unchanged and remains SHA-256 verified.
+
+The Metal suite adds a known BC4/BC5 decoded-to-native copy probe and checks the
+exact compressed readback before randomized mixed-copy sample comparison. The
+last GPU run compiled/executed the previous source; the new Metal probes and
+complete corrected suite remain unverified on this Linux host. Do not report
+the full GPU suite as passed until another Apple run completes it.
+
+Additional primary references:
+
+- https://developer.apple.com/documentation/metal/mtlpixelformat/bc4_runorm
+- https://developer.apple.com/documentation/metal/mtlpixelformat/bc5_rgunorm
+- https://github.com/iOrange/bcdec/blob/80859ed3b7afb1c527a2a99d70c61457bea72d0c/bcdec.h

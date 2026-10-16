@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define BCDEC_STATIC
+#define BCDEC_BC4BC5_PRECISE
 #define BCDEC_IMPLEMENTATION
 #include "../Tools/bcdec/bcdec.h"
 #include "BCTextureDecoderReference.inc"
@@ -11,8 +12,8 @@ static void decodeBlock(int format,const void *compressed,void *destination,int 
     case 1:bcdec_bc1(compressed,destination,pitch);break;
     case 2:bcdec_bc2(compressed,destination,pitch);break;
     case 3:bcdec_bc3(compressed,destination,pitch);break;
-    case 4:bcdec_bc4(compressed,destination,pitch);break;
-    case 5:bcdec_bc5(compressed,destination,pitch);break;
+    case 4:bcdec_bc4(compressed,destination,pitch,0);break;
+    case 5:bcdec_bc5(compressed,destination,pitch,0);break;
     case 7:bcdec_bc7(compressed,destination,pitch);break;
   }
 }
